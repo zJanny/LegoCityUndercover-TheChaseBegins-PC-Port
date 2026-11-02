@@ -18,6 +18,8 @@ struct PropDestroyEffects {
     unsigned debrisAmount = kDebrisDefaultCount;  // DebrisAmount when above 0 (0x20c938: its integer value's low byte), else 6
     std::uint32_t colour = kDebrisDefaultColour;        // DebrisColour
     std::uint32_t secondColour = kDebrisNoSecondColour; // DebrisColour2
+    bool hasColour = false;       // the class or the object gives DebrisColour
+    bool hasSecondColour = false; // the class or the object gives DebrisColour2
     float ratio = 0;              // DebrisRatio
     bool respawn = false;         // Respawn: 0x239898 queues the entity for its room (not ported)
     std::uint16_t sound = 0;      // the sound id the destroy requests through 0x23ae84 / 0x23fa54 (ATTR_SFX_DESTROYED, 29 for the default handler); 0 none

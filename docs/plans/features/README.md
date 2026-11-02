@@ -59,7 +59,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [script-system-platforms](script-system-platforms.md) | IN_PROGRESS | SCRIPT-377 orient and type 7 platforms, shape curves, lift timers; SCRIPT-385 oracle check of the path platforms; SCRIPT-388 the platform's push and squash; SCRIPT-389 the lift starts one update late |
 | [script-system-missions-1-3-generator](script-system-missions-1-3-generator.md) | IN_PROGRESS | SCRIPT-364 generator scene against the oracle |
 | [script-system-missions-1-3-end](script-system-missions-1-3-end.md) | IN_PROGRESS | SCRIPT-382 push cart and mission end against the oracle; SCRIPT-390 the lift's switch at the top |
-| [script-system-missions-1-4](script-system-missions-1-4.md) | IN_PROGRESS | SCRIPT-410 AI spawner (fight start); SCRIPT-411 arrest events; SCRIPT-413 BulletTime; SCRIPT-415 the chase |
+| [script-system-missions-1-4](script-system-missions-1-4.md) | IN_PROGRESS | SCRIPT-410 AI spawner (fight start); SCRIPT-411 arrest events; SCRIPT-421 BulletTime readers; SCRIPT-422 the stolen car drives |
 | [script-system-use-markers](script-system-use-markers.md) | IN_PROGRESS | SCRIPT-299 markers of the other 34 kinds; SCRIPT-355 special cases and HeadMarker; SCRIPT-356 list builder; SCRIPT-357 placement ray |
 | [script-system-natives](script-system-natives.md) | IN_PROGRESS | SCRIPT-7 natives in batches SCRIPT-29 to SCRIPT-39, SCRIPT-57 to SCRIPT-65 |
 | [script-system-natives-world](script-system-natives-world.md) | IN_PROGRESS | SCRIPT-279 party swap; SCRIPT-280 destroy message 1 per class; SCRIPT-281 effect fade rest; SCRIPT-282 distance fade gate; SCRIPT-283 AddToSemiTransList |

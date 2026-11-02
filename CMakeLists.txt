@@ -68,6 +68,7 @@ target_sources(chase_runtime PRIVATE src/runtime/platform_riding.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/node_attach.cpp src/runtime/attach_children.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/bone_attach.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/script_particles.cpp src/runtime/game_mission_end_1_3_glue.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/bullet_time.cpp src/runtime/script_debris.cpp src/runtime/vehicle_ai_natives.cpp src/runtime/game_mission14_natives_glue.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pushable.cpp src/runtime/mission13_end.cpp src/runtime/final_prop_rise.cpp src/runtime/attached_drawn_log.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_manager.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_blocked.cpp src/runtime/room_layers.cpp)
@@ -366,6 +367,10 @@ if(BUILD_TESTING)
   target_link_libraries(natives-objects-test PRIVATE chase_runtime)
   target_compile_options(natives-objects-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME natives-objects COMMAND natives-objects-test)
+  add_executable(mission14-natives-test tests/mission14_natives_test.cpp)
+  target_link_libraries(mission14-natives-test PRIVATE chase_runtime)
+  target_compile_options(mission14-natives-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME mission14-natives COMMAND mission14-natives-test)
   add_executable(natives-party-test tests/natives_party_test.cpp)
   target_link_libraries(natives-party-test PRIVATE chase_runtime)
   target_compile_options(natives-party-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -1924,6 +1929,25 @@ if(BUILD_TESTING)
       --script "0 0 40;0 120 90;0 0 800")
     set_tests_properties(game-showroom-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "script 1-4_MissionStart ended at update [0-9]+\n.*waypoint started script 1-4_ShowroomArrival at update [0-9]+\n.*script 1-4_ShowroomArrival started at update [0-9]+\n.*cutscene 1_4_a started at update [0-9]+\n.*cutscene 1_4_a ended at update [0-9]+\n.*PositionObject: 1-4_booster_strange to 1-4_showroof_06 at update [0-9]+\n.*script 1-4_ShowroomArrival ended at update [0-9]+\n.*player ended at 577.484 27.5656 967.533")
+    # Mission 1-4 roof scene and skylight (SCRIPT-413, 20261102-mission14-C): 1-4_SO_Phase2 calls BulletTime 0.01 0.1 0 and 0.105 s later BulletTime 1 0.01 0, which
+    # sends the start message 97 and then 97, 98 and 99 (docs/re/scripts-missions-1-4.md); 1-4_Hatch_Open breaks the skylights and bursts bricks at
+    # BoosterSkylightDebris with SpawnDebris2Colour. Update numbers are the port's.
+    add_test(NAME game-bullet-time-1-4 COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --save-out "${CMAKE_BINARY_DIR}/game-bullet-time-1-4.dat"
+      --start "602.9 23.8 975" --facing 180 --call-script 1-4_SO_Phase2
+      --script "0 0 100")
+    set_tests_properties(game-bullet-time-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
+      PASS_REGULAR_EXPRESSION "bullet time message 97 at update [0-9]+ [^\n]*\n.*bullet time message 97 at update [0-9]+ [^\n]*\n.*bullet time message 98 at update [0-9]+ [^\n]*\n.*bullet time message 99 at update [0-9]+")
+    add_test(NAME game-skylight-debris-1-4 COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --save-out "${CMAKE_BINARY_DIR}/game-skylight-debris-1-4.dat"
+      --start "602.9 23.8 975" --facing 180 --call-script 1-4_Hatch_Open
+      --script "0 0 160")
+    set_tests_properties(game-skylight-debris-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
+      PASS_REGULAR_EXPRESSION "prop 1-4_Showroom_Skylight05: explosion particle 10, 0 bricks[^\n]*\n.*debris burst at boosterskylightdebris: 6 bricks at update [0-9]+")
     # Mission 1-2, the dog cage (SCRIPT-111): 1-2_Pringles_Cage_Locked enables the use spot 1-2_Dog_Cage_Use_Spot, A on the user's trigger position
     # (oracle save state at the dog cage trigger of mission 1-2) fires 1-2_Cage_Key_Target_Script through the spot's TriggerObject. The use marker (SCRIPT-292) is shown
     # while the spot is usable (seen on the ground in the oracle in that state) and goes after the use, when 0x236624 switched the zone off.
@@ -2460,7 +2484,7 @@ foreach(test_name ${chase_all_tests})
   set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${CMAKE_BINARY_DIR}/test-xdg/${test_name}")
 endforeach()
 
-foreach(slow_test game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-girder-guy-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-helipad-collision game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data reflection-real-data)
+foreach(slow_test game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-girder-guy-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-bullet-time-1-4 game-skylight-debris-1-4 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-helipad-collision game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data reflection-real-data)
   if(TEST ${slow_test})
     set_property(TEST ${slow_test} APPEND PROPERTY LABELS slow)
   endif()
@@ -2489,7 +2513,7 @@ foreach(game_data_test
   game-script-run game-script-walk game-script-camera game-script-ledge game-vehicle-drive game-van-escort game-cutscene-glass-hidden
   game-cutscene-dog-prop game-super-brick-freeplay game-save-new-game-clean game-save-new-game game-save-reload game-super-brick-roof
   game-cutscene-dog-end game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-break game-vehicle-smash game-debris-super-pickup
-  game-mission-1-1 game-detective-1-2 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-girder-guy-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-garage-key-1-3 game-key-use-1-3 game-use-spot-1-2 game-use-marker-detective-1-2 game-player-script-animation game-super-buildit-prompt
+  game-mission-1-1 game-detective-1-2 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-girder-guy-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-bullet-time-1-4 game-skylight-debris-1-4 game-garage-key-1-3 game-key-use-1-3 game-use-spot-1-2 game-use-marker-detective-1-2 game-player-script-animation game-super-buildit-prompt
   game-super-buildit-build game-helipad-collision game-fast-travel-exit game-cage-release-1-2 game-doorlock-detective-1-2 game-mission-1-2-start-timing game-mission-1-1-start game-script-dialog
   game-same-level-entry game-scene-change-exit game-scene-change-entry game-director-hold game-director-release game-script-zipline game-script-zipline-handcuffs
   game-script-attack-table game-script-attack-goon game-script-wobbly-table game-script-bounce game-script-bounce-grab game-script-acrobat-poles game-script-zipline-use-a

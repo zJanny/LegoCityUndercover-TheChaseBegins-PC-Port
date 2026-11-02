@@ -29,11 +29,12 @@ std::int32_t intValue(const assets::LevelParam* value, std::int32_t fallback) {
     return fallback;
 }
 
-void colourValue(const assets::LevelParam* value, std::uint32_t& colour) {
-    if (!value || value->type != 2 || value->blocks.empty() || value->blocks[0].size() < 12) return;
+bool colourValue(const assets::LevelParam* value, std::uint32_t& colour) {
+    if (!value || value->type != 2 || value->blocks.empty() || value->blocks[0].size() < 12) return false;
     std::array<float, 3> rgb{};
     std::memcpy(rgb.data(), value->blocks[0].data(), 12);
     colour = debrisColourOf(rgb);
+    return true;
 }
 
 }
@@ -46,8 +47,8 @@ PropDestroyEffects propDestroyEffects(const assets::LevelObject& object, const a
     effects.spawnDebris = intValue(param(object, cls, "SpawnDebris"), 0) != 0;
     const float amount = floatValue(param(object, cls, "DebrisAmount"), 0.0f);
     if (amount > 0.0f) effects.debrisAmount = unsigned(std::int32_t(amount) & 0xff);
-    colourValue(param(object, cls, "DebrisColour"), effects.colour);
-    colourValue(param(object, cls, "DebrisColour2"), effects.secondColour);
+    effects.hasColour = colourValue(param(object, cls, "DebrisColour"), effects.colour);
+    effects.hasSecondColour = colourValue(param(object, cls, "DebrisColour2"), effects.secondColour);
     effects.ratio = floatValue(param(object, cls, "DebrisRatio"), 0.0f);
     effects.respawn = intValue(param(object, cls, "Respawn"), 0) != 0;
     effects.superBlock = superDebrisBlock(intValue(param(object, cls, "SuperBuildValue"), 0), assets::objectKind(object, cls));

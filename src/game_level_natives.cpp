@@ -28,6 +28,12 @@ void LevelSession::applyScriptNatives() {
         const bool started = request.definition >= 0 && particles.system().start(unsigned(request.definition), {request.position, std::nullopt, 0}) != 0;
         std::cout << "particles " << request.definition << " at " << request.object << (started ? " started" : " refused") << " at update " << updatesForLog << '\n';
     }
+    for (const runtime::ScriptDebrisRequest& request : levelScripts.takeDebrisRequests()) {
+        if (effects.debris()) effects.debris()->burst(request.burst, debrisLineStandIn(), debrisLineStandIn());
+        std::cout << "debris burst at " << request.object << ": " << request.burst.count << " bricks at update " << updatesForLog << '\n';
+    }
+    for (const runtime::BulletTimeMessage& message : levelScripts.bulletTime().takeMessages())
+        std::cout << "bullet time message " << message.id << " at update " << updatesForLog << " (stand-in SCRIPT-S323: not delivered)\n";
     scriptedRooms.clear();
     for (const std::string& room : levelScripts.takeRoomRequests()) scriptedRooms.insert(runtime::roomNumber(room));
     for (const std::size_t vehicle : pendingVehicleBreaks)

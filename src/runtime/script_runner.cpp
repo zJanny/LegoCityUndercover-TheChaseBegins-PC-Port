@@ -27,7 +27,8 @@ enum class Word {
     EnableObject, EnableCollision, TriggerObject, EnableTrigger, EnableBound, GetGameComplete, IsLevelUnlocked, IsRedBrickExtraActive,
     WarningDialogBox, InformationBox, FadeScreen, PositionObject, PositionPlayer, SceneChange,
     KillScript, ObjectNative, VehicleNative, ProgressNative, MusicNative, SoundNative, TextNative, ObjectiveNative, AiNative, AnimationNative, CutsceneNative, EffectNative, WorldNative, PartyNative,
-    SetPropRocking, WaitForPlatform, PlatformNative, PlayParticlesGO, StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait, CameraFollow, AwardViewer
+    SetPropRocking, WaitForPlatform, PlatformNative, PlayParticlesGO, StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait, CameraFollow, AwardViewer,
+    BulletTime, SpawnDebris2Colour, VehicleSetAI, VehicleSetChased
 };
 
 struct ScriptFunction {
@@ -80,6 +81,10 @@ constexpr ScriptFunction kScriptFunctions[] = {
     {"setdcamendwait", Word::SetDCamEndWait, false},
     {"camerafollow", Word::CameraFollow, true},
     {"awardviewer", Word::AwardViewer, false},
+    {"bullettime", Word::BulletTime, true},
+    {"spawndebris2colour", Word::SpawnDebris2Colour, true},
+    {"vehiclesetai", Word::VehicleSetAI, true},
+    {"vehiclesetchased", Word::VehicleSetChased, true},
 };
 
 Word wordOf(const std::string& function) {
@@ -236,6 +241,7 @@ void ScriptRunner::update(float dt) {
     dt_ = dt;
     text_.update(dt, objectives_.mapBlackout());
     effectNatives_.update(dt);
+    bulletTime_.update(dt);
     ai_.update(dt);
     screenFade_.update(dt);
     cutscenes_.update(dt, screenFade_.running());
@@ -476,6 +482,10 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     case Word::PlatformNative: platformNative(call); break;
     case Word::PlayParticlesGO: playParticlesGoNative(call); break;
     case Word::AwardViewer: awardViewerNative(); break;
+    case Word::BulletTime: bulletTimeNative(call); break;
+    case Word::SpawnDebris2Colour: spawnDebris2ColourNative(call); break;
+    case Word::VehicleSetAI: vehicleAiNative(call, false); break;
+    case Word::VehicleSetChased: vehicleAiNative(call, true); break;
     case Word::ObjectNative:
         if (const auto kind = objectNativeKind(lower(call.function)); kind && !args.empty()) {
             if (*kind == ObjectNativeKind::DestroyProp || *kind == ObjectNativeKind::KillObject) {

@@ -1,7 +1,8 @@
 // The gap list of mission 1-4 (docs/plans/features/script-system-missions-1-4.md, docs/re/scripts-missions-1-4.md) against the level data:
 // the scripts named 1-4_*, their natives without a handler, the trigger events by name, the characters and the AI spawners.
 // Counts recorded 20261101-mission-C (2026-11-01) with the C++ level loader (parseLevel, drawableObjects) on lvl_01_cherrytreehills_main.blvl and
-// the handler table of ScriptRunner. When a native of the list gets a handler or an event a check, this test fails: update the gap list with it.
+// the handler table of ScriptRunner. The four natives that had no handler (BulletTime, SpawnDebris2Colour, VehicleSetAI, VehicleSetChased) got
+// theirs in 20261102-mission14-C (2026-11-02): no native of the 29 scripts lacks one. When an event gets a check, this test fails: update the gap list with it.
 // Needs the extracted RomFS; exits with 77 (skipped) when missing.
 #include "assets/assets.hpp"
 #include "runtime/script_runner.hpp"
@@ -36,9 +37,6 @@ const char* const kScripts[] = {
     "1-4_MissionStart", "1-4_Pursuit_Booster_Spawner_Script", "1-4_RobberCaught", "1-4_RooftopReached", "1-4_Run_Point_01", "1-4_Run_Point_02",
     "1-4_Run_Point_03", "1-4_Run_Point_04", "1-4_Run_Point_05", "1-4_ShowRoom_Stud_Trail", "1-4_ShowroomArrival", "1-4_SO_LadderFallen", "1-4_SO_Phase1",
     "1-4_SO_Phase2", "1-4_Spawner_06_Script", "1-4_Spawner_07_Script"};
-
-const char* const kFirstPart[] = {"1-4_MissionStart", "1-4_CameraBoundsON", "1-4_ShowroomArrival", "1-4_SO_Phase1", "1-4_Spawner_06_Script",
-                                  "1-4_Character_Arrestable_Script", "1-4_Spawner_07_Script"};
 }
 
 int main(int argc, char** argv) {
@@ -66,11 +64,10 @@ int main(int argc, char** argv) {
             for (const assets::ScriptCall& call : found->second->calls)
                 if (runtime::scriptFunctionSupport(call.function) == runtime::ScriptFunctionSupport::None) withoutHandler.insert(lowerCase(call.function));
         }
-        const std::set<std::string> expectedMissing = {"bullettime", "spawndebris2colour", "vehiclesetai", "vehiclesetchased"};
-        require(withoutHandler == expectedMissing, "natives without handler in the 29 scripts of mission 1-4 changed (" + std::to_string(withoutHandler.size()) + ")");
-        for (const char* name : kFirstPart)
-            for (const assets::ScriptCall& call : byHash.at(assets::nameHash(name))->calls)
-                require(expectedMissing.count(lowerCase(call.function)) == 0, std::string("first part script ") + name + " calls " + call.function);
+        if (!withoutHandler.empty()) require(false, "a native of the 29 scripts of mission 1-4 has no handler: " + *withoutHandler.begin());
+        const std::set<std::string> closedNatives = {"bullettime", "spawndebris2colour", "vehiclesetai", "vehiclesetchased"};
+        for (const std::string& name : closedNatives)
+            require(runtime::scriptFunctionSupport(name) == runtime::ScriptFunctionSupport::StandIn, name + " is a stand-in (SCRIPT-S323)");
 
         std::map<std::string, int> events;
         for (const assets::LevelTrigger& trigger : level.triggers)

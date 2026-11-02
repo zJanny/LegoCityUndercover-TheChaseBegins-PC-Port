@@ -24,7 +24,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | ? | 0x16354c | 3 | 554 / 69 / 27 / 4 | 10 | done |  |  |
 | ?? | 0x17efb8 | 0 | 554 / 69 / 27 / 4 | 10 | done |  |  |
 | SetActiveWayPoint | 0x27bde8 | 2 | 540 / 79 / 23 / 0 | 8 | stand-in | 31 | handled: show and hide chain with map slot and disable fade (SCRIPT-74 closed); stand-in SCRIPT-S269: [objective-hud.md §2026-10-19T15:00](objective-hud.md#ts-20261019-150002) |
-| PrintDebugString | 0x26fde8 | 2 | 514 / 125 / 6 / 6 | 24 | D | 26 | handled: 0x26fde8 is `mov r0,#1; bx lr`, no text is drawn or logged (corrects the old note: 0x2665d0 belongs to the next function 0x26fdf0) |
+| PrintDebugString | 0x26fde8 | 2 | 514 / 125 / 6 / 6 | 24 | D | 26 | handled: 0x26fde8 is `mov r0,#1; bx lr`, no text is drawn or logged |
 | PositionObject | 0x1d9e6c | 2 | 498 / 89 / 4 / 0 | 9 | done |  | player, vehicles and level characters (SCRIPT-287); props SCRIPT-288, no physics body (SCRIPT-S255 closed) |
 | CallScript | 0x1c3730 | 1 | 485 / 67 / 64 / 2 | 9 | done |  | handled; a missing script stops the runner (SCRIPT-S5 closed): [scripts.md §2026-10-19T15:12:09](scripts.md#ts-20261019-151209) |
 | ShowDialogBG | 0x1bfb64 | 1 | 443 / 64 / 4 / 0 | 8 | stand-in | 30 | byte handled, prompt reader open (SCRIPT-346): [script-text-bottom-screen.md §2026-10-19T23:15:01](script-text-bottom-screen.md#ts-20261019-231501) |
@@ -41,7 +41,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | subobjectivegotoenable | 0x2adaac | 3 | 260 / 39 / 6 / 0 | 7 | done | 31 | exact: registry, record update and map slot drawn (SCRIPT-71 closed; update stand-in SCRIPT-S270): [objective-hud.md §2026-10-19T15:00](objective-hud.md#ts-20261019-150002) |
 | StartDCamTrack | 0x1da810 | 4 | 259 / 31 / 0 / 0 | 10 | stand-in | 28 | handled; look point is the placement of the object, not entity +0x60 with its node matrix |
 | ShowTipTextOnce | 0x263850 | 1 | 251 / 31 / 11 / 0 | 8 | stand-in | 30 | handled as a stand-in, drawn with fitted layout: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
-| LoadAnimation | 0x2681a0 | 4 | 244 / 18 / 5 / 19 | 10 | stand-in | 32 | stand-in: name and class recorded as loaded (SCRIPT-S110, SCRIPT-274): [script-natives-animation.md §2026-10-15T18:33](script-natives-animation.md#ts-20261015-183336); the wait for the load: SCRIPT-345 ([scripts-runtime.md §2026-10-20T09:22](scripts-runtime.md#ts-20261020-092238)) |
+| LoadAnimation | 0x2681a0 | 4 | 244 / 18 / 5 / 19 | 10 | stand-in | 32 | name and class recorded as loaded (SCRIPT-S110, SCRIPT-274): [script-natives-animation.md §2026-10-15T18:33](script-natives-animation.md#ts-20261015-183336); the wait for the load: SCRIPT-345 ([scripts-runtime.md §2026-10-20T09:22](scripts-runtime.md#ts-20261020-092238)) |
 | EnableCollision | 0x27e9f4 | 2 | 240 / 33 / 2 / 5 | 9 | done |  |  |
 | VehicleSetChaseMaxSpeed | 0x2b4bec | 2 | 208 / 12 / 0 / 0 | 6 | C | 36 |  |
 | StopCharAnim | 0x1bfb84 | 1 | 193 / 30 / 0 / 0 | 8 | stand-in | 32 | stand-in: stops level characters and Player1 (SCRIPT-S110, SCRIPT-S262): [script-natives-animation-player.md §2026-10-19T12:55](script-natives-animation-player.md#ts-20261019-125503) |
@@ -57,7 +57,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | ResetObject | 0x1b25f8 | 1 | 107 / 5 / 0 / 0 | 11 | A | 26 | handled: class message 8 queued; kind 132 restores placement, enables, clears destroyed bit; kind 64 enables only (SCRIPT-307, SCRIPT-313; rest SCRIPT-317, SCRIPT-318): [script-natives-world-reset.md §2026-10-19T11:06:52](script-natives-world-reset.md#ts-20261019-110652) |
 | VehicleSetLocked | 0x26fe78 | 2 | 102 / 13 / 3 / 0 | 8 | done | 36 | record +0x311 bit 1; src/runtime/vehicle.cpp: [vehicles-system.md §2026-10-14T23:59:31](vehicles-system.md#ts-20261014-235931) |
 | AIActive | 0x1881a4 | 1 | 101 / 16 / 0 / 0 | 6 | stand-in | 34 | flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
-| AttachObject | 0x1bf68c | 2 | 100 / 15 / 13 / 0 | 8 | stand-in | 32 | stand-in: parent of the second object recorded (SCRIPT-S110, SCRIPT-272); moving platforms carry the attached nodes (SCRIPT-S302): [script-natives-animation.md §2026-10-15T18:33](script-natives-animation.md#ts-20261015-183336), [props-rocking-platforms.md §2026-10-26T22:54:42](props-rocking-platforms.md#ts-20261026-225442) |
+| AttachObject | 0x1bf68c | 2 | 100 / 15 / 13 / 0 | 8 | stand-in | 32 | parent of the second object recorded (SCRIPT-S110, SCRIPT-272); moving platforms carry the attached nodes (SCRIPT-S302): [script-natives-animation.md §2026-10-15T18:33](script-natives-animation.md#ts-20261015-183336), [props-rocking-platforms.md §2026-10-26T22:54:42](props-rocking-platforms.md#ts-20261026-225442) |
 | VehicleSetForcedStop | 0x29ea7c | 2 | 99 / 13 / 1 / 0 | 6 | done | 36 | record +0x310: [vehicles-system.md §2026-10-14T23:59:31](vehicles-system.md#ts-20261014-235931) |
 | AIMove | 0x171f7c | 3 | 98 / 19 / 0 / 0 | 8 | stand-in | 34 | handled: starts a straight walk to the target object (path finder not ported) and ends with the AIMove trigger event; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | EnableTargetable | 0x26fb2c | 2 | 97 / 6 / 0 / 0 | 7 | A | 26 | handled, flag recorded (SCRIPT-S18) |
@@ -73,7 +73,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | VehicleJumpOut | 0x1da8d8 | 1 | 70 / 5 / 0 / 0 | 8 | done | 36 | player: [vehicles-waypoints.md §2026-10-15T11:35](vehicles-waypoints.md#ts-20261015-113500) |
 | StopMusic | 0x195054 | 1 | 68 / 15 / 0 / 0 | 7 | stand-in | 33 | block ramp (AUDIO-S20) [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038) |
 | AutomaticMusic | 0x1d9c70 | 0 | 67 / 15 / 1 / 0 | 7 | stand-in | 33 | clears 0x376b31; mood step needs combat [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038) |
-| DestroyProp | 0x1a2fe4 | 1 | 66 / 7 / 0 / 0 | 8 | stand-in | 26 | stand-in: effects of kinds 67, 204, 71, 64, 132 and the character death of 27, 121, 242 ported; SCRIPT-S245, SCRIPT-S246, SCRIPT-S250..S252, SCRIPT-S264, SCRIPT-S265, SCRIPT-306, SCRIPT-307, SCRIPT-321..323, SCRIPT-58: [script-natives-world.md §2026-10-19T10:02:26](script-natives-world.md#ts-20261019-100226), [script-natives-world-death.md §2026-10-19T13:21:05](script-natives-world-death.md#ts-20261019-132105) |
+| DestroyProp | 0x1a2fe4 | 1 | 66 / 7 / 0 / 0 | 8 | stand-in | 26 | effects of kinds 67, 204, 71, 64, 132 and the character death of 27, 121, 242 ported; SCRIPT-S245, SCRIPT-S246, SCRIPT-S250..S252, SCRIPT-S264, SCRIPT-S265, SCRIPT-306, SCRIPT-307, SCRIPT-321..323, SCRIPT-58: [script-natives-world.md §2026-10-19T10:02:26](script-natives-world.md#ts-20261019-100226), [script-natives-world-death.md §2026-10-19T13:21:05](script-natives-world-death.md#ts-20261019-132105) |
 | SwapAllegiance | 0x1da88c | 1 | 66 / 2 / 0 / 0 | 8 | stand-in | 35 | toggles recorded, lists and grid not ported (SCRIPT-S277, SCRIPT-338): [script-natives-party.md §2026-10-19T15:53:02](script-natives-party.md#ts-20261019-155302) |
 | OverrideMusic | 0x1cdb28 | 1 | 65 / 19 / 0 / 0 | 7 | stand-in | 33 | through the block queue and ramp (AUDIO-S20) [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038) |
 | PanMapToObject | 0x1d9e04 | 4 | 65 / 2 / 0 / 0 | 6 | stand-in | 31 | records its call (SCRIPT-S27): [objective-hud.md §2026-10-14T15:59](objective-hud.md#ts-20261014-155919) |
@@ -98,7 +98,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | enableobjectfade | 0x26fac4 | 2 | 42 / 1 / 0 / 0 | 7 | A | 26 | stand-in: ends like EnableObject unless the kind answers message 24 (SCRIPT-S241, SCRIPT-295) |
 | EnableTrafficAndPedestrians | 0x2c5780 | 1 | 42 / 12 / 0 / 0 | 6 | stand-in | 36 | flag takes effect on the traffic and pedestrian managers (SCRIPT-230) [§2026-10-15T15:10](script-natives-audio.md#ts-20261015-151038), managers corrected [pedestrians.md §2026-10-20T11:17:42](pedestrians.md#ts-20261020-111742) |
 | PositionPlayer | 0x1da0dc | 2 | 42 / 11 / 0 / 0 | 7 | stand-in | 26 | handled like PositionObject for the player (fall reset, message 8 and bits recorded SCRIPT-S274, SCRIPT-S275; a seated player moves the vehicle SCRIPT-S276); ground probe SCRIPT-59: [script-natives-flags.md §2026-10-19T15:12:32](script-natives-flags.md#ts-20261019-151232) |
-| AddToSemiTransNearCameraList | 0x2cb734 | 2 | 41 / 5 / 5 / 0 | 7 | stand-in | 38 | stand-in: entries drawn see-through near the camera (RENDER-S72, SCRIPT-38): [rendering-draw-order.md §2026-10-27T18:49:04](rendering-draw-order.md#ts-20261027-184904); [script-natives-world.md §2026-10-18T11:01:40](script-natives-world.md#ts-20261018-110140) |
+| AddToSemiTransNearCameraList | 0x2cb734 | 2 | 41 / 5 / 5 / 0 | 7 | stand-in | 38 | entries drawn see-through near the camera (RENDER-S72, SCRIPT-38): [rendering-draw-order.md §2026-10-27T18:49:04](rendering-draw-order.md#ts-20261027-184904); [script-natives-world.md §2026-10-18T11:01:40](script-natives-world.md#ts-20261018-110140) |
 | enabletrafficpath | 0x27bc30 | 2 | 40 / 0 / 0 / 0 | 2 | C | 36 | read, ported in `traffic_route.*`, not wired (TRAFFIC-5): [traffic-ai-driver.md §2026-10-25T12:19:38](traffic-ai-driver.md#ts-20261025-121938) |
 | StreamRoomIn | 0x1bfba4 | 1 | 40 / 9 / 0 / 0 | 6 | done | 38 | handled: requests the room, blocks until loaded (SCRIPT-S235, WSTREAM-33, SCRIPT-38): [script-natives-world.md §2026-10-18T11:01:40](script-natives-world.md#ts-20261018-110140) |
 | SnapCamera | 0x1a30fc | 0 | 39 / 15 / 2 / 0 | 7 | stand-in | 28 | follow reset through FollowCamera::reset |
@@ -106,7 +106,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | UnlockCharacter | 0x263918 | 1 | 34 / 1 / 0 / 0 | 8 | A | 27 | handled as stand-in, partial (SCRIPT-S21, SCRIPT-61) |
 | AISuperJump | 0x1b2344 | 3 | 31 / 9 / 0 / 0 | 7 | stand-in | 34 | set-up 0x213300, state 11 and the horizontal step ported; the height of the flight is a stand-in (SCRIPT-103, SCRIPT-S103); returns 1 ([ai-states.md §2026-10-25T16:37:12](ai-states.md#ts-20261025-163712)): [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | KillScript | 0x1c3834 | 1 | 30 / 5 / 1 / 0 | 7 | A | 26 | handled: threads of the script except the caller end |
-| BulletTime | 0x1a2df0 | 3 | 28 / 6 / 0 / 0 | 9 | C | 29 |  |
+| BulletTime | 0x1a2df0 | 3 | 28 / 6 / 0 / 0 | 9 | stand-in | 29 | SCRIPT-S323, SCRIPT-421 |
 | SetPartyCharacter | 0x27beb4 | 3 | 28 / 10 / 3 / 0 | 8 | stand-in | 35 | stand-in: a swap to another character is not ported (SCRIPT-S234, SCRIPT-279): [script-natives-world.md §2026-10-18T11:01:40](script-natives-world.md#ts-20261018-110140) |
 | SetRaceInProgress | 0x27bff4 | 1 | 28 / 4 / 0 / 0 | 6 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | ShowBossHearts | 0x1da788 | 2 | 27 / 0 / 0 / 0 | 7 | stand-in | 30 | call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
@@ -124,11 +124,11 @@ This file has no dated entries: the table is edited in place. When a native is r
 | RideableSetPath | 0x26376c | 2 | 20 / 0 / 0 / 0 | 1 | C | 37 |  |
 | ToggleUpdateFlag | 0x270094 | 2 | 20 / 0 / 0 / 0 | 3 | A | 26 | handled; doors honour the flag (reader: update loop 0x1a4098), other readers open (SCRIPT-56, SCRIPT-S18) |
 | StopPlayerVehicle | 0x27c040 | 1 | 18 / 8 / 0 / 0 | 4 | done | 36 | [vehicles-waypoints.md §2026-10-15T11:35](vehicles-waypoints.md#ts-20261015-113500) |
-| VehicleSetChased | 0x26fe54 | 3 | 18 / 2 / 0 / 0 | 8 | C | 36 |  |
+| VehicleSetChased | 0x26fe54 | 3 | 18 / 2 / 0 / 0 | 8 | stand-in | 36 | SCRIPT-S323, SCRIPT-422 |
 | VehicleSetInvulnerable | 0x2ad904 | 2 | 17 / 2 / 0 / 0 | 6 | C | 36 |  |
 | ?! | 0x18a7e4 | 3 | 16 / 7 / 0 / 0 | 7 | done |  |  |
 | WarningDialogBox | 0x2700d4 | 1 | 16 / 7 / 0 / 0 | 7 | done |  |  |
-| KillObject | 0x1a2fe4 | 1 | 15 / 0 / 0 / 0 | 2 | stand-in | 26 | stand-in: same handler as DestroyProp (SCRIPT-S245, SCRIPT-S246, SCRIPT-S264, SCRIPT-S265, SCRIPT-306, SCRIPT-321..323): [script-natives-world.md §2026-10-19T10:02:26](script-natives-world.md#ts-20261019-100226), [script-natives-world-death.md §2026-10-19T13:21:05](script-natives-world-death.md#ts-20261019-132105) |
+| KillObject | 0x1a2fe4 | 1 | 15 / 0 / 0 / 0 | 2 | stand-in | 26 | same handler as DestroyProp (SCRIPT-S245, SCRIPT-S246, SCRIPT-S264, SCRIPT-S265, SCRIPT-306, SCRIPT-321..323): [script-natives-world.md §2026-10-19T10:02:26](script-natives-world.md#ts-20261019-100226), [script-natives-world-death.md §2026-10-19T13:21:05](script-natives-world-death.md#ts-20261019-132105) |
 | PlayParticlesGO | 0x27e8b4 | 6 | 15 / 2 / 0 / 4 | 2 | stand-in | 38 | handled; node position from the object position source (SCRIPT-S300): [props-rocking.md §2026-10-26T13:39:27](props-rocking.md#ts-20261026-133927) |
 | RideableClearPath | 0x27bdcc | 1 | 14 / 0 / 0 / 0 | 1 | C | 37 |  |
 | VehicleSetTopSpeed | 0x2860d4 | 2 | 14 / 2 / 0 / 0 | 6 | done | 36 | [vehicles-waypoints.md §2026-10-15T11:35](vehicles-waypoints.md#ts-20261015-113500) |
@@ -166,7 +166,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | IsRacingCarAwarded | 0x285f64 | 1 | 7 / 1 / 0 / 0 | 6 | A | 27 | handled, exact (batch 27 entry) |
 | SetPlatformTime | 0x2637a4 | 2 | 7 / 0 / 0 / 0 | 1 | C | 37 |  |
 | SetRaceWon | 0x1a30a8 | 1 | 7 / 1 / 0 / 0 | 6 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
-| SpawnDebris2Colour | 0x2860f0 | 7 | 7 / 4 / 0 / 0 | 3 | C | 38 |  |
+| SpawnDebris2Colour | 0x2860f0 | 7 | 7 / 4 / 0 / 0 | 3 | stand-in | 38 | SCRIPT-S323 |
 | VehicleSetRaceTrim | 0x286080 | 2 | 7 / 1 / 0 / 0 | 6 | C | 36 |  |
 | AICantAttack | 0x1bf528 | 2 | 6 / 0 / 0 / 0 | 1 | stand-in | 34 | flag or requested state recorded; returns 1: [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | OverrideFog | 0x1b24f8 | 2 | 6 / 0 / 0 / 0 | 2 | C | 29 |  |
@@ -179,7 +179,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | SetForcedStopOnMyVehicle | 0x2b9df0 | 2 | 5 / 4 / 2 / 0 | 2 | done | 36 | first argument is a character; no effect while it is on foot (always, until VEH-4): [vehicles-system.md §2026-10-14T23:59:31](vehicles-system.md#ts-20261014-235931) |
 | ShowLevelText | 0x1cdc54 | 0 | 5 / 1 / 1 / 0 | 5 | stand-in | 30 | heading box drawn, start time a stand-in: [script-text.md §2026-10-14T16:51](script-text.md#ts-20261014-165143) |
 | ShowTally | 0x194f78 | 5 | 5 / 0 / 0 / 0 | 1 | stand-in | 30 | call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
-| VehicleSetAI | 0x1bfb50 | 1 | 5 / 1 / 0 / 0 | 5 | C | 36 |  |
+| VehicleSetAI | 0x1bfb50 | 1 | 5 / 1 / 0 / 0 | 5 | stand-in | 36 | SCRIPT-S323, SCRIPT-422 |
 | VehicleSetDCamPathFollow | 0x27be1c | 3 | 5 / 0 / 0 / 0 | 3 | C | 28 | not read |
 | activeduringdcam | 0x26f978 | 2 | 4 / 0 / 0 / 0 | 3 | A | 26 | handled, flag recorded (SCRIPT-S18) |
 | AIStalkPlayer | 0x1cd88c | 2 | 4 / 0 / 0 / 0 | 1 | stand-in | 34 | state 27 recorded; update 0x2c1c90 not ported (SCRIPT-104); returns 1 ([ai-states.md §2026-10-14T21:21](ai-states.md#ts-20261014-212158)): [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |

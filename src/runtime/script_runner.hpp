@@ -6,6 +6,7 @@
 #include "runtime/natives_animation.hpp"
 #include "runtime/natives_cutscene.hpp"
 #include "runtime/screen_fade.hpp"
+#include "runtime/bullet_time.hpp"
 #include "runtime/natives_effects.hpp"
 #include "runtime/natives_world.hpp"
 #include "runtime/natives_objects.hpp"
@@ -17,7 +18,9 @@
 #include "runtime/natives_party.hpp"
 #include "runtime/platform_wait.hpp"
 #include "runtime/prop_rocking.hpp"
+#include "runtime/script_debris.hpp"
 #include "runtime/script_particles.hpp"
+#include "runtime/vehicle_ai_natives.hpp"
 #include "runtime/objectives.hpp"
 #include "runtime/sub_objectives.hpp"
 #include "runtime/vehicle.hpp"
@@ -248,7 +251,14 @@ public:
     void loadObjectKinds(const assets::ClassLookup& classOf) {
         objectNatives_.loadKinds(level_, classOf);
         loadGeneratorNatives(classOf);
+        loadMission14Natives(classOf);
     }
+    // BulletTime, VehicleSetAI, VehicleSetChased and SpawnDebris2Colour (game_mission14_natives_glue.cpp).
+    void loadMission14Natives(const assets::ClassLookup& classOf) { classOf_ = classOf; }
+    const BulletTimeSystem& bulletTime() const { return bulletTime_; }
+    BulletTimeSystem& bulletTime() { return bulletTime_; }
+    const VehicleAiNatives& vehicleAi() const { return vehicleAi_; }
+    std::vector<ScriptDebrisRequest> takeDebrisRequests();
     // The rocking props (SetPropRocking) and the platform records (WaitForPlatform) of the level (game_generator_natives_glue.cpp).
     void loadGeneratorNatives(const assets::ClassLookup& classOf);
     const PropRockingSet& propRocking() const { return propRocking_; }
@@ -309,6 +319,9 @@ private:
     void platformNative(const assets::ScriptCall& call);
     void platformAttachment(AnimationNativeKind kind, const std::vector<std::string>& args);
     void playParticlesGoNative(const assets::ScriptCall& call);
+    void bulletTimeNative(const assets::ScriptCall& call);
+    void spawnDebris2ColourNative(const assets::ScriptCall& call);
+    void vehicleAiNative(const assets::ScriptCall& call, bool chased);
     void awardViewerNative();
     void destroyNative(const std::string& lowerInstance);
     void fireAiMoveEvents();
@@ -351,6 +364,10 @@ private:
     EffectNativeState effectNatives_;
     std::vector<PartyRequest> partyRequests_;
     std::vector<ScriptParticleRequest> particleRequests_;
+    BulletTimeSystem bulletTime_;
+    VehicleAiNatives vehicleAi_;
+    std::vector<ScriptDebrisRequest> debrisRequests_;
+    assets::ClassLookup classOf_;
     bool awardViewerRequested_ = false;
     std::vector<std::string> roomRequests_;
     std::set<std::string> knownRooms_;
