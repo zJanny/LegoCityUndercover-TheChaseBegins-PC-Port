@@ -6,7 +6,7 @@
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-18T09:41:20+02:00. Emitters and particles run with the original's rules and are drawn in `chase-game`; the first quad of a siren-light emitter equals the oracle bit for bit. The game starts two kinds of emitters: the smoke of a vehicle that loses a heart (0x22a124) and the `ExplosionParticleDef` of a destroyed prop (0x2aa5c8); the development option `--particle "DEFINITION X Y Z"` starts any definition.
+IN_PROGRESS, updated 2026-11-02T22:43:51+01:00. Emitters and particles run with the original's rules and are drawn in `chase-game`; the first quad of a siren-light emitter equals the oracle bit for bit. The game starts three kinds of emitters: the smoke of a vehicle that loses a heart (0x22a124), the `ExplosionParticleDef` of a destroyed prop (0x2aa5c8) and the particle objects a script triggers (class `particles`, PART-3); the development option `--particle "DEFINITION X Y Z"` starts any definition.
 
 ## 3. Verified behaviour
 
@@ -25,7 +25,7 @@ IN_PROGRESS, updated 2026-10-18T09:41:20+02:00. Emitters and particles run with 
 ## 5. Open items
 
 - [ ] PART-2 — Most callers do not start emitters: the script natives (`EffectPlayParticles`, `EffectAttachParticles`, `EffectAttachParticlesOffset`, `EffectAttachParticlesToPath`), the vehicle's other emitter slots (+0x2ac, +0x2c4) and the other callers of 0x23de24 (about 68 sites); the vehicle smoke 0x22a124, the prop explosion of 0x2aa5c8 and `PlayParticlesGO` (SCRIPT-S300) are ported. blocks: SCRIPT-38, PART-3. evidence: [particles.md §2026-10-18T09:40](../../re/particles.md#ts-20261018-094004).
-- [ ] PART-3 — The level object class `particles` (constructor 0x1a7f30, handlers 0x1a8394 and 0x1a7d30: `ParticleDef`, `ReTriggerTime`, `TimeRandomiser`, damage, sound, spawn point or path) is read only in outline; port it with its trigger and damage rules. needs: PART-2. evidence: [particles.md §2026-10-18T09:40](../../re/particles.md#ts-20261018-094004).
+- [ ] PART-3 — The rest of the level object class `particles` (kind 1): read in full, ported are only TriggerObject's trigger and untrigger and the one-shot timer; open are the endless self-start, the retrigger times, damage, sound, path, parent node and the objects nested in class files. needs: PART-2. blocks: SCRIPT-S325. evidence: [particles-objects.md §2026-11-02T22:39:38](../../re/particles-objects.md#ts-20261102-223938).
 - [ ] PART-4 — Parent nodes and rooms: spawner modes 1 and 2 with a parent object, the room lookup (`*0x376c78`, 0x239838), the visibility removal and bounds of 0x20db0c, E+0x148 / +0x160 / +0x164 and the callback owner. blocks: PART-S2. evidence: [particles.md §2026-10-18T09:40](../../re/particles.md#ts-20261018-094004).
 - [ ] PART-5 — The update and step have no recorded trace: only the init is compared with the oracle. Record a young emitter (a driving car's smoke, a siren light being created) for many updates with `memtrace` and replay it with the recorded frame times. evidence: [particles.md §2026-10-18T09:40](../../re/particles.md#ts-20261018-094004).
 - [ ] PART-6 — The ground height of bouncing particles needs the world ray cast 0x22f978 (3 casts, collision world `*0x376b9c`) from the level collision. blocks: PART-S3. evidence: [particles.md §2026-10-18T09:40](../../re/particles.md#ts-20261018-094004).
@@ -35,7 +35,8 @@ IN_PROGRESS, updated 2026-10-18T09:41:20+02:00. Emitters and particles run with 
 
 - Container: [particles.md §2026-10-13T09:00](../../re/particles.md#ts-20261013-0900); spawner, init, emitter update, step, texture index: [particles.md §2026-10-13T09:01](../../re/particles.md#ts-20261013-0901), [particles.md §2026-10-13T09:03](../../re/particles.md#ts-20261013-0903), [particles.md §2026-10-13T09:08](../../re/particles.md#ts-20261013-0908).
 - Runtime, draw, callers and the oracle check: [particles.md §2026-10-18T09:40](../../re/particles.md#ts-20261018-094004).
+- The level object class `particles`: [particles-objects.md §2026-11-02T22:39:38](../../re/particles-objects.md#ts-20261102-223938).
 
 ## 7. Code and tests
 
-- `src/assets/particles.cpp` (definitions), `src/runtime/particles.*` (system), `src/render/particles.*` with `src/render/shaders/particle.{vert,frag}.glsl` (drawing), `src/game_particles.*` and the option `--particle` (chase-game glue, see docs/commands.md); CTest `particles-core`, `particles-real-data`, `game-options-core`, `assets-core`, `assets-real-data`.
+- `src/assets/particles.cpp` (definitions), `src/runtime/particles.*` (system), `src/runtime/particle_object.*` (class `particles`, CTests `particle-object`, `particle-object-real-data`), `src/render/particles.*` with `src/render/shaders/particle.{vert,frag}.glsl` (drawing), `src/game_particles.*` and the option `--particle` (chase-game glue, see docs/commands.md); CTest `particles-core`, `particles-real-data`, `game-options-core`, `assets-core`, `assets-real-data`.

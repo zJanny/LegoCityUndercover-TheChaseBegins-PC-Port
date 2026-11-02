@@ -5,41 +5,46 @@ namespace chase::runtime {
 bool BulletTimeSystem::set(float scale, float duration) {
     if (active_ ? (scale_ == 1.0f && scale == 1.0f) : scale == 1.0f) return false;
     const bool slowing = scale < 1.0f;
-    base_ = worldScale_;
+    base_ = timeScale_;
     scale_ = scale;
     duration_ = duration;
     start_ = clock_;
     active_ = true;
+    reached_ = false;
     if (slowing) {
         mode_ = kBulletTimeSlowMode;
-        messages_.push_back({kBulletTimeMessageStart, std::nullopt});
+        sounds_.push_back({false, kBulletTimeSoundStart, 0.0f});
         return true;
     }
-    messages_.push_back({kBulletTimeMessageStart, duration});
-    messages_.push_back({kBulletTimeMessageRestoring, duration});
-    messages_.push_back({kBulletTimeMessageEnd, std::nullopt});
+    sounds_.push_back({true, kBulletTimeSoundStart, duration});
+    sounds_.push_back({true, kBulletTimeSoundLoop, duration});
+    sounds_.push_back({false, kBulletTimeSoundEnd, 0.0f});
     return true;
 }
 
-void BulletTimeSystem::update(float dt) {
-    clock_ += dt;
-    if (!active_) return;
+bool BulletTimeSystem::update(float realDt, bool loopSoundIdle) {
+    clock_ += realDt;
+    if (!active_) return false;
+    if (loopSoundIdle && scale_ != 1.0f) sounds_.push_back({false, kBulletTimeSoundLoop, 0.0f});
     float progress = (clock_ - start_) / duration_;
     if (progress > 1.0f) {
         progress = 1.0f;
         if (scale_ == 1.0f) active_ = false;
     }
-    worldScale_ = base_ + progress * (scale_ - base_);
+    timeScale_ = base_ + progress * (scale_ - base_);
+    const bool reachedNow = progress == 1.0f && !reached_;
+    if (reachedNow) reached_ = true;
+    return reachedNow;
 }
 
 void BulletTimeSystem::stop() {
-    worldScale_ = 1.0f;
+    timeScale_ = 1.0f;
     active_ = false;
 }
 
-std::vector<BulletTimeMessage> BulletTimeSystem::takeMessages() {
-    std::vector<BulletTimeMessage> taken;
-    taken.swap(messages_);
+std::vector<BulletTimeSound> BulletTimeSystem::takeSounds() {
+    std::vector<BulletTimeSound> taken;
+    taken.swap(sounds_);
     return taken;
 }
 

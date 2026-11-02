@@ -1,24 +1,25 @@
 #pragma once
 // BulletTime (docs/re/scripts-missions-1-4.md): the native 0x1a2df0 passes (scale, duration, flag) with the player object 0x3772b8 to the BulletTimeSystem
-// 0x239330, whose update 0x2ec070 blends the scale of the current scene (scene +0x1c, also the global 0x376d08 through 0x2a0744) from the value it had
-// when the call came to the new scale. The readers of the scene scale and the receivers of the messages 97, 98 and 99 are not read: the blend is
-// kept here and nothing applies it (STAND-IN SCRIPT-S323). No SDL dependency.
+// 0x239330, whose update 0x2ec070 blends the time scale of the running process (C+0x1c of the scheduler client [P + 0xc], which 0x23878c returns)
+// from the value it had when the call came to the new scale, on its own real-time clock. The scheduler 0x100f44 multiplies the tick count of every
+// step by that scale, so the whole game update slows down (Scheduler::setScale). The system plays the sounds 97, 98 and 99 at the owner (0x23ae84)
+// and stops 97 and 98 (0x23ae50). No SDL dependency.
 #include <cstdint>
-#include <optional>
 #include <vector>
 
 namespace chase::runtime {
 
-constexpr std::uint16_t kBulletTimeMessageStart = 97;
-constexpr std::uint16_t kBulletTimeMessageRestoring = 98;
-constexpr std::uint16_t kBulletTimeMessageEnd = 99;
+constexpr std::uint16_t kBulletTimeSoundStart = 97;
+constexpr std::uint16_t kBulletTimeSoundLoop = 98;
+constexpr std::uint16_t kBulletTimeSoundEnd = 99;
 constexpr std::uint8_t kBulletTimeSlowMode = 255;
 
-// What 0x239330 sends to the player object with the message ids 0x61 (0x23ae84 without a value, 0x23ae50 with the duration) and 0x62, 0x63.
-struct BulletTimeMessage {
+// A sound call of the system for its owner: a play through 0x23ae84, or a stop through 0x23ae50 -> 0x23f75c with the duration as the fade.
+struct BulletTimeSound {
+    bool stop = false;
     std::uint16_t id = 0;
-    std::optional<float> value;
-    bool operator==(const BulletTimeMessage& other) const { return id == other.id && value == other.value; }
+    float fadeSeconds = 0;
+    bool operator==(const BulletTimeSound& other) const { return stop == other.stop && id == other.id && fadeSeconds == other.fadeSeconds; }
 };
 
 class BulletTimeSystem {
@@ -27,9 +28,11 @@ public:
     // 0x2a36b4, not read). Returns false when it did nothing: no blend is running and the scale is 1.0, or the blend already holds 1.0 and the
     // scale is 1.0.
     bool set(float scale, float duration);
-    // 0x2ec070 once per update; `dt` stands in for the clock 0x2528b4 that the original reads (STAND-IN SCRIPT-S323).
-    void update(float dt);
-    // 0x2ec044: the scene scale back to 1.0 and the system off.
+    // 0x2ec070 once per update. `realDt` is the real time since the last update: the clock +0x28 is a 3000 Hz tick timer (0x25a1a0) that the time
+    // scale does not slow. `loopSoundIdle` is the test of 0x237acc: no voice of 97 runs for the owner and 98 is not playing; then, while the target
+    // scale is not 1.0, the system plays 98. Returns true in the update in which a blend reaches its target (progress clamped to 1.0).
+    bool update(float realDt, bool loopSoundIdle);
+    // 0x2ec044: the scale back to 1.0 and the system off.
     void stop();
 
     bool active() const { return active_; }
@@ -37,20 +40,22 @@ public:
     float baseScale() const { return base_; }
     float duration() const { return duration_; }
     std::uint8_t mode() const { return mode_; }
-    float worldScale() const { return worldScale_; }
-    const std::vector<BulletTimeMessage>& messages() const { return messages_; }
-    std::vector<BulletTimeMessage> takeMessages();
+    // The scheduler's C+0x1c (1.0 at level load).
+    float timeScale() const { return timeScale_; }
+    const std::vector<BulletTimeSound>& sounds() const { return sounds_; }
+    std::vector<BulletTimeSound> takeSounds();
 
 private:
     bool active_ = false;       // +0x69
     float scale_ = 1.0f;        // +0x5c
-    float base_ = 1.0f;         // +0x58: the scene scale when the call came
+    float base_ = 1.0f;         // +0x58: the time scale when the call came
     float start_ = 0.0f;        // +0x60: the clock when the call came
     float duration_ = 0.0f;     // +0x64
     std::uint8_t mode_ = 0;     // +0x68
+    bool reached_ = false;
     float clock_ = 0.0f;
-    float worldScale_ = 1.0f;   // scene +0x1c, 1.0 at level load
-    std::vector<BulletTimeMessage> messages_;
+    float timeScale_ = 1.0f;
+    std::vector<BulletTimeSound> sounds_;
 };
 
 }

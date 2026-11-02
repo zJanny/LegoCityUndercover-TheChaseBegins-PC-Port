@@ -54,6 +54,7 @@ Read this index, then open only the file you need.
 | [fmv.md](fmv.md) | Mobiclip `.moflex` video and subtitles |
 | [debris.md](debris.md) | Brick debris of vehicle contacts, destroyed props and the car break (dropped pickup records, Debris01..20), the hit flash of a vehicle, its smoke emitter, oracle traces |
 | [particles.md](particles.md) | `particledefs.bprt` definitions and the particle runtime: start entry, emitter update, particle init and step, quad draw state, callers, oracle check |
+| [particles-objects.md](particles-objects.md) | The level object class `particles` (kind 1): create, trigger messages, one-shot timer and self-start, the particle objects of lvl_01 |
 | [scripts.md](scripts.md) | Level scripts (section +0x18), the script executor 0x234204 and its words, the per-update runner, EnableObject / EnableCollision, the `startup` script, the revealer links, the start state of placed objects; runtime entries: [scripts-runtime.md](scripts-runtime.md) |
 | [scripts-runtime.md](scripts-runtime.md) | Trigger records and bound switches, the police entrance, WarningDialogBox / PositionObject / FadeScreen, a live script thread of the original |
 | [script-text.md](script-text.md) | Tip text, dialogue lines, dialogue background, mission title: handlers of batch 30, the timed objects 0x517ef8 / 0x5189cc, measured timing and layout |

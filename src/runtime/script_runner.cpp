@@ -241,7 +241,6 @@ void ScriptRunner::update(float dt) {
     dt_ = dt;
     text_.update(dt, objectives_.mapBlackout());
     effectNatives_.update(dt);
-    bulletTime_.update(dt);
     ai_.update(dt);
     screenFade_.update(dt);
     cutscenes_.update(dt, screenFade_.running());

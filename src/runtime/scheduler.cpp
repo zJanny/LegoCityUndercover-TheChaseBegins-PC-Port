@@ -7,6 +7,12 @@ std::uint32_t toTicks(std::uint32_t frequency, float seconds) {
 }
 }
 
+float scaledStepDt(float realDt, float scale) {
+    const std::uint32_t scaled = toTicks(stepTicks(realDt), scale);
+    const std::uint32_t ticks = scaled <= 1 ? 1 : scaled;
+    return static_cast<float>(ticks) / static_cast<float>(kClockFrequency);
+}
+
 Scheduler::Scheduler(StepConfig config, std::uint32_t start, std::uint32_t frequency)
     : config_(config), frequency_(frequency), last_(start) {}
 
@@ -29,7 +35,10 @@ std::uint32_t Scheduler::advance(std::uint32_t now, const std::function<void(flo
     const std::uint32_t scaled = toTicks(period, config_.scale);
     const std::uint32_t ticks = scaled <= 1 ? 1 : scaled;
     const float dt = static_cast<float>(ticks) / static_cast<float>(frequency_);
-    if (steps) lastDt_ = dt;
+    if (steps) {
+        lastDt_ = dt;
+        lastRealDt_ = static_cast<float>(period) / static_cast<float>(frequency_);
+    }
     for (std::uint32_t i = 0; i < steps; ++i) {
         update(dt);
         timerTicks_ += ticks;

@@ -32,13 +32,35 @@ void LevelSession::applyScriptNatives() {
         if (effects.debris()) effects.debris()->burst(request.burst, debrisLineStandIn(), debrisLineStandIn());
         std::cout << "debris burst at " << request.object << ": " << request.burst.count << " bricks at update " << updatesForLog << '\n';
     }
-    for (const runtime::BulletTimeMessage& message : levelScripts.bulletTime().takeMessages())
-        std::cout << "bullet time message " << message.id << " at update " << updatesForLog << " (stand-in SCRIPT-S323: not delivered)\n";
+    const std::uint16_t bulletTimeOwner = levelScripts.soundNatives().ownerOf("player1");
+    for (const runtime::BulletTimeSound& sound : levelScripts.bulletTime().takeSounds()) {
+        if (sound.stop) {
+            std::cout << "bullet time sound " << sound.id << " stopped over " << sound.fadeSeconds << " s at update " << updatesForLog << '\n';
+            if (shared.audio) shared.audio->applySound({runtime::SoundRequest::Kind::Stop, sound.id, bulletTimeOwner, false, {}, sound.fadeSeconds});
+            continue;
+        }
+        if (shared.audio && player) shared.audio->play({sound.id, player->position(), bulletTimeOwner});
+        if (sound.id == runtime::kBulletTimeSoundLoop && !(shared.audio && shared.audio->playing(sound.id, bulletTimeOwner))) continue;
+        std::cout << "bullet time sound " << sound.id << " at update " << updatesForLog << '\n';
+        soundLog.emplace_back(updates, sound.id);
+    }
     scriptedRooms.clear();
     for (const std::string& room : levelScripts.takeRoomRequests()) scriptedRooms.insert(runtime::roomNumber(room));
     for (const std::size_t vehicle : pendingVehicleBreaks)
         if (!vehicleDrives[vehicle].wreck.active) breakVehicleNode(vehicle);
     pendingVehicleBreaks.clear();
+}
+
+// 0x2ec070 on the real clock, then the scale it blends becomes the scheduler's C+0x1c for the next step. STAND-IN SCRIPT-S323: the system steps at
+// the start of the level update (the original's order of the system updates is not read), and the stream pause 0x1cef9c is not applied.
+void LevelSession::updateBulletTime(float realDt) {
+    runtime::BulletTimeSystem& bulletTime = levelScripts.bulletTime();
+    const std::uint16_t owner = levelScripts.soundNatives().ownerOf("player1");
+    const bool loopIdle = shared.audio && shared.audio->open() && !shared.audio->playing(runtime::kBulletTimeSoundStart, owner) &&
+                          !shared.audio->playing(runtime::kBulletTimeSoundLoop, owner);
+    const bool reached = bulletTime.update(realDt, loopIdle);
+    if (scheduler) scheduler->setScale(bulletTime.timeScale());
+    if (reached) std::cout << "time scale " << bulletTime.timeScale() << " at update " << updatesForLog << '\n';
 }
 
 void LevelSession::applyObjectFades(std::vector<bool>& drawn) {

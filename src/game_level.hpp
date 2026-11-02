@@ -56,6 +56,8 @@
 #include "runtime/scanner.hpp"
 #include "runtime/switch_set.hpp"
 #include "runtime/ai_spawner.hpp"
+#include "runtime/fall_arrest_bounds.hpp"
+#include "runtime/particle_object.hpp"
 #include "runtime/scanner_info.hpp"
 #include "runtime/scanner_bottom.hpp"
 #include "runtime/scanner_markers.hpp"
@@ -347,6 +349,15 @@ private:
     void loadAiSpawners();
     void deliverAiSpawnerMessage(const chase::runtime::ScriptObjectMessage& sent);
     void updateAiSpawners();
+    // The particle objects, kind 1, and the FallArrest bounds (runtime/particle_object.hpp, runtime/fall_arrest_bounds.hpp; glue
+    // src/runtime/game_particle_objects.cpp), and the BulletTime system's step on the real clock (src/game_level_natives.cpp).
+    chase::runtime::ParticleObjects particleObjects;
+    std::set<std::string> particleObjectsStarted;
+    std::vector<std::size_t> fallArrestBoundList;
+    void loadParticleObjects();
+    void deliverParticleObjectMessage(const chase::runtime::ScriptObjectMessage& sent);
+    void updateParticleObjects(float dt);
+    void updateBulletTime(float realDt);
     void loadScriptDestroyProps(chase::assets::FuseArchive& archive);
     // STAND-IN VEH-S104: the line tests 0x21ab20 / 0x22b108 of a brick burst are the wheel ray of the collision world, vehicles skipped.
     chase::runtime::DebrisLineTest debrisLineStandIn() const;

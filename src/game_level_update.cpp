@@ -20,10 +20,15 @@ constexpr float kScriptDt = 0.033f;
 }
 
 void LevelSession::advance(const runtime::PadState& liveInput) {
-    if (script.empty()) scheduler->advance(pacer.present(now()), [&](float dt) { simulate(dt, liveInput); });
+    if (script.empty()) scheduler->advance(pacer.present(now()), [&](float dt) {
+        updateBulletTime(scheduler->lastRealDt());
+        simulate(dt, liveInput);
+    });
     else if (updates + shared.scriptOffset < scriptLength) {
         applyScriptTeleports(updates + shared.scriptOffset);
-        simulate(kScriptDt, scriptedPad(updates + shared.scriptOffset));
+        const float dt = runtime::scaledStepDt(kScriptDt, levelScripts.bulletTime().timeScale());
+        updateBulletTime(kScriptDt);
+        simulate(dt, scriptedPad(updates + shared.scriptOffset));
     }
 }
 
@@ -469,11 +474,13 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         if (sent.message == runtime::kMessageTrigger) detective.triggerMessage(sent.instance);
         deliverSwitchMessage(sent);
         deliverAiSpawnerMessage(sent);
+        deliverParticleObjectMessage(sent);
         deliverSuperBuilditMessage(sent.instance, sent.message);
         if (const std::optional<runtime::DoorMessage> doorMessage = runtime::doorMessageFor(sent.message))
             for (DoorObject& door : doors)
                 if (game_doors::lowerCase(door.instance) == sent.instance) runtime::doorMessage(door.state, door.params, *doorMessage);
     }
+    updateParticleObjects(dt);
     provisionalStudClockSeconds += double(dt);
     updateLevelCharacters(dt);
     followPlacedChildren();

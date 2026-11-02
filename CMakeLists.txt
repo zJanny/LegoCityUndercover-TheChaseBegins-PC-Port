@@ -1959,17 +1959,18 @@ if(BUILD_TESTING)
       --script "0 0 40;0 120 90;0 0 800")
     set_tests_properties(game-showroom-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "script 1-4_MissionStart ended at update [0-9]+\n.*waypoint started script 1-4_ShowroomArrival at update [0-9]+\n.*script 1-4_ShowroomArrival started at update [0-9]+\n.*cutscene 1_4_a started at update [0-9]+\n.*cutscene 1_4_a ended at update [0-9]+\n.*PositionObject: 1-4_booster_strange to 1-4_showroof_06 at update [0-9]+\n.*script 1-4_ShowroomArrival ended at update [0-9]+\n.*player ended at 577.484 27.5656 967.533")
-    # Mission 1-4 roof scene and skylight (SCRIPT-413, 20261102-mission14-C): 1-4_SO_Phase2 calls BulletTime 0.01 0.1 0 and 0.105 s later BulletTime 1 0.01 0, which
-    # sends the start message 97 and then 97, 98 and 99 (docs/re/scripts-missions-1-4.md); 1-4_Hatch_Open breaks the skylights and bursts bricks at
-    # BoosterSkylightDebris with SpawnDebris2Colour. Update numbers are the port's.
+    # Mission 1-4 roof scene and skylight (SCRIPT-413, 20261102-mission14-C; SCRIPT-421, 20261102-mission14b-C): 1-4_SO_Phase2 calls BulletTime 0.01 0.1 0,
+    # which plays sound 97 and blends the scheduler's time scale to 0.01, and 0.105 game seconds later (about 120 updates: three of the real blend, then one clock tick each)
+    # BulletTime 1 0.01 0, which stops 97 and 98 over 0.01 s, plays 99 and blends the scale back to 1 (docs/re/scripts-missions-1-4.md); 1-4_Hatch_Open
+    # breaks the skylights and bursts bricks at BoosterSkylightDebris with SpawnDebris2Colour. Update numbers are the port's.
     add_test(NAME game-bullet-time-1-4 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --save-out "${CMAKE_BINARY_DIR}/game-bullet-time-1-4.dat"
       --start "602.9 23.8 975" --facing 180 --call-script 1-4_SO_Phase2
-      --script "0 0 100")
+      --script "0 0 250")
     set_tests_properties(game-bullet-time-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
-      PASS_REGULAR_EXPRESSION "bullet time message 97 at update [0-9]+ [^\n]*\n.*bullet time message 97 at update [0-9]+ [^\n]*\n.*bullet time message 98 at update [0-9]+ [^\n]*\n.*bullet time message 99 at update [0-9]+")
+      PASS_REGULAR_EXPRESSION "bullet time sound 97 at update [0-9]+\n.*time scale 0.0099[0-9]* at update [0-9]+\n.*bullet time sound 97 stopped over 0.01 s at update [0-9]+\nbullet time sound 98 stopped over 0.01 s at update [0-9]+\nbullet time sound 99 at update [0-9]+\n.*time scale 1 at update [0-9]+")
     add_test(NAME game-skylight-debris-1-4 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -2596,6 +2597,34 @@ if(TARGET chase-game)
   set_property(TEST game-ai-start-state-1-4 APPEND PROPERTY LABELS needs-game-data)
 endif()
 
+target_sources(chase_runtime PRIVATE src/runtime/particle_object.cpp src/runtime/fall_arrest_bounds.cpp)
+add_executable(particle-object-test tests/particle_object_test.cpp)
+target_link_libraries(particle-object-test PRIVATE chase_runtime chase_assets)
+target_compile_options(particle-object-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME particle-object COMMAND particle-object-test)
+add_executable(particle-object-real-test tests/particle_object_real_test.cpp)
+target_link_libraries(particle-object-real-test PRIVATE chase_runtime chase_assets)
+target_compile_options(particle-object-real-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME particle-object-real-data COMMAND particle-object-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+set_tests_properties(particle-object-real-data PROPERTIES SKIP_RETURN_CODE 77)
+set_property(TEST particle-object-real-data APPEND PROPERTY LABELS needs-game-data)
+if(TARGET chase-game)
+  target_sources(chase-game PRIVATE src/runtime/game_particle_objects.cpp)
+  # SCRIPT-414, SCRIPT-421: the roof scene 1-4_SO_Phase2 slows the game to the time scale 0.01 (BulletTime, the scheduler's C+0x1c) and back, the
+  # goon's ladder kick fires the particle object LadderKick (effect 148) and 1-4_AI_Goon_10_Run_Off_Script fires LadderLand (effect 11), each
+  # disabled again after its effect's duration. Class code read by 20261102-mission14b-C (2026-11-02, REA Ghidra and llvm-objdump of
+  # game.arm.elf; docs/re/particles-objects.md, docs/re/scripts-missions-1-4.md). The update numbers are the port's, not measured in the original.
+  add_test(NAME game-ladder-kick-1-4 COMMAND chase-game
+    --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+    --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+    --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --save-out "${CMAKE_BINARY_DIR}/game-ladder-kick-1-4.dat"
+    --start "602.9 23.8 975" --facing 180 --call-script 1-4_SO_Phase2
+    --script "0 0 600")
+  set_tests_properties(game-ladder-kick-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
+    PASS_REGULAR_EXPRESSION "particle objects: [0-9]+, fall arrest bounds: 6\n.*time scale 0.0099[0-9]* at update [0-9]+\n.*time scale 1 at update [0-9]+\n.*particle object ladderkick: effect 148 started at update [0-9]+\n.*particle object ladderkick: disabled at update [0-9]+\n.*platform 1-4_showroom_ladder_platform: travel ended[^\n]*\n.*particle object ladderland: effect 11 started at update [0-9]+")
+  set_property(TEST game-ladder-kick-1-4 APPEND PROPERTY LABELS needs-game-data)
+endif()
+
 if(BUILD_TESTING)
   add_test(NAME test-labels COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/check_test_labels.py" "${CMAKE_BINARY_DIR}")
 endif()
@@ -2605,7 +2634,7 @@ foreach(test_name ${chase_all_tests})
   set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${CMAKE_BINARY_DIR}/test-xdg/${test_name}")
 endforeach()
 
-foreach(slow_test game-script-takedown-goon game-script-takedown-arrestable game-script-arrest-goon game-arrest-showroom-1-4 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-girder-guy-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-bullet-time-1-4 game-skylight-debris-1-4 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-helipad-collision game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data reflection-real-data)
+foreach(slow_test game-script-takedown-goon game-script-takedown-arrestable game-script-arrest-goon game-arrest-showroom-1-4 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-girder-guy-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-bullet-time-1-4 game-ladder-kick-1-4 game-skylight-debris-1-4 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-helipad-collision game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data reflection-real-data)
   if(TEST ${slow_test})
     set_property(TEST ${slow_test} APPEND PROPERTY LABELS slow)
   endif()

@@ -23,6 +23,10 @@ constexpr std::uint32_t kClockFrequency = 3000;
 // The step the scheduler passes to an update is a whole number of clock ticks divided by the frequency.
 inline std::uint32_t stepTicks(float dt) { return static_cast<std::uint32_t>(std::lround(dt * static_cast<float>(kClockFrequency))); }
 
+// The scaled step of a period of `realDt` (whole ticks): ticks = (int)(C+0x1c x period), at least 1 (0x100f44). With scale 1.0 it is `realDt`
+// whenever that is a whole number of ticks.
+float scaledStepDt(float realDt, float scale);
+
 class Scheduler {
 public:
     explicit Scheduler(StepConfig config = {}, std::uint32_t start = 0, std::uint32_t frequency = kClockFrequency);
@@ -30,9 +34,15 @@ public:
     // One call of 0x100f44 at clock value `now`; runs update(dt) zero or more times and returns the count.
     std::uint32_t advance(std::uint32_t now, const std::function<void(float)>& update);
 
+    // C+0x1c, written by the BulletTime system (0x2ec070 through 0x23878c).
+    void setScale(float scale) { config_.scale = scale; }
+    float scale() const { return config_.scale; }
+
     std::uint32_t last() const { return last_; }
     std::uint32_t timerTicks() const { return timerTicks_; }
     float lastDt() const { return lastDt_; }
+    // The unscaled period of the last step in seconds (per / frequency).
+    float lastRealDt() const { return lastRealDt_; }
 
 private:
     StepConfig config_;
@@ -40,6 +50,7 @@ private:
     std::uint32_t last_;
     std::uint32_t timerTicks_ = 0;
     float lastDt_ = 0.0f;
+    float lastRealDt_ = 0.0f;
 };
 
 }

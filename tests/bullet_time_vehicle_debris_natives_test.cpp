@@ -2,7 +2,10 @@
 // 0x1796e8, VehicleSetChased 0x26fe54 -> 0x1afd38, SpawnDebris2Colour 0x2860f0 -> 0x23aebc / 0x20c938. The rules were read from the disassembly of
 // artifacts/game/game.arm.elf by 20261102-mission14-C (2026-11-02, llvm-objdump); the scripts and numbers are made up except the argument lists,
 // which are those of the shipped scripts 1-4_SO_Phase2, 1-4_Car_Chase and 1-4_Hatch_Open (dumped from lvl_01 with the C++ level loader).
+// 20261102-mission14b-C (2026-11-02, REA Ghidra decompile of 0x239330, 0x2ec070, 0x23ae84, 0x23ae50, 0x23878c): 97, 98 and 99 are sounds of the
+// owner, not messages, and the blended value is the scheduler's tick scale C+0x1c; the step values are hand-computed from the rule of 0x100f44.
 #include "runtime/bullet_time.hpp"
+#include "runtime/scheduler.hpp"
 #include "runtime/script_runner.hpp"
 
 #include <iostream>
@@ -28,35 +31,40 @@ void add(Level& level, const std::string& name, std::vector<ScriptCall> calls) {
     level.scripts.push_back(std::move(script));
 }
 
-void bulletTimeBlendsTheSceneScale() {
+void bulletTimeBlendsTheTimeScale() {
     runtime::BulletTimeSystem system;
     require(!system.set(1.0f, 0.1f), "0x239330 does nothing for scale 1.0 while no blend runs (0x239380..0x239388)");
-    require(!system.active() && system.messages().empty(), "nothing was stored or sent");
+    require(!system.active() && system.sounds().empty(), "nothing was stored or played");
     require(system.set(0.25f, 0.125f), "a scale below 1.0 starts a blend");
     require(system.active() && system.baseScale() == 1.0f && system.targetScale() == 0.25f && system.duration() == 0.125f, "+0x58 base, +0x5c scale, +0x64 duration");
     require(system.mode() == runtime::kBulletTimeSlowMode, "+0x68 is 255 for a scale below 1.0 with the flag clear (0x2393c8)");
-    require(system.messages() == std::vector<runtime::BulletTimeMessage>({{runtime::kBulletTimeMessageStart, std::nullopt}}), "message 97 without a value (0x23ae84)");
-    system.update(0.0625f);
-    require(system.worldScale() == 0.625f, "halfway: 1.0 + 0.5 x (0.25 - 1.0) (0x2ec100..0x2ec114)");
-    system.update(0.0625f);
-    require(system.worldScale() == 0.25f && system.active(), "at the end the scale holds the target, the system stays on");
-    system.update(1.0f);
-    require(system.worldScale() == 0.25f && system.active(), "progress above 1.0 is clamped to 1.0");
-    system.takeMessages();
+    require(system.sounds() == std::vector<runtime::BulletTimeSound>({{false, runtime::kBulletTimeSoundStart, 0.0f}}), "sound 97 at the owner (0x23ae84(0x61, owner))");
+    system.takeSounds();
+    system.update(0.0625f, false);
+    require(system.timeScale() == 0.625f, "halfway: 1.0 + 0.5 x (0.25 - 1.0) (0x2ec100..0x2ec114)");
+    require(system.sounds().empty(), "no loop sound while 97 still runs (0x237acc(0x61, owner) not 0)");
+    system.update(0.0625f, true);
+    require(system.timeScale() == 0.25f && system.active(), "at the end the scale holds the target, the system stays on");
+    require(system.sounds() == std::vector<runtime::BulletTimeSound>({{false, runtime::kBulletTimeSoundLoop, 0.0f}}), "98 once 97 has ended (0x2ec09c)");
+    system.update(1.0f, false);
+    require(system.timeScale() == 0.25f && system.active(), "progress above 1.0 is clamped to 1.0");
+    system.takeSounds();
     require(system.set(1.0f, 0.0625f), "scale 1.0 while a blend holds 0.25 restarts the blend");
-    require(system.baseScale() == 0.25f && system.targetScale() == 1.0f, "the base is the scene scale at the call");
-    const auto expected = std::vector<runtime::BulletTimeMessage>(
-        {{runtime::kBulletTimeMessageStart, 0.0625f}, {runtime::kBulletTimeMessageRestoring, 0.0625f}, {runtime::kBulletTimeMessageEnd, std::nullopt}});
-    require(system.messages() == expected, "restoring sends 97 and 98 with the duration and then 99 (0x239454..0x239488)");
-    system.update(0.03125f);
-    require(system.worldScale() == 0.625f, "0.25 + 0.5 x 0.75");
-    system.update(0.0625f);
-    require(system.worldScale() == 1.0f && !system.active(), "a blend that ends at scale 1.0 switches the system off (0x2ec0f8)");
+    require(system.baseScale() == 0.25f && system.targetScale() == 1.0f, "the base is the time scale at the call");
+    const auto expected = std::vector<runtime::BulletTimeSound>(
+        {{true, runtime::kBulletTimeSoundStart, 0.0625f}, {true, runtime::kBulletTimeSoundLoop, 0.0625f}, {false, runtime::kBulletTimeSoundEnd, 0.0f}});
+    require(system.sounds() == expected, "restoring stops 97 and 98 with the duration as the fade, then plays 99 (0x239454..0x239488)");
+    system.takeSounds();
+    system.update(0.03125f, true);
+    require(system.timeScale() == 0.625f, "0.25 + 0.5 x 0.75");
+    require(system.sounds().empty(), "no loop sound while the target is 1.0");
+    system.update(0.0625f, true);
+    require(system.timeScale() == 1.0f && !system.active(), "a blend that ends at scale 1.0 switches the system off (0x2ec0f8)");
     require(!system.set(1.0f, 0.1f), "scale 1.0 again does nothing");
     system.set(0.5f, 1.0f);
-    system.update(0.25f);
+    system.update(0.25f, false);
     system.stop();
-    require(system.worldScale() == 1.0f && !system.active(), "0x2ec044: scale 1.0 and off");
+    require(system.timeScale() == 1.0f && !system.active(), "0x2ec044: scale 1.0 and off");
 }
 
 void bulletTimeScriptCalls() {
@@ -70,12 +78,29 @@ void bulletTimeScriptCalls() {
     require(runner.start("s") && runner.bulletTime().active(), "BulletTime 0.01 0.1 0 of 1-4_SO_Phase2");
     require(runner.bulletTime().targetScale() == 0.01f && runner.bulletTime().duration() == 0.1f, "arguments 0 and 1");
     runner.update(0.1f);
-    require(runner.bulletTime().worldScale() < 0.0101f && runner.bulletTime().worldScale() > 0.0099f, "the scale reaches 0.01 after the duration");
+    require(runner.bulletTime().timeScale() == 1.0f, "the runner's update does not step the system: its clock is real time, stepped by the level");
+    runner.bulletTime().update(0.1f, false);
+    require(runner.bulletTime().timeScale() < 0.0101f && runner.bulletTime().timeScale() > 0.0099f, "the scale reaches 0.01 after the duration");
     require(runner.start("t") && runner.bulletTime().targetScale() == 1.0f, "BulletTime 1 0.01 0 of 1-4_SO_Phase2 restores");
-    runner.update(0.02f);
-    require(runner.bulletTime().worldScale() > 0.99999f && runner.bulletTime().worldScale() < 1.00001f && !runner.bulletTime().active(), "back at 1.0 after 0.01 s");
+    runner.bulletTime().update(0.02f, false);
+    require(runner.bulletTime().timeScale() > 0.99999f && runner.bulletTime().timeScale() < 1.00001f && !runner.bulletTime().active(), "back at 1.0 after 0.01 s");
     require(runner.unhandledFunctions().empty(), "BulletTime has a handler");
     require(runtime::scriptFunctionSupport("BulletTime") == runtime::ScriptFunctionSupport::StandIn, "BulletTime is a stand-in (SCRIPT-S323)");
+}
+
+void bulletTimeScalesTheSchedulerStep() {
+    require(runtime::scaledStepDt(0.033f, 1.0f) == 0.033f, "scale 1.0: 99 ticks of 3000, the step unchanged");
+    require(runtime::scaledStepDt(0.033f, 0.5f) == 49.0f / 3000.0f, "ticks = (int)(scale x 99) (0x100f44, arm-executable.md)");
+    require(runtime::scaledStepDt(0.033f, 0.01f) == 1.0f / 3000.0f, "at least one tick");
+    runtime::StepConfig config;
+    runtime::Scheduler scheduler(config, 0);
+    float seen = 0;
+    scheduler.advance(99, [&](float dt) { seen = dt; });
+    require(seen == 99.0f / 3000.0f, "an unscaled step of 99 ticks");
+    require(scheduler.lastRealDt() == 99.0f / 3000.0f, "the real step is the period");
+    scheduler.setScale(0.01f);
+    scheduler.advance(198, [&](float dt) { seen = dt; });
+    require(seen == 1.0f / 3000.0f && scheduler.lastRealDt() == 99.0f / 3000.0f, "C+0x1c scales the ticks, not the period");
 }
 
 void vehicleAiNatives() {
@@ -198,7 +223,8 @@ void spawnDebrisNative() {
 
 int main() {
     try {
-        bulletTimeBlendsTheSceneScale();
+        bulletTimeBlendsTheTimeScale();
+        bulletTimeScalesTheSchedulerStep();
         bulletTimeScriptCalls();
         vehicleAiNatives();
         chasedCallsOnARecord();
