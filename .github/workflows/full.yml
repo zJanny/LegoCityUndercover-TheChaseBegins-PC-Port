@@ -24,9 +24,16 @@ jobs:
           if [ "$(id -u)" != "0" ]; then SUDO="sudo"; fi
           $SUDO apt-get update
           $SUDO apt-get install -y --no-install-recommends \
-            ca-certificates git cmake g++ make pkg-config python3 \
+            ca-certificates curl git g++ make pkg-config python3 \
             libsdl2-dev libepoxy-dev \
             libavformat-dev libavcodec-dev libswscale-dev libswresample-dev libavutil-dev
+      - name: Install CMake 4.4.5
+        run: |
+          curl -fsSL -o /tmp/cmake.tar.gz https://github.com/Kitware/CMake/releases/download/v4.4.5/cmake-4.4.5-linux-x86_64.tar.gz
+          echo "ed85135c5a5135b45e50423cb406dea04ca3338da0b8ef3c9ede963559680be0  /tmp/cmake.tar.gz" | sha256sum -c -
+          mkdir -p "$HOME/cmake"
+          tar -xzf /tmp/cmake.tar.gz -C "$HOME/cmake" --strip-components=1
+          echo "$HOME/cmake/bin" >> "$GITHUB_PATH"
       - uses: actions/checkout@v4
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_COMPILE_WARNING_AS_ERROR=ON

@@ -57,7 +57,8 @@ Tests that need the game data carry the CTest label `needs-game-data`. Exclude t
 
 The workflow files build the project and run the tests for every push to `main` and every pull request. A second workflow runs every night and by hand, including the slow tests. Neither runs tests that need game data.
 
-- The jobs install `cmake`, `g++`, `pkg-config`, `python3`, `libsdl2-dev`, `libepoxy-dev` and the five FFmpeg development packages (`libavformat-dev`, `libavcodec-dev`, `libswscale-dev`, `libswresample-dev`, `libavutil-dev`) with `apt-get`.
+- The jobs install CMake 4.4.5 from Kitware's release (checked against its SHA256), so CI uses the same CMake as a current developer setup.
+- The jobs install `g++`, `pkg-config`, `python3`, `libsdl2-dev`, `libepoxy-dev` and the five FFmpeg development packages (`libavformat-dev`, `libavcodec-dev`, `libswscale-dev`, `libswresample-dev`, `libavutil-dev`) with `apt-get`.
 - The build fails on any compiler warning.
 - The workflow files are `.forgejo/workflows/ci.yml`, `.forgejo/workflows/full.yml`, `.github/workflows/ci.yml` and `.github/workflows/full.yml`.
 - The exact commands to reproduce a run locally are in the [command reference](commands.md#continuous-integration).

@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.16)
+
 set(keepFiles render/front_presenter.cpp render/hud_overlay.cpp)
 set(keepCounts 2 1)
 set(swapFiles game.cpp game_front.hpp)
