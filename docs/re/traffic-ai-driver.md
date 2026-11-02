@@ -11,6 +11,7 @@ Subtopic of [traffic.md](traffic.md): the junction routes (route list, EnableTra
 - The junction test 0x2cdde4 stops a car on a junction lane while a lane paired with it in the junction's conflict list is listed at +0x284. [§2026-10-25T12:19:38](#ts-20261025-121938)
 - Driver +0x78 is written only by the spawn (0) and by the state change 0x1cb148. Each update the vehicle update runs 0x1cb148, which copies the request +0x79 into +0x78. After a spawn this gives 0 → 1 → 2, one update per step (code and servant). State 3 (junction, next route +8) follows from 2 at the route end. State 4 follows a contact, 7 destroys the car, and 6 leads to 7 after the car has stood for 90 updates. [§2026-10-25T12:26:09](#ts-20261025-122609)
 - The traffic post step 0x1bc79c replaces the input copy for AI cars. It moves the car in states 2 and 3 (0x2613ac) and takes the junction, the recovery after a hit (4 → 8) and the break (6 → 7). [§2026-10-25T12:26:09](#ts-20261025-122609)
+- In states 2 and 3 the route mover 0x2613ac turns the node toward the target +0xc above speed 1 (by dt x 4, dt x 6 above 20) and moves it dt x +0x68 along its forward row. Within entity +0x5c of the target it advances +0x64 by 0.4 (0.15 on a route of length 4) and moves the target to the route point there. At the route end the junction choice 0x2cb1e8 picks a random enabled output of the junction the road leads into, puts the car on the lane that joins them (+4 = lane, +8 = output), queues it at the junction and requests state 3. The speed moves 0.18 of the way to +0x70 each update. The stop test 0x2ca504 stops a car on an input road at a light listing that road unless the light's pair is the junction's passing pair. The queue 0x22a080 removes the car when it leaves the junction. [§2026-11-02T23:44:38](#ts-20261102-234438)
 - Traffic cars are kinematic Bullet bodies (flags 0x102) through 0x22a270 → 0x213c74 → body command 4: at creation, in state 1 and when they leave 8. They become dynamic in states 4 and 6 and at a contact. Message 0x80000005 does nothing, 0x80000006 stops the car's sounds and effects, 0x80000007 sets the node fade. [§2026-10-25T12:26:09](#ts-20261025-122609)
 
 <a id="ts-20261025-121938"></a>
@@ -133,6 +134,81 @@ Unknowns:
 - The junction choice 0x2cb1e8 (signal connection table +0x418 / +0x310, which output becomes driver +8), the signal queue 0x22a080 (the junction test 0x2cdde4 is read in [§2026-10-25T12:19:38](#ts-20261025-121938)), and the list of 0x230dbc / 0x230e60 (who sets +0xaf bit 4).
 - The state 6 calls 0x229be4, 0x23cee8 and 0x22a124 (0x11f), 0x1bc660, 0x2308e4, 0x20ae2c and 0x20362c. Who writes +0xaf bits 1 and 2. What 0x2c87a8 tests.
 - The other creators of a driver record (stores to +0x2a4 at 0x1afe50, 0x262794, 0x290de8, 0x2a60c4); which cars they serve is not read.
+
+<a id="ts-20261102-234438"></a>
+
+## 2026-11-02T23:44:38+01:00 — The route mover 0x2613ac, the stop test 0x2ca504, the junction choice 0x2cb1e8 and the junction queue 0x22a080 (llvm-objdump only, no REA session, no emulator)
+
+Method: `llvm-objdump -d --triple=armv6k-none-eabi --mattr=+vfp2` on `artifacts/game/game.arm.elf`, words read from the ELF segments, worker 20261102-traffic-B, 2026-11-02. Helpers read along the way: 0x22859c, 0x221e5c, 0x2361d4, 0x23b960, 0x257ea0, 0x257f14, 0x2408f8, 0x23d39c, 0x2507dc, 0x2429d0, 0x232788, 0x242554, 0x229920, 0x20362c, 0x2286d4, 0x20af24, 0x2786a8, 0x2b9f84, 0x235498, 0x21d5b0. Port: `src/runtime/traffic_route_mover.*`, test `traffic-route-mover`. This answers two unknowns of [§2026-10-25T12:19:38](#ts-20261025-121938): who moves a car's route onto a lane and on to the next road, and the writer of the junction list at +0x284.
+
+**Route mover 0x2613ac(entity).** The post step 0x1bc79c calls it in states 2 and 3. In order:
+1. +0xae += 1 (a byte). Above 5, 0x20ae2c(entity) runs and +0xae = 0.
+2. M = the node's world matrix (0x2429d0, node +0x5c).
+3. Only when +0x68 > 1.0 (literal 0x261690), the car turns:
+   - t = dt × 4.0 (0x2616a0), or dt × 6.0 (0x26169c) when +0x68 > 20.0 (0x261698).
+   - L = 0x22859c(M position, target +0xc, roll 0): row 2 = unit(target − position) (0x257f14 subtracts, 0x23b998 makes the unit vector). Row 0 = (z, 0, −x) of row 2, or (0, −z, y) when \|row 2 y\| is above 0.98 as integer bits (0x2286cc). Row 0 is normalised. Row 1 = row 2 × row 0 (0x23b960).
+   - Rows 0, 1 and 2 of M each become M + (L − M) t (0x221e5c).
+   - 0x2361d4 makes M orthonormal. It sets the w words to 0, normalises row 2 (0x257ea0), sets row 1 = unit(row 2 × row 0) and row 0 = row 1 × row 2.
+   - 0x232788 copies rows 0..2 of M to driver +0x18. Row +0x48 is not touched.
+4. M position += M row 2 × (dt × +0x68) (0x2408f8, 0x23d39c).
+5. When the distance 0x2507dc from M position to +0xc is below entity +0x5c (`bhs` skips this for a larger distance or NaN):
+   - When +0x64 > the route length (hword +10, `vcvt.f32.u32`; `bhi`, so NaN too), the target moves on: +0xc += M row 2.
+   - Otherwise +0x64 grows by 0.15 (0x2616a4) when the length is 4, else by 0.4 (0x2616a8). While it is still below the length (`blt`), only the refresh below runs.
+   - At the length, +0x64 = the length and out = 0. When +0x70 > 0 (`ble` skips 0 and NaN), 0x2cb1e8(entity, &out) runs. When it returns true, out ≠ 0 sets +0x79 = 3 (0x261594), and out = 0 calls 0x21d6b8(entity).
+   - The refresh: +0xc = route function slot 0 (table 0x3581d4, called as route +8, +0xc, no tangent, 1, +0x64), then +0xc y += 0x20af24 (driver +0x74 − body +0x54). Unlike the state change 0x1cb148, it adds no 0.1.
+6. 0x24c118(node, M) sets the node matrix.
+7. The body is 0x242554(entity), which returns entity +0x84. v = M row 2 × +0x68. When rigid flags (body +0x7c) +0xcc have value 2 (the kinematic flag of 0x213c74), 0x229920(body, v) stores v at rigid +0x13c..+0x144 and 0 at +0x148.
+8. Body +0x27c = 0x2286d4(body +0x26c, body +0x264, +0x68 / 0x20362c(body)), which is a + (b − a) t. 0x20362c(body) = +0x268 / \|table 0x376d84 [gear +0x298 − 1] × +0x29c × word 0x376d78\| × 0.10472 (0x3dd6774f) × +0x2f8, the speed the ported AI driver calls the gear speed.
+9. The speed: d = +0x70 − +0x68. When the bits of \|d\| are at most 0x3a83126f (0.001, signed compare), +0x68 = +0x70. Otherwise +0x68 += d × 0.18 (0x2616b4). Steps 7 and 8 use the speed from before this step.
+
+**Junction choice 0x2cb1e8(entity, &out).**
+- It returns 0 without writing out while (int) length − 0.5 (0x2cb420) > +0x64.
+- J = 0x20ff40(driver +4). With no J: out = 0, return 1.
+- The input search: the first input entry i of J (40 bytes at record +0) whose path word equals the route. Its choice count is byte +0x418 + i; the output indices are the words at +0x310 + 32 i (at most 8):
+  - count 0: no output;
+  - count 1: that output, with no random draw and no bit test;
+  - otherwise o = word [(0x235498(count × 8) >> 3)]. 0x235498(n) is 0x25b2b8() % n. It draws again until 0x2b9f84(output o path) is true. 0x2b9f84 is the route bit test of the manager: path +0x24 below +0x2d4 and its bit in +0x2c4. With no enabled output it loops for ever.
+- The lane: the first 96-byte lane at *(+0x410) (count +0x423) whose word +0 is the input entry's address and word +4 the output entry's address.
+- The driver:
+  - +4 = lane + 8 (the lane's own path record);
+  - +8 = output path;
+  - +0x64 = 0x21d5b0(lane path +8, node position (0x250810 +0x30), 10, 1, scale 1.0). This is the nearest-sample search, slot 3 of type 0 in table 0x3581d4 (= 0x357f34), called directly whatever the type;
+  - +0xc = the route point there (table 0x357f34 slot 0), y += 0x20af24;
+  - +0 = J, and +0xaf bit 3 set.
+- The queue: the entry at J record +0x280 + 8 × count byte +0x424 gets (entity, lane), and the count += 1. There is no capacity test; 52 entries fit before the count byte.
+- out = J, return 1.
+- Without a matching input (or with count 0), no lane matches and +4 becomes the address 8. That case is not reached by consistent data.
+- The node position is read before the mover's 0x24c118, so it is the position before this update's move.
+
+**Stop test 0x2ca504(entity).**
+- With driver +0 = 0, or with no light pairs (count +0x304), it returns 0.
+- r = the path word of the first input entry equal to the route (0 when there is none). When r is 0, a car whose route is one of J's lanes (lane + 8) gives 0.
+- For each pair j below +0x304 and each of its two light pointers at +0x2c0 + 8 j (0 = none): when 0x2786a8(light, r) is true, the result is 1 if +0x300 ≠ j or byte +0x308 is 0.
+- Otherwise 0.
+- 0x2786a8(light, route) is true when the route is one of the light record's words at +0xf0 (count +0x100, at most 4).
+- So a car on an input road stops at a light listing that road unless the light's pair is +0x300 with +0x308 set. A car already on a lane never stops for lights.
+
+**Junction queue 0x22a080(junction, car).**
+- It does nothing without a driver record or without +0xaf bit 3.
+- The entry whose word +0x280 is the car is searched from the last one down.
+- The count byte +0x424 is then decremented in any case: an empty queue wraps it to 255, and a car that is not found drops the last entry.
+- When the found index is below the new count, the last entry (both words) is copied into it.
+- +0xaf bit 3 is cleared.
+- Callers: the post step state 3 (with J = driver +0), the state change entering 4 and the contact message 0x80000002 (both only with bit 3), and the message 0x80000006 at 0x1929b0 (with driver +0 ≠ 0).
+- The junction test 0x2cdde4 reads the lane word +0x284 of the same entries.
+
+**Port.**
+- `runTrafficRouteMover`, `chooseTrafficJunction`, `trafficStopAtLights`, `trafficLightControls`, `leaveTrafficJunctionQueue` work on `TrafficJunctionRecord` (`TrafficJunction` of `traffic_route.hpp` plus the choice table, lane ends, light pairs, +0x300 / +0x308 and the queue's car words). The driver's +0 is the junction index + 1.
+- 0x20ae2c and 0x21d6b8 are the hooks `snapTarget` and `leaveTraffic` of `AiDriverHooks`.
+- Stand-ins:
+  - TRAFFIC-S11: refusals where the original loops for ever, wraps a count or reads garbage. These are no enabled output, no lane for the pair, a full queue and leaving an empty queue.
+  - TRAFFIC-S12: the choice takes the nearest sample from the route functions (slot 3 of the route's type) where the original calls 0x21d5b0 (type 0) directly. All shipped traffic routes are type 0; the type of a lane path is not read.
+- The functions are not connected to the AI driver yet (TRAFFIC-2).
+
+Unknowns:
+- What 0x21d6b8 does with the car (the removal request when a route leads into no junction), and 0x20ae2c (it runs a ground ray at the target ± a literal).
+- Who fills the choice table +0x418 / +0x310, the lanes' end words, the light pairs +0x2c0 / +0x304 and the lights' route words +0xf0 (the set-up 0x1ca5a4, not read). Who changes +0x300 / +0x308 (the light update 0x1d8924, not read). The route length (hword +10) of a lane path.
+- What body +0x264, +0x26c and +0x27c mean (an engine value, by its use with the gear speed); who reads +0x27c.
 
 <a id="ts-20261102-234629"></a>
 

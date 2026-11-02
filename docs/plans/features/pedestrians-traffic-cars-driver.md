@@ -6,7 +6,7 @@ The AI driver input 0x26d934 of the spawned traffic cars, the driver record and 
 
 ## 2. Status
 
-IN_PROGRESS. The AI driver is ported as `ai_driver_input` (record, input provider with every state, state change 0x1cb148, post step 0x1bc79c) and is not wired to the cars. The functions it calls are not ported (TRAFFIC-7..9).
+IN_PROGRESS. The AI driver is ported as `ai_driver_input` (record, input provider with every state, state change 0x1cb148, post step 0x1bc79c) and is not wired to the cars. The route mover and junction functions it calls are ported, not connected ([pedestrians-traffic-cars-movement.md](pedestrians-traffic-cars-movement.md)); the steering and the other calls are not (TRAFFIC-8, TRAFFIC-9, TRAFFIC-17).
 
 ## 3. Verified behaviour
 
@@ -25,7 +25,7 @@ IN_PROGRESS. The AI driver is ported as `ai_driver_input` (record, input provide
 
 ## 5. Open items
 
-- [ ] TRAFFIC-2 — Connect the AI driver (`ai_driver_input`) to the path follower 0x2bf2ec and the route type functions (table 0x3581d4) of the route port, and port the functions it calls. needs: TRAFFIC-7, TRAFFIC-8, TRAFFIC-9; the routes, pairs and bits come from `TrafficSystem::routes()` and `TrafficManager::routeTable()`. blocks: VEH-12, TRAFFIC-S5, TRAFFIC-S7, TRAFFIC-11. evidence: [traffic-ai-driver.md §2026-10-25T12:26:09](../../re/traffic-ai-driver.md#ts-20261025-122609)
+- [ ] TRAFFIC-2 — Connect the AI driver (`ai_driver_input`) to the path follower 0x2bf2ec and the route type functions (table 0x3581d4) of the route port, and port the functions it calls. needs: TRAFFIC-8, TRAFFIC-9, TRAFFIC-17, TRAFFIC-18; the routes, pairs and bits come from `TrafficSystem::routes()` and `TrafficManager::routeTable()`. blocks: VEH-12, TRAFFIC-S5, TRAFFIC-S7, TRAFFIC-11. evidence: [traffic-ai-driver.md §2026-10-25T12:26:09](../../re/traffic-ai-driver.md#ts-20261025-122609)
 - [ ] TRAFFIC-8 — The steering of states 5 and 8: the controller 0x27872c (it also reads +0x7a / +0x7c and clears +0xa4), the step 0x29cc38 and the gear speed 0x20362c. blocks: TRAFFIC-2. evidence: [traffic-ai-driver.md §2026-10-25T12:26:09](../../re/traffic-ai-driver.md#ts-20261025-122609)
 - [ ] TRAFFIC-9 — The other calls of the state change and the post step: the list of 0x230dbc (+0xaf bit 4), the state 6 calls (0x229be4, 0x23cee8, 0x22a124 with 0x11f), 0x1bc660, 0x2308e4, 0x20ae2c, the lights 0x278b78, 0x23de70, 0x2c87a8, the writers of +0xaf bits 1 and 2, and the other creators of driver records (stores to +0x2a4 at 0x1afe50, 0x262794, 0x290de8, 0x2a60c4). blocks: TRAFFIC-2. evidence: [traffic-ai-driver.md §2026-10-25T12:26:09](../../re/traffic-ai-driver.md#ts-20261025-122609)
 - [ ] TRAFFIC-11 — The vehicle side of a spawn in the vehicle code: the port sets the record state 1 and makes no physics body; the kinematic switch 0x22a270 → 0x213c74 and the car messages (read in [traffic-ai-driver.md §2026-10-25T12:26:09](../../re/traffic-ai-driver.md#ts-20261025-122609)) are to be ported into the vehicle code. needs: VEH-91, TRAFFIC-2, PREGEN-7. blocks: TRAFFIC-S7. evidence: [traffic.md §2026-10-25T12:35:43](../../re/traffic.md#ts-20261025-123543)
