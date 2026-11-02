@@ -119,6 +119,9 @@ public:
     // real update time, `random` the next word of the game generator (0x25b2b8).
     TakedownStep update(TakedownCharacter& character, CharacterHitTarget& target, const TakedownTables& tables, ArrestableList& list,
                         const std::string& name, bool clipFinished, float dt, const std::function<std::uint32_t()>& random);
+    // A request of a state another module runs (the arrest, runtime/character_arrest.hpp): the exit of the current state runs, the state becomes
+    // `state` and nothing is entered or updated here any more.
+    TakedownStep handOver(std::uint16_t state, TakedownCharacter& character, CharacterHitTarget& target, ArrestableList& list, const std::string& name);
     std::uint16_t state() const { return state_; }
     std::optional<std::uint16_t> pending() const { return pending_; }
     bool active() const { return state_ != kCharacterStateIdle; }

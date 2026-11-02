@@ -93,7 +93,8 @@ struct AttackSearch {
     float range = 0;
     float angle = 0;
     unsigned flags = kAttackSearchFlags;   // 0x21a2d4 flags
-    bool allAround = true;                 // fourth argument: a bad guy is searched all around (every call of the player's attack sets it)
+    bool allAround = true;                 // second argument r1: a bad guy is searched all around (every call of the player's attack sets it)
+    bool charactersOnly = false;           // fifth argument: only candidates that pass 0x245b00 (0x219d6c; the A tap of 0x1fdbd4 sets it)
 };
 
 // STAND-IN PLAYER-S9: the level objects the attack can find are the props of class leprops/leprop_wobblydestructible (handler type 119, which

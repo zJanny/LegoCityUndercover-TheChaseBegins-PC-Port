@@ -6,8 +6,6 @@ namespace game_level {
 using namespace chase;
 
 namespace {
-constexpr std::size_t kSlotButtonA = 6;  // A (0x376a00); the jump button B is slot 7
-
 bool hasLedgeClips(const game_player::PlayerRig& player) {
     return player.animations.count(runtime::kAnimationLedgeIdle) && player.animations.count(runtime::kAnimationLedgeLeft) &&
            player.animations.count(runtime::kAnimationLedgeRight);

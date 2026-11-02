@@ -15,7 +15,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [player-traversal-ladders](player-traversal-ladders.md) | IN_PROGRESS | TRAV-58 entry from the air, furled ladders; TRAV-59 exit collision; TRAV-60 clip restart, hidden weapons, camera; TRAV-61 oracle check of the sounds (ladders ported) |
 | [camera](camera.md) | IN_PROGRESS | CAMERA-55 police car after PositionObject at the hand-back; CAMERA-3 multi-record weights; CAMERA-2 characters and vehicles not registered |
 | [collision](collision.md) | IN_PROGRESS | COLL-1 broad phase stand-in; COLL-2 constructors missing (about 40 kinds, characters); COLL-23 transcribe them; COLL-24 nested start state |
-| [combat-characters](combat-characters.md) | IN_PROGRESS | COMBAT-7 counter takedown and arrest; COMBAT-8 takedown motion; COMBAT-9 AI pursuit (hit receiver, takedown states and arrestable list ported) |
+| [combat-characters](combat-characters.md) | IN_PROGRESS | COMBAT-10 counter takedown and grab; COMBAT-8 takedown motion; COMBAT-9 AI pursuit; COMBAT-12 arrest against the oracle (hit receiver, takedown and arrest by A ported) |
 | [animation-characters](animation-characters.md) | IN_PROGRESS | ANIM-3 blending; ANIM-10 slot bookkeeping; ANIM-11 model folders |
 | [input](input.md) | DONE (lab, mapping) | INPUT-2 readers of input slots 16/17 |
 | [abilities-detective](abilities-detective.md) | IN_PROGRESS | DETECT-2 first point never enabled (Doorlock script waits); DETECT-1 use-state approach; DETECT-4 particles, fades, flight |
@@ -59,7 +59,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [script-system-platforms](script-system-platforms.md) | IN_PROGRESS | SCRIPT-377 orient and type 7 platforms, shape curves, lift timers; SCRIPT-385 oracle check of the path platforms; SCRIPT-388 the platform's push and squash; SCRIPT-389 the lift starts one update late |
 | [script-system-missions-1-3-generator](script-system-missions-1-3-generator.md) | IN_PROGRESS | SCRIPT-364 generator scene against the oracle |
 | [script-system-missions-1-3-end](script-system-missions-1-3-end.md) | IN_PROGRESS | SCRIPT-382 push cart and mission end against the oracle; SCRIPT-390 the lift's switch at the top |
-| [script-system-missions-1-4](script-system-missions-1-4.md) | IN_PROGRESS | SCRIPT-411 arrest events; SCRIPT-412 the goons' conduct; SCRIPT-423 the StartState entries not ported; SCRIPT-421 BulletTime readers; SCRIPT-422 the stolen car drives |
+| [script-system-missions-1-4](script-system-missions-1-4.md) | IN_PROGRESS | SCRIPT-412 the goons' conduct; SCRIPT-423 the StartState entries not ported; SCRIPT-421 BulletTime readers; SCRIPT-422 the stolen car drives |
 | [script-system-use-markers](script-system-use-markers.md) | IN_PROGRESS | SCRIPT-299 markers of the other 34 kinds; SCRIPT-355 special cases and HeadMarker; SCRIPT-356 list builder; SCRIPT-357 placement ray |
 | [script-system-natives](script-system-natives.md) | IN_PROGRESS | SCRIPT-7 natives in batches SCRIPT-29 to SCRIPT-39, SCRIPT-57 to SCRIPT-65 |
 | [script-system-natives-world](script-system-natives-world.md) | IN_PROGRESS | SCRIPT-279 party swap; SCRIPT-280 destroy message 1 per class; SCRIPT-281 effect fade rest; SCRIPT-282 distance fade gate; SCRIPT-283 AddToSemiTransList |

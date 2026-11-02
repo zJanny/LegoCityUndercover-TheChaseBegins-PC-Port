@@ -74,6 +74,7 @@ void LevelSession::updateCharacterTakedowns(float dt) {
     if (!levelCharacters || !player) return;
     for (auto& [name, entry] : characterTakedowns) {
         if (!entry.states.active() && !entry.states.pending()) continue;
+        if (entry.arrest.active()) continue;
         if (entry.states.pending() == runtime::kTakedownMeleePutdown && entry.startedAt == updates) continue;
         auto hit = characterHits.find(name);
         if (hit == characterHits.end()) continue;

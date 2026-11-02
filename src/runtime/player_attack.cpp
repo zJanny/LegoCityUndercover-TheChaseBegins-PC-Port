@@ -189,6 +189,7 @@ std::optional<std::size_t> findAttackTarget(const AttackSearch& search, const At
     for (std::size_t i = 0; i < candidates.size(); ++i) {
         const AttackCandidate& candidate = candidates[i];
         if (!candidate.collision || !candidate.listed) continue;
+        if (search.charactersOnly && !isAttackCharacter(candidate.entity)) continue;
         if (!attackCandidatePasses(candidate.entity, attackerEntity, search.flags)) continue;
         const AttackBody& body = candidate.body;
         std::array<float, 3> to = transformPoint(body.node, body.centre);

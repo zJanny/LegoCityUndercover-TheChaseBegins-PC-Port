@@ -73,6 +73,7 @@
 #include "runtime/prop_bouncer.hpp"
 #include "runtime/prop_wobbly_destructible.hpp"
 #include "runtime/player_attack.hpp"
+#include "runtime/character_arrest.hpp"
 #include "runtime/character_takedown.hpp"
 #include "runtime/camera_lock_icon.hpp"
 #include "runtime/screen_shake.hpp"
@@ -127,6 +128,7 @@ namespace game_level {
 inline constexpr std::size_t kSlotLeftShoulder = 12, kSlotRightShoulder = 13, kSlotStickX = 14, kSlotStickY = 15;
 inline constexpr std::size_t kSlotConfirmButton = 4, kSlotCancelButton = 5;
 inline constexpr std::size_t kSlotButtonX = 8, kSlotButtonY = 9, kSlotJumpButton = 7;
+inline constexpr std::size_t kSlotButtonA = 6;  // A (0x376a00); the jump button B is slot 7
 
 std::uint32_t clockTicks(std::uint64_t counter, std::uint64_t frequency);
 
@@ -318,6 +320,8 @@ private:
         chase::runtime::TakedownCharacter character;
         chase::runtime::CharacterTakedownStates states;
         unsigned startedAt = 0;  // the update of the fight move: the oracle's goon enters MELEE PUTDOWN one update later (20261101-mission-D-1)
+        chase::runtime::CharacterArrestStates arrest;
+        unsigned arrestStartedAt = 0;  // the update of the A tap: the target enters ARREST in its next update, as for the fight move
     };
     std::map<std::string, CharacterTakedownEntry> characterTakedowns;
     chase::runtime::TakedownTables takedownTables;
@@ -328,6 +332,14 @@ private:
     void updateCharacterTakedowns(float dt);
     std::optional<std::uint8_t> characterTakedownTargetMode(const std::string& lowerInstance) const;
     bool enabledObjectTrigger(const std::string& lowerEvent, const std::string& lowerInstance) const;
+    // The player's arrest by A (runtime/character_arrest.hpp; glue src/runtime/game_character_arrest.cpp).
+    chase::runtime::AttackTap arrestTap;
+    chase::runtime::PlayerArrest playerArrest;
+    std::optional<chase::runtime::AttackClip> arrestClip;
+    void loadCharacterArrest(chase::assets::FuseArchive& archive);
+    game_player::PlayerAnimation arrestMovePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, bool attackHeld, bool arrestHeld,
+                                                  bool attackAllowed, float dt);
+    void updateCharacterArrests(float dt);
     void characterAggro(const std::string& lowerInstance, const chase::runtime::CharacterHitSender& sender);
     // The AI spawners, kind 14 (runtime/ai_spawner.hpp; glue src/runtime/game_ai_spawner.cpp).
     chase::runtime::AiSpawnerSet aiSpawners;

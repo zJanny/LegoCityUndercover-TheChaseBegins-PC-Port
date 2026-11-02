@@ -203,6 +203,16 @@ TakedownStep CharacterTakedownStates::update(TakedownCharacter& character, Chara
     return step;
 }
 
+TakedownStep CharacterTakedownStates::handOver(std::uint16_t state, TakedownCharacter& character, CharacterHitTarget& target, ArrestableList& list,
+                                               const std::string& name) {
+    TakedownStep step;
+    pending_.reset();
+    exit(character, list, name, step);
+    state_ = state;
+    target.state = state;
+    return step;
+}
+
 void CharacterTakedownStates::exit(TakedownCharacter& character, ArrestableList& list, const std::string& name, TakedownStep& step) const {
     if (!registeredTakedownState(state_)) return;
     character.selectByte = restoredSelect(character.selectByte);

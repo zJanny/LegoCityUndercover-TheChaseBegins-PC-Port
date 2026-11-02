@@ -60,7 +60,7 @@ target_sources(chase_runtime PRIVATE src/runtime/reference_trigger_level.cpp src
 target_sources(chase_runtime PRIVATE src/runtime/switch_base.cpp src/runtime/switch_set.cpp src/runtime/lever_use.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/player_attack.cpp src/runtime/attack_targets.cpp src/runtime/attack_facts.cpp src/runtime/attack_sounds.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_walk.cpp)
-target_sources(chase_runtime PRIVATE src/runtime/vehicle_camera.cpp src/runtime/particles.cpp src/runtime/debris.cpp src/runtime/prop_destroy.cpp src/runtime/destroy_message.cpp src/runtime/character_death.cpp src/runtime/fall_apart.cpp src/runtime/stud_drop.cpp src/runtime/character_respawn.cpp src/runtime/character_hit.cpp src/runtime/character_takedown.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/vehicle_camera.cpp src/runtime/particles.cpp src/runtime/debris.cpp src/runtime/prop_destroy.cpp src/runtime/destroy_message.cpp src/runtime/character_death.cpp src/runtime/fall_apart.cpp src/runtime/stud_drop.cpp src/runtime/character_respawn.cpp src/runtime/character_hit.cpp src/runtime/character_takedown.cpp src/runtime/character_arrest.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/prop_wobbly_destructible.cpp src/runtime/prop_bouncer.cpp src/runtime/stud_callers.cpp src/runtime/stud_drop_classes.cpp src/runtime/super_brick.cpp src/runtime/prop_hit_sequence.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/prop_rocking.cpp src/runtime/platform_wait.cpp src/runtime/script_runner_generator_natives.cpp
   src/runtime/platform_node_move.cpp src/runtime/platform_path.cpp src/runtime/script_runner_platform_natives.cpp)
@@ -189,7 +189,7 @@ if(EPOXY_FOUND)
   if(FFMPEG_FOUND)
     add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_level.cpp src/game_pause_menu.cpp src/game_award_viewer.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_pedestrians.cpp src/game_pedestrian_fade.cpp src/game_semi_trans.cpp src/game_pedestrian_rooms.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_shadows.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_ladder.cpp src/game_fence_vault.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp src/game_fast_travel.cpp src/game_key_pickup.cpp)
     target_sources(chase-game PRIVATE src/game_pedestrian_blocking.cpp src/game_traffic.cpp)
-    target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/runtime/game_character_hit.cpp src/runtime/game_character_takedown.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
+    target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/runtime/game_character_hit.cpp src/runtime/game_character_takedown.cpp src/runtime/game_character_arrest.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
     target_sources(chase-game PRIVATE src/game_debris_pickup.cpp)
     target_sources(chase-game PRIVATE src/game_switch.cpp src/game_switch_use.cpp)
     target_sources(chase-game PRIVATE src/game_debris_super.cpp)
@@ -899,6 +899,12 @@ if(BUILD_TESTING)
   add_test(NAME character-takedown COMMAND character-takedown-test)
   add_test(NAME character-takedown-real-data COMMAND character-takedown-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(character-takedown-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(character-arrest-test tests/character_arrest_test.cpp)
+  target_link_libraries(character-arrest-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(character-arrest-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME character-arrest COMMAND character-arrest-test)
+  add_test(NAME character-arrest-real-data COMMAND character-arrest-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+  set_tests_properties(character-arrest-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(player-attack-test tests/player_attack_test.cpp)
   target_link_libraries(player-attack-test PRIVATE chase_runtime chase_assets)
   target_compile_options(player-attack-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -2220,6 +2226,31 @@ if(BUILD_TESTING)
       --call-script 1-4_SO_Phase1 --start "566.644 27.7749 952.65" --facing 270 --script "0 0 32;0 0 1 Y;0 0 100;at 566.644 27.7749 952.65 270;0 0 1 Y;0 0 200")
     set_tests_properties(game-script-takedown-arrestable PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "1-4_ai_goon_07: arrest health 2 -> 1.*1-4_ai_goon_07: state 1 IDLE.*attack: fight move [0-7] on character 1-4_ai_goon_07 \\(state 227\\).*1-4_ai_goon_07: arrest health 1 -> 0, timer 3.967\ncharacter 1-4_ai_goon_07: arrestable \\(1 listed\\) at update [0-9]+\ncharacter 1-4_ai_goon_07: event CharacterArrestable at update [0-9]+\n.*1-4_ai_goon_07: not arrestable any more at update [0-9]+\ncharacter 1-4_ai_goon_07: state 313 GENERIC GETUP")
+    # An A tap next to the goon lying arrestable after the second throw of game-script-takedown-arrestable arrests it: the player enters ARRESTING 322
+    # (`cuffing`, 28 updates), the goon ARREST 323 one update later (the exit of 309 unlists it), ARRESTED 324 when `cuffed_back` ends with
+    # CharacterArrested in the same update, and ARRESTED sets the destroyed and disabled bits once ctrl+0x24c passes 1.0 (0x1fdbd4, 0x2107e0, 0x26ac14,
+    # 0x28ba78, 0x1c7208, 0x26abcc, 0x25ebe8, 0x282e6c, read from the code by 20261102-mission14b-B on 2026-11-02; docs/re/combat-characters-arrest.md). The
+    # update numbers are the port's, not measured in the original.
+    add_test(NAME game-script-arrest-goon COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+      --call-script 1-4_SO_Phase1 --start "566.644 27.7749 952.65" --facing 270 --script "0 0 32;0 0 1 Y;0 0 100;at 566.644 27.7749 952.65 270;0 0 1 Y;0 0 84;0 0 1 A;0 0 70")
+    set_tests_properties(game-script-arrest-goon PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "arrest: clip 314, 28 updates.*1-4_ai_goon_07: arrest health 1 -> 0.*1-4_ai_goon_07: event CharacterArrestable at update 200\n.*arrest: player state 322 ARRESTING on character 1-4_ai_goon_07 at update 219\ncharacter 1-4_ai_goon_07: not arrestable any more at update 220\ncharacter 1-4_ai_goon_07: state 323 ARREST at update 220\n.*arrest: player state 1 IDLE at update 247\n.*character 1-4_ai_goon_07: state 324 ARRESTED at update 247\ncharacter 1-4_ai_goon_07: event CharacterArrested at update 247\n.*character 1-4_ai_goon_07: arrested \\(destroyed, disabled\\) at update 278"
+      FAIL_REGULAR_EXPRESSION "1-4_ai_goon_07: state 313 GENERIC GETUP at update (2[0-9][0-9]|3[0-9][0-9])")
+    # The first fight of mission 1-4 to its end: after 1-4_ShowroomArrival (cutscene 1_4_a) goons 03 and 06 of 1-4_Spawner_05 are each thrown twice
+    # and arrested; CharacterArrestable starts 1-4_Character_Arrestable_Script for each, and once both are arrested (destroyed) the spawner fires
+    # 1-4_SO_Phase1, whose TriggerObject starts 1-4_Spawner_06 (the done bit of the spawner's slots, docs/re/scripts-missions-1-4-spawners.md). The
+    # positions are the goons' placements in lvl_01 (level data); the update numbers are the port's.
+    add_test(NAME game-arrest-showroom-1-4 COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+      --call-script 1-4_ShowroomArrival
+      --script "0 0 600;at 568.06 27.5656 974.072 0;0 0 1 Y;0 0 120;0 0 1 Y;0 0 90;0 0 1 A;0 0 70;at 563.918 27.8636 968.328 0;0 0 1 Y;0 0 120;0 0 1 Y;0 0 90;0 0 1 A;0 0 70")
+    set_tests_properties(game-arrest-showroom-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "1-4_ai_goon_03: event CharacterArrestable at update [0-9]+\n.*script 1-4_Character_Arrestable_Script started.*arrest: player state 322 ARRESTING on character 1-4_ai_goon_03.*1-4_ai_goon_03: event CharacterArrested.*1-4_ai_goon_03: arrested \\(destroyed, disabled\\).*1-4_ai_goon_06: event CharacterArrestable at update [0-9]+\n.*script 1-4_Character_Arrestable_Script started.*arrest: player state 322 ARRESTING on character 1-4_ai_goon_06.*1-4_ai_goon_06: arrested \\(destroyed, disabled\\) at update [0-9]+\nai spawner 1-4_spawner_05: TriggerObject 1-4_so_phase1.*script 1-4_SO_Phase1 started.*ai spawner 1-4_spawner_06: spawned 1-4_ai_goon_07")
     # Five Y taps (15 updates apart) from the same spot: every hit lowers the table's WobbleHealth 5 by the damage 1 (oracle: 4, 3, 2, 1, 0 after the five
     # punches), the fifth destroys DonutTable_14 and DonutTable_14_Script runs in the update of the destroy (docs/re/props-wobbly-bouncer.md).
     add_test(NAME game-script-wobbly-table COMMAND chase-game
@@ -2574,7 +2605,7 @@ foreach(test_name ${chase_all_tests})
   set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${CMAKE_BINARY_DIR}/test-xdg/${test_name}")
 endforeach()
 
-foreach(slow_test game-script-takedown-goon game-script-takedown-arrestable game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-girder-guy-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-bullet-time-1-4 game-skylight-debris-1-4 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-helipad-collision game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data reflection-real-data)
+foreach(slow_test game-script-takedown-goon game-script-takedown-arrestable game-script-arrest-goon game-arrest-showroom-1-4 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-girder-guy-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-bullet-time-1-4 game-skylight-debris-1-4 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-helipad-collision game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data reflection-real-data)
   if(TEST ${slow_test})
     set_property(TEST ${slow_test} APPEND PROPERTY LABELS slow)
   endif()
@@ -2588,7 +2619,7 @@ foreach(game_data_test
   ladder-real-data fence-vault-real-data carry-animation-real-data lever-use-real-data nested-object-collision-real-data super-buildit-real-data layout-text-real-data layout-scale-real-data fast-travel-pad-real-data map-buttons-real-data pause-menu-real-data buildit-real-data
   prop-animation-real-data animal-props-real-data cat-rescue-real-data prop-parts-real-data vehicle-boarding-real-data vehicle-drive-real-data
   floor-graph-real-data vehicle-collision-real-data vehicle-box-contact-real-data vehicle-sphere-sweep-real-data vehicle-prop-smash-real-data
-  destroy-effects-real-data character-death-real-data character-hit-real-data character-takedown-real-data player-attack-real-data attack-targets-real-data attack-facts-real-data attack-sounds-real-data vehicle-world-real-data vehicle-rest-real-data
+  destroy-effects-real-data character-death-real-data character-hit-real-data character-takedown-real-data character-arrest-real-data player-attack-real-data attack-targets-real-data attack-facts-real-data attack-sounds-real-data vehicle-world-real-data vehicle-rest-real-data
   vehicle-wheels-real-data vehicle-hud-real-data vehicle-real-data objectives-real-data object-kinds progress-readme priorities-current
   camera-records-real-data locomotion-real-data streaming-real-data room-streaming-real-data collision-real-data fog-real-data lighting-real-data reflection-real-data
   sky-real-data shadow-real-data level-start-real-data dcam-real-data npc-idle-real-data pedestrian-limit-real-data ai-real-data nav-path-real-data
@@ -2606,7 +2637,7 @@ foreach(game_data_test
   game-mission-1-1 game-detective-1-2 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-girder-guy-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-bullet-time-1-4 game-skylight-debris-1-4 game-garage-key-1-3 game-key-use-1-3 game-use-spot-1-2 game-use-marker-detective-1-2 game-player-script-animation game-super-buildit-prompt
   game-super-buildit-build game-helipad-collision game-fast-travel-exit game-cage-release-1-2 game-doorlock-detective-1-2 game-mission-1-2-start-timing game-mission-1-1-start game-script-dialog
   game-same-level-entry game-scene-change-exit game-scene-change-entry game-director-hold game-director-release game-script-zipline game-script-zipline-handcuffs
-  game-script-attack-table game-script-attack-goon game-script-takedown-goon game-script-takedown-arrestable game-script-wobbly-table game-script-bounce game-script-bounce-grab game-script-acrobat-poles game-script-zipline-use-a
+  game-script-attack-table game-script-attack-goon game-script-takedown-goon game-script-takedown-arrestable game-script-arrest-goon game-arrest-showroom-1-4 game-script-wobbly-table game-script-bounce game-script-bounce-grab game-script-acrobat-poles game-script-zipline-use-a
   game-script-zipline-use-b game-script-brick-grab game-script-brick-rail game-script-pole game-script-ladder game-script-ladder-walk-in
   game-script-jump game-pause-menu-clean game-pause-menu game-options-reload game-script-hud game-room-streaming game-stream-room-in soundtest-real-smoke soundtest-id-smoke fmv-real-smoke
   prop-wobbly-real-data stud-callers-real-data stud-drop-classes-real-data prop-hit-sequence-real-data super-brick-real-data

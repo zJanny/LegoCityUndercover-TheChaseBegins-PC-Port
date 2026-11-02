@@ -2,6 +2,8 @@
 
 What a level character does with message 0 (the hit): the hit receiver 0x1b8570, the damage 0x15afb4, the reaction message 46, the hit states PUNCHED, KNOCKED DOWN and GET UP, the arrest health and the takedown moves that lower it. The attacker's side (Chase's punch) is in [player-attack.md](player-attack.md), the death of a character (message 1) in [script-natives-world-death.md](script-natives-world-death.md). Items: [combat-characters.md](../plans/features/combat-characters.md). For developers; no game assets.
 
+Subtopics: [combat-characters-arrest.md](combat-characters-arrest.md)
+
 ## Current state
 
 - Message 0 of the character handler 0x18e4c8 goes to the hit receiver 0x1b8570 (0x24255c forwards it to ctrl+0x130 for kinds 284 and 411). A punch (kind 1 with a sender) on any character but the player takes no health: 0x1b8570 jumps past the damage and only sends message 46 to the character itself. [§2026-11-01T15:23:21](#ts-20261101-152321)
@@ -16,12 +18,15 @@ What a level character does with message 0 (the hit): the hit receiver 0x1b8570,
 - The aggro 0x1d1170 (receiver 0x1b8770): same side nothing; not engaged (ctrl+0xd8 bit 5) the pursuit call 0x21102c (AI state 2); engaged the target switch 0x2080a0 beyond ctrl+0x80 and the counter ctrl+0x72 = 90. [§2026-11-02T15:37:50](#ts-20261102-153750)
 - Port: `src/runtime/character_takedown.*`, glue `src/runtime/game_character_takedown_glue.cpp`. [§2026-11-02T15:37:50](#ts-20261102-153750)
 - The popups 600 / 700 of a fight are 10 x the running sum of the stud counts (sheet 2 byte +11) of the throws, requested by 0x1b9878 for the HUD object 0x5197c8 at the strike of each throw, next to the stud drop 0x21e2e4. [§2026-11-02T16:13:53](#ts-20261102-161353)
-- Open: the arrestable lie of about 124 updates against 120 by the timer, the owner and reset of the popup sum, the counter takedown and the arrest itself, the pair motion, the AI pursuit, the KNOCK BACK states, the countdown of the hit list 0x593178.
+- The arrest by A (the A tap, 0x2107e0, ARRESTING, ARREST, ARRESTED, CharacterArrested and the spawner's done bit): [combat-characters-arrest.md](combat-characters-arrest.md).
+- Open: the arrestable lie of about 124 updates against 120 by the timer, the owner and reset of the popup sum, the counter takedown, the pair motion, the AI pursuit, the KNOCK BACK states, the countdown of the hit list 0x593178.
 - Renamed files: src/runtime/game_character_hit_glue.cpp -> src/runtime/game_character_hit.cpp, src/runtime/game_character_takedown_glue.cpp -> src/runtime/game_character_takedown.cpp.
 
 <a id="ts-20261101-152321"></a>
 
 ## 2026-11-01T15:23:21+01:00 — The hit receiver 0x1b8570, message 46, the hit states and the arrest health (REA and llvm-objdump of artifacts/game/game.arm.elf, 20261101-mission-E; no emulator)
+
+Corrected by [combat-characters-arrest.md §2026-11-02T22:34:47](combat-characters-arrest.md#ts-20261102-223447): the state records are {id, update, enter, per-update hook, exit, name, 0}; the fourth hook named below (0x25f45c of KNOCK BACK) is the exit.
 
 ### Method
 

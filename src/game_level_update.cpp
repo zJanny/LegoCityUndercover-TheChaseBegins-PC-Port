@@ -204,6 +204,7 @@ void LevelSession::updateLevelCharacters(float dt) {
     followAttachedCharacters();
     updateCharacterHits();
     updateCharacterTakedowns(dt);
+    updateCharacterArrests(dt);
     levelCharacters->update(scene, dt, [this](const chase::assets::CharacterObject& character) {
         return !objectState.isDisabled(character.placement.instance) && roomShown(runtime::roomNumber(character.placement.room));
     });
@@ -359,8 +360,8 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         game_player::PlayerAnimation shown =
             boardingStep.takesControl ? applyBoarding(boardingStep)
             : scriptClip              ? game_player::PlayerAnimation{}
-                                      : attackMovePlayer(runtime::stickIntent(stick), !controlTaken && carry.allowsJump() && !detective.modeActive() && pad.slot(kSlotJumpButton).press > 0,
-                                                         !controlTaken && pad.slot(kSlotConfirmButton).press > 0, pad.slot(kSlotButtonY).value > 0.0f,
+                                      : arrestMovePlayer(runtime::stickIntent(stick), !controlTaken && carry.allowsJump() && !detective.modeActive() && pad.slot(kSlotJumpButton).press > 0,
+                                                         !controlTaken && pad.slot(kSlotConfirmButton).press > 0, pad.slot(kSlotButtonY).value > 0.0f, pad.slot(kSlotButtonA).value > 0.0f,
                                                          !controlTaken && carry.carryingMode() == 0 && !detective.modeActive(), dt);
         linkGroundEntity();
         deliverAttackHits();
