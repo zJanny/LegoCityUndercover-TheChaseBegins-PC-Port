@@ -17,6 +17,5 @@ Ranges of item IDs held by parallel agents, named like `20261021-audio-A`. The p
 | QOLCTL | 17 | 17 | 20261102-qolctl2-C | 2026-11-02T14:47:45+01:00 |
 | QOLBOT | 24 | 26 | 20261102-qolctl2-D | 2026-11-02T14:47:45+01:00 |
 | QOLBOT-S | 2 | 2 | 20261102-qolctl2-D | 2026-11-02T14:47:45+01:00 |
-| QOLFS | 20 | 22 | 20261102-qolctl2-E | 2026-11-02T14:47:45+01:00 |
 | QOLFS | 23 | 23 | 20261102-qolctl2-F | 2026-11-02T14:47:45+01:00 |
 | QOLSET | 99 | 100 | 20261102-qolctl2-F | 2026-11-02T14:47:45+01:00 |

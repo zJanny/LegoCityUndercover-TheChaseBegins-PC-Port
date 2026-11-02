@@ -220,3 +220,12 @@ if(TARGET chase_qol_window)
   set_tests_properties(qol-ui-menu-window-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS "needs-game-data;needs-display"
     ENVIRONMENT "SDL_VIDEODRIVER=offscreen")
 endif()
+
+if(TARGET chase_runtime AND TARGET chase_assets)
+  add_executable(qol-view-edges-real-test view_edges_real_test.cpp)
+  target_link_libraries(qol-view-edges-real-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(qol-view-edges-real-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME qol-view-edges-real-data COMMAND qol-view-edges-real-test
+    "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+  set_tests_properties(qol-view-edges-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS "needs-game-data;slow")
+endif()

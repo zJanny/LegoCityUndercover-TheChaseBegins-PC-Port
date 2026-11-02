@@ -105,3 +105,12 @@ Asked of the user by the lead on 2026-10-30 (round 20261030-qolstores); the quot
   - "Boot ('Preparing') and 'Saving Game' notices with Improved?": "Alert panel (Recommended)": the notice page is shown as the centred panel like other front-end pages (not chosen: "Spinner only").
   - "Intro movie subtitles at the movie's bottom edge?": "Original bubble, moved (Recommended)": the game's own subtitle bubble art drawn over the bottom edge of the movie (not chosen: "Plain caption strip").
   - Amounts (QOLBOT-23, answered 2026-10-30T17:12:58+01:00), "Is that right?": "Confirm as built": the top picture at half brightness, fitted 5:3 in the window like in play; the 4:3 bottom panel fitted to the whole window, centred over the picture (in a 4:3 window it covers the picture).
+
+<a id="ts-20261102-154207"></a>
+
+## 2026-11-02T15:42:07+01:00 — Rooms that only the widened view reaches are loaded too
+
+Asked of the user by the lead on 2026-11-02 (round 20261102-qolctl2); the quoted label is the user's selection. Decides QOLFS-20.
+
+- "Should the widened view also load the rooms only the 16:9 strip reaches, which would change the game's room streaming, only with the widened view on?": "Yes, load them". With the widened view on, the game also requests the rooms that the 16:9 frustum reaches (they are outside the current room's neighbours and preloads, mostly far in the fog); it is a QoL option behind the widened view's toggle (the one toggle of the view and the corner HUD). With the toggle off the room streaming stays the original's. Findings: [view-edges.md §2026-11-02T15:16:57](../re/view-edges.md#ts-20261102-151657).
+- Open: how many rooms and from which depth (the scan found them mostly beyond 208 m); to be proposed with the implementation.
