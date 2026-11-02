@@ -5,6 +5,7 @@
 #include "runtime/qol_pc_controls.hpp"
 
 #include <fstream>
+#include <iostream>
 #include <stdexcept>
 #include <vector>
 
@@ -81,6 +82,13 @@ StoresPorts QolWindow::menuStores(const std::string& controlsFile, InputState& i
 
 void QolWindow::syncControls(const std::string& controlsFile, InputState& input) {
     if (enabled(Feature::PcControls)) input.rebind(readActiveBindings(controlsFile));
+}
+
+void QolWindow::syncSeatedControls(const std::string& controlsFile, InputState& input, bool seated, bool screenOpen) {
+    const auto vehicle = seatedControls_.update(enabled(Feature::PcControls), seated && !screenOpen);
+    if (!vehicle) return;
+    input.rebind(*vehicle ? readVehicleBindings(controlsFile) : readActiveBindings(controlsFile));
+    std::cout << "PC vehicle controls " << (*vehicle ? "on" : "off") << '\n';
 }
 
 }

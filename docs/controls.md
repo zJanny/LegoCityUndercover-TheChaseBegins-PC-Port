@@ -61,9 +61,29 @@ With PC controls on, `chase-game` reads the keys from `config/controls.pc.cfg` i
 
 - The right mouse button is unused. The lower-screen menus are used by clicking them. A left click on the lower screen is still a touch.
 - Escape is a fixed second key for Start in this set too (see [Escape](#escape)).
-- Driving keys are not built yet.
 - Mouse camera: moving the mouse left and right turns the camera, like Z and C but with the size of the motion (up and down does nothing). Invert camera flips it. The cursor is hidden and captured while you play. It is released while the pause screen or the PC settings menu is open, and when you move the mouse down onto the lower screen: the cursor appears there and you click as usual. Move it back up out of the lower screen and the capture starts again. A mouse button held down (a touch drag) never starts a capture. The sensitivity is fixed for now; a setting for it comes later.
 - A change of the Quality of life row takes effect at once, without restarting.
+
+### Keys in a vehicle
+
+While the character sits in a vehicle (and no pause screen or award viewer is open), the keys follow a typical PC driving game. They are kept in `config/controls.pc.vehicle.cfg` next to the other files, created from the built-in set the first time. The Controls tab does not show this set yet: change it by editing the file (same line format as above). The built-in set:
+
+| Action | Keys |
+|---|---|
+| Accelerate (A) | W or Up |
+| Brake and reverse (B) | S or Down, Space |
+| Steer | A and D, or Left and Right |
+| Horn (Y) | H |
+| Leave the vehicle (X) | F |
+| Turn the camera, Select, Start, Walk, debug overlay, full screen | as on foot |
+
+- E, Return, the left mouse button and R do nothing in a vehicle. There are no hand brake and siren keys because the game has no player input for them.
+- The keys switch when the character sits down and when he leaves. A key held at that moment has to be pressed again.
+- The development runtime prints `PC vehicle controls on` and `PC vehicle controls off` at the switch.
+
+### When the built-in set grows
+
+If `config/controls.pc.cfg` or `config/controls.pc.vehicle.cfg` already exists, the program keeps every binding in it. It adds only the actions the file has no line for, with their built-in keys, and skips a key that the file already uses for another action. It then writes the file again. An action you cleared completely comes back with its built-in keys at the next start.
 
 ## Fast travel pad
 

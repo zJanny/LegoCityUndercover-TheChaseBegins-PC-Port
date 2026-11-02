@@ -20,8 +20,8 @@ struct ActiveControls {
     std::optional<std::vector<BindingEntry>> defaults;
 };
 
-ActiveControls activeControls(const std::string& controlsFile, bool pcControls, const KeyResolver& resolveKey);
+ActiveControls activeControls(const std::string& controlsFile, bool pcControls, const KeyResolver& resolveKey, const KeyNamer& nameKey);
 
-ActiveControls activeControls(const std::string& controlsFile, const KeyResolver& resolveKey);
+ActiveControls activeControls(const std::string& controlsFile, const KeyResolver& resolveKey, const KeyNamer& nameKey);
 
 }

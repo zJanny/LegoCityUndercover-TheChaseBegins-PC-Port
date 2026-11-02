@@ -136,7 +136,7 @@ void originalModeFirst() {
     require(!std::filesystem::exists(f.pcPath) && !std::filesystem::exists(f.qolPath), "navigating writes neither controls.pc.cfg nor qol.cfg");
     require(f.controlsChanged == 0, "the running input is not told");
     require(slurp(f.controlsPath) == faithfulText, "controls.cfg untouched");
-    const auto active = qol::activeControls(f.controlsPath, chase::runtime::sdlKeyResolver);
+    const auto active = qol::activeControls(f.controlsPath, chase::runtime::sdlKeyResolver, chase::runtime::sdlKeyNamer);
     require(active.path == f.controlsPath && !active.defaults, "Original reads controls.cfg with its shipped defaults");
     require(chase::runtime::readActiveBindings(f.controlsPath).size() == 4, "the faithful file is the active mapping");
     require(!std::filesystem::exists(f.pcPath), "reading the active mapping in Original creates no file");

@@ -171,6 +171,8 @@ public:
     void handOverProgress();
     unsigned updateCount() const { return updates; }
     bool pauseSettingsConsume(const SDL_Event& event, SDL_Window* window);
+    bool playerSeated() const;
+    bool screenOpen() const;
     chase::frontend::PausePage pausePage() const;
     void mouseCameraEvent(const SDL_Event& event, SDL_Window* window);
     void mouseCameraFrame(SDL_Window* window);

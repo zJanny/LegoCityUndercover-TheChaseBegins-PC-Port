@@ -12,6 +12,8 @@ using qol::ControlsPort;
 
 std::vector<Binding> readActiveBindings(const std::string& controlsFile);
 
+std::vector<Binding> readVehicleBindings(const std::string& controlsFile);
+
 std::unique_ptr<ControlsPort> makeActiveControls(const std::string& controlsFile);
 
 }

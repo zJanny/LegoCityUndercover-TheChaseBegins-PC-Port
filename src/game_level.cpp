@@ -87,6 +87,12 @@ runtime::CollisionWorld loadCollision(FuseArchive& archive, const std::string& l
 }
 }
 
+bool LevelSession::playerSeated() const { return boarding && boarding->seatedVehicle(); }
+
+bool LevelSession::screenOpen() const {
+    return (pauseMenu && pauseMenu->isOpen()) || (awardViewer && awardViewer->isOpen());
+}
+
 std::uint32_t clockTicks(std::uint64_t counter, std::uint64_t frequency) {
     std::uint64_t seconds = counter / frequency, rest = counter % frequency;
     return std::uint32_t(seconds * runtime::kClockFrequency + rest * runtime::kClockFrequency / frequency);

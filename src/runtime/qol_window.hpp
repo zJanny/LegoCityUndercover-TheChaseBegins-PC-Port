@@ -1,6 +1,7 @@
 #pragma once
 #include "input.hpp"
 #include "qol/menu_stores.hpp"
+#include "qol/pc_vehicle_controls.hpp"
 
 #include <SDL.h>
 #include <memory>
@@ -28,11 +29,13 @@ public:
     void poll(const InputState& input);
     qol::StoresPorts menuStores(const std::string& controlsFile, InputState& input);
     void syncControls(const std::string& controlsFile, InputState& input);
+    void syncSeatedControls(const std::string& controlsFile, InputState& input, bool seated, bool screenOpen);
 
 private:
     void apply(bool fullscreen, int width, int height);
 
     std::unique_ptr<qol::WindowController> controller_;
+    qol::SeatedControls seatedControls_;
     std::string path_;
     std::vector<std::pair<int, int>> modes_;
     std::pair<int, int> desktop_{0, 0};

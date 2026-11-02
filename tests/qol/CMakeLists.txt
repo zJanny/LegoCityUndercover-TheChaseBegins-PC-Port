@@ -109,6 +109,10 @@ if(TARGET chase_qol_paint)
   target_link_libraries(qol-pc-controls-test PRIVATE chase_qol_paint chase_input PkgConfig::SDL2)
   target_compile_options(qol-pc-controls-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME qol-pc-controls COMMAND qol-pc-controls-test)
+  add_executable(qol-pc-vehicle-controls-test pc_vehicle_controls_test.cpp ${CMAKE_SOURCE_DIR}/src/runtime/qol_controls_bindings.cpp ${CMAKE_SOURCE_DIR}/src/runtime/qol_pc_controls.cpp)
+  target_link_libraries(qol-pc-vehicle-controls-test PRIVATE chase_qol_paint chase_input PkgConfig::SDL2)
+  target_compile_options(qol-pc-vehicle-controls-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME qol-pc-vehicle-controls COMMAND qol-pc-vehicle-controls-test)
 endif()
 
 if(TARGET chase_qol_paint)
@@ -239,6 +243,32 @@ if(TARGET chase_qol_window)
     "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(qol-ui-menu-window-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS "needs-game-data;needs-display"
     ENVIRONMENT "SDL_VIDEODRIVER=offscreen")
+endif()
+
+if(TARGET chase-game)
+  set(PC_VEHICLE_CONFIG_DIR "${CMAKE_BINARY_DIR}/config-pc-vehicle")
+  configure_file(${CMAKE_SOURCE_DIR}/config/controls.cfg ${PC_VEHICLE_CONFIG_DIR}/controls.cfg COPYONLY)
+  configure_file(${CMAKE_SOURCE_DIR}/config/controls.default.cfg ${PC_VEHICLE_CONFIG_DIR}/controls.default.cfg COPYONLY)
+  file(WRITE ${PC_VEHICLE_CONFIG_DIR}/qol.cfg "window_mode windowed\nresolution 960x600\nmaster Custom\npc_controls on\n")
+  add_test(NAME qol-pc-vehicle-controls-game COMMAND chase-game
+    --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+    --config "${PC_VEHICLE_CONFIG_DIR}/controls.cfg"
+    --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+    --call-script 1-1_SO_VanFixed --start "866.0 52.0 691.0"
+    --script "0 0 60;0 0 3 X;0 0 140;0 0 60 A;at 820.0 18.5 1047.0;0 0 393;0 0 1 A")
+  set_tests_properties(qol-pc-vehicle-controls-game PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+    LABELS "needs-game-data;slow" TIMEOUT 300
+    PASS_REGULAR_EXPRESSION "jump in started at update 60.*PC vehicle controls on.*exiting at update 306.*PC vehicle controls off")
+  add_test(NAME qol-pc-vehicle-controls-game-original COMMAND chase-game
+    --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+    --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+    --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+    --call-script 1-1_SO_VanFixed --start "866.0 52.0 691.0"
+    --script "0 0 60;0 0 3 X;0 0 140;0 0 60 A;at 820.0 18.5 1047.0;0 0 393;0 0 1 A")
+  set_tests_properties(qol-pc-vehicle-controls-game-original PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+    LABELS "needs-game-data;slow" TIMEOUT 300
+    PASS_REGULAR_EXPRESSION "jump in started at update 60.*exiting at update 306"
+    FAIL_REGULAR_EXPRESSION "PC vehicle controls")
 endif()
 
 if(TARGET chase_runtime AND TARGET chase_assets)

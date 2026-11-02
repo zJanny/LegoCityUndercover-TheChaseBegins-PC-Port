@@ -193,6 +193,7 @@ int run(const Options& given) {
         while (running) {
             pollEvents(input, pad, running, touch, window, session);
             qolWindow.poll(input);
+            qolWindow.syncSeatedControls(options.config, input, session.playerSeated(), session.screenOpen());
             if (!session.frameDue()) {
                 SDL_Delay(1);
                 continue;

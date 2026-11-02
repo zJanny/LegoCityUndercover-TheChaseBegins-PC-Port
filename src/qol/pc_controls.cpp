@@ -1,8 +1,7 @@
 #include "qol/pc_controls.hpp"
 
 #include "qol/active_settings.hpp"
-
-#include <filesystem>
+#include "qol/controls_merge.hpp"
 
 namespace qol {
 
@@ -40,15 +39,15 @@ std::string pcControlsPathFor(const std::string& controlsFile) {
     return (slash == std::string::npos ? std::string() : controlsFile.substr(0, slash + 1)) + pcControlsFileName;
 }
 
-ActiveControls activeControls(const std::string& controlsFile, bool pcControls, const KeyResolver& resolveKey) {
+ActiveControls activeControls(const std::string& controlsFile, bool pcControls, const KeyResolver& resolveKey, const KeyNamer& nameKey) {
     if (!pcControls) return {controlsFile, std::nullopt};
     const std::string path = pcControlsPathFor(controlsFile);
-    if (!std::filesystem::exists(path)) writeBindingFile(path, pcControlsDefaults(), resolveKey);
+    keepControlsFile(path, pcControlsDefaults(), resolveKey, nameKey);
     return {path, pcControlsDefaults()};
 }
 
-ActiveControls activeControls(const std::string& controlsFile, const KeyResolver& resolveKey) {
-    return activeControls(controlsFile, enabled(Feature::PcControls), resolveKey);
+ActiveControls activeControls(const std::string& controlsFile, const KeyResolver& resolveKey, const KeyNamer& nameKey) {
+    return activeControls(controlsFile, enabled(Feature::PcControls), resolveKey, nameKey);
 }
 
 }
