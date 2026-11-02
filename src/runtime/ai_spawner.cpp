@@ -91,6 +91,7 @@ AiSpawner aiSpawnerOf(const assets::LevelObject& object, const assets::Level& cl
     params.maxSpawn = std::int16_t(switchIntParam(object, cls, "MaxSpawn", 0));
     params.startActive = switchIntParam(object, cls, "StartActive", 1) != 0;
     params.startState = std::uint16_t(switchIntParam(object, cls, "StartState", 0));
+    spawner.start = aiStartStateOf(params.startState, object, cls, names);
     params.startEffect = referenceParam(object, cls, "StartEffect", names);
     params.startSpawned = switchIntParam(object, cls, "StartSpawned", 1) != 0;
     params.maxOnScreen = std::uint16_t(switchIntParam(object, cls, "MaxOnScreen", 0));
@@ -279,6 +280,7 @@ void AiSpawnerSet::stateChange(AiSpawner& spawner, AiSpawnerWorld& world) {
         if (!world.release(slot.character, spawner.params.spawnFromSpawner ? spawner.matrix : slot.placed)) return;
         spawner.heldMask = std::uint16_t(spawner.heldMask & ~bit(index));
         if (spawner.params.maxOnScreen != 0) ++spawner.onScreen;
+        world.startState(spawner, index);
         world.aiSpawned(spawner.instance);
         world.aiSpawned(slot.character);
         spawner.stagger = spawner.params.staggerFrames;

@@ -12,8 +12,9 @@ namespace {
 class SessionSpawnerWorld : public runtime::AiSpawnerWorld {
 public:
     using Place = std::function<bool(const std::string&, const chase::assets::Matrix&)>;
-    SessionSpawnerWorld(chase::assets::PlacedObjectState& state, runtime::ReferenceTriggers& references, runtime::ScriptRunner& scripts, Place place)
-        : state_(state), references_(references), scripts_(scripts), place_(std::move(place)) {}
+    SessionSpawnerWorld(chase::assets::PlacedObjectState& state, runtime::ReferenceTriggers& references, runtime::ScriptRunner& scripts, Place place,
+                        unsigned update)
+        : state_(state), references_(references), scripts_(scripts), place_(std::move(place)), update_(update) {}
 
     bool held(const std::string& character) const override { return state_.destroyed.count(character) != 0; }
     bool disabled(const std::string& object) const override { return state_.disabled.count(object) != 0; }
@@ -40,6 +41,14 @@ public:
     // bound test answers "inside" (no spawner of the eight levels sets PlayerInsideBound).
     bool inView(const chase::assets::Matrix&) const override { return false; }
     bool playerInside(const runtime::AiSpawner&) const override { return true; }
+    void startState(const runtime::AiSpawner& spawner, std::size_t slot) override {
+        const runtime::AiSpawnerSlot& spawned = spawner.slots[slot];
+        const chase::assets::Matrix& at = spawner.params.spawnFromSpawner ? spawner.matrix : spawned.placed;
+        const runtime::AiStartOrder order = runtime::aiStartOrder(spawner.start, slot);
+        const runtime::AiStartApplied applied = runtime::applyAiStartOrder(order, spawned.character, {at[12], at[13], at[14]}, scripts_.ai());
+        std::cout << "ai start state " << spawner.start.index << ' ' << spawned.character << ": " << runtime::aiStartActionName(order.action)
+                  << (order.target.empty() ? "" : " to " + order.target) << (applied == runtime::AiStartApplied::NotPorted ? " (not ported)" : applied == runtime::AiStartApplied::TargetNotFound ? " (target not found)" : "") << " at update " << update_ << '\n';
+    }
     void aiSpawned(const std::string& object) override { scripts_.fireObjectEvent("aispawned", object); }
     void activateReference(const std::string& spawner) override {
         if (const auto id = references_.findOwner(spawner)) runtime::applyReferenceActivation(references_.activate(*id), scripts_);
@@ -60,6 +69,7 @@ private:
     runtime::ReferenceTriggers& references_;
     runtime::ScriptRunner& scripts_;
     Place place_;
+    unsigned update_;
 };
 
 }
@@ -67,7 +77,7 @@ private:
 void LevelSession::withAiSpawnerWorld(const std::function<void(runtime::AiSpawnerWorld&)>& use) {
     SessionSpawnerWorld world(objectState, buildits.references(), levelScripts, [this](const std::string& character, const chase::assets::Matrix& matrix) {
         return levelCharacters && levelCharacters->place(character, matrix);
-    });
+    }, updatesForLog);
     use(world);
 }
 

@@ -180,6 +180,11 @@ public:
     // Handler of `kind` for the characters named by lower-case names and the numbers already read from the script.
     void run(AiNativeKind kind, const std::vector<std::string>& names, const std::vector<float>& numbers);
 
+    // 0x2246c0 (requested state 0) and 0x22471c (requested state 9 when the character mills about) for callers other than the natives, the
+    // StartState entries of the AI spawner (ai_start_state.hpp).
+    void startIdle(const std::string& lowerCaseName) { requestIdle(at(lowerCaseName)); }
+    void startMillAbout(const std::string& lowerCaseName) { requestMillAbout(at(lowerCaseName)); }
+
     // Position of a character that something else moves (the player node, PositionObject).
     void setPosition(const std::string& lowerCaseName, const float position[3]);
     bool moving(const std::string& lowerCaseName) const;

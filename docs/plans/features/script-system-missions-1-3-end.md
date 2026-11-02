@@ -25,7 +25,7 @@ IN_PROGRESS, updated 2026-11-01T16:09:40+01:00. From the start of `1-3_Start_Mow
 - SCRIPT-S311 The fall after the bridge jump: the fall speed and distance at the end of the flight are taken from the port's own descent. evidence: [pushables.md §2026-10-28T01:21:46](../../re/pushables.md#ts-20261028-012146).
 - SCRIPT-S312 The player's height during an `AISuperJump` flight follows the `jump_run` clip scaled to the climb, not the original's curve (port 29.52 at the flight's end, original 25.71). blocks: SCRIPT-391. evidence: [pushables.md §2026-10-28T01:21:46](../../re/pushables.md#ts-20261028-012146).
 
-- SCRIPT-S318 The fall of a released flight (an AISuperJump that another order replaces) follows the port's parabola (SCRIPT-S103) beyond the target and lands within 0.4 of a floor, not on the original's ground contact. evidence: [ai-states.md §2026-11-01T15:37:57](../../re/ai-states.md#ts-20261101-153757).
+- SCRIPT-S318 The fall of a released flight (an AISuperJump that another order replaces, or whose state 11 arrived above the target's height, [scripts-missions-1-4-spawners.md §2026-11-02T22:18:08](../../re/scripts-missions-1-4-spawners.md#ts-20261102-221808)) follows the port's parabola (SCRIPT-S103) beyond the target and lands within 0.4 of a floor, not on the original's ground contact. evidence: [ai-states.md §2026-11-01T15:37:57](../../re/ai-states.md#ts-20261101-153757).
 - SCRIPT-S319 The root delta of an animated prop is applied to its current world matrix and the attach derives the local one; the original moves the local matrix, so they differ if the parent moves between the two updates. evidence: [props-rocking-attach.md §2026-11-01T15:37:57](../../re/props-rocking-attach.md#ts-20261101-153757).
 
 ## 5. Open items

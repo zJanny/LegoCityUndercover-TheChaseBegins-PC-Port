@@ -3,6 +3,7 @@
 // and the update 0x1a5d2c, which runs 0x2424d0 with the pre-update 0x288f18 and the update 0x288fbc, then the state change 0x268978. The record at
 // entity +0x7c holds the state (+2) and the requested state (+4), the character slots (+0x1c, count +0x24) and the counters. No SDL dependency.
 #include "assets/assets.hpp"
+#include "runtime/ai_start_state.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -55,6 +56,7 @@ struct AiSpawner {
     std::string instance;             // lower case
     assets::Matrix matrix{};          // the spawner's node matrix
     AiSpawnerParams params;
+    AiStartState start;               // the StartState entry's record (+0x5c)
     std::vector<AiSpawnerSlot> slots;
     AiSpawnerState state = AiSpawnerState::Idle;      // +2
     AiSpawnerState requested = AiSpawnerState::Idle;  // +4
@@ -89,6 +91,8 @@ public:
     // 0x268978 state 2: 0x24c118 puts the character's node at `matrix`, then message 52 (0x21e810: 0x218b88, 0x242cf0 enable, bit 4 cleared,
     // message 2). Returns whether the character came out (bit 4 clear and the controller's requested state +0x6e is 1).
     virtual bool release(const std::string& character, const assets::Matrix& matrix) = 0;
+    // The spawn word +0xc of the StartState entry (ai_start_state.hpp), called with the character of slot +0x2b once it came out.
+    virtual void startState(const AiSpawner& spawner, std::size_t slot) = 0;
     // 0x23cee8 of *0x3775ec ("AISpawned") with the object as owner and instigator.
     virtual void aiSpawned(const std::string& object) = 0;
     // 0x23211c(spawner, record +0xc, mode): the spawner's TriggerObject reference. referenceIdle is its kind bits (+0xc & 31) == 0.

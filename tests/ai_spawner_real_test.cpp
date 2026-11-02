@@ -1,7 +1,8 @@
 // The AI spawners (src/runtime/ai_spawner.*) on the level data, and the first fight chain of mission 1-4 run through the class, the level's reference
 // records and its scripts. Parameter values read by 20261102-mission14-A (2026-11-02) with the C++ level loader on the eight main levels and the class
 // file props/prop_aispawner; the rules are those of docs/re/scripts-missions-1-4-spawners.md (objdump of game.arm.elf), not measured in the original. Needs the
-// extracted RomFS; exits with 77 (skipped) when missing.
+// extracted RomFS; exits with 77 (skipped) when missing. The StartState values (StartState, ForceMove, SuperjumpHeight, Runto1 ..) were read by
+// 20261102-mission14b-A (2026-11-02) with the same loader; the table rules are those of ai_start_state.hpp (objdump of game.arm.elf).
 #include "assets/assets.hpp"
 #include "runtime/ai_spawner.hpp"
 #include "runtime/reference_trigger_apply.hpp"
@@ -60,6 +61,8 @@ struct LevelWorld : runtime::AiSpawnerWorld {
         state.destroyed.erase(c), state.disabled.erase(c);
         return true;
     }
+    std::vector<std::string> started;
+    void startState(const runtime::AiSpawner& s, std::size_t slot) override { started.push_back(s.slots[slot].character); }
     void aiSpawned(const std::string&) override {}
     void activateReference(const std::string& s) override {
         const auto id = references.findOwner(s);
@@ -82,6 +85,8 @@ void census(assets::FuseArchive& archive, const assets::ClassLookup& classOf) {
         {"lvl_00_policestation", 0}, {"lvl_01_cherrytreehills", 17}, {"lvl_02_albatrossisland", 9}, {"lvl_03_auburn", 10},
         {"lvl_04_fortmeadows", 7},   {"lvl_05_bluebellwood", 26},   {"lvl_06_apolloisland", 26},    {"lvl_07_downtown", 14}};
     std::size_t slots = 0, offScreen = 0, ownPlace = 0, waitForDead = 0, extras = 0, startActive = 0, startSpawned = 0;
+    std::map<std::uint16_t, std::size_t> startStates;
+    std::size_t forceMove = 0, runToEverySlot = 0, runToSome = 0, superJumpDefault = 0;
     for (const auto& [file, count] : levels) {
         const runtime::AiSpawnerSet set = spawnersOf(load(archive, file), classOf);
         require(set.spawners().size() == count, file + ": spawners " + std::to_string(set.spawners().size()));
@@ -92,6 +97,13 @@ void census(assets::FuseArchive& archive, const assets::ClassLookup& classOf) {
             waitForDead += s.params.waitForDead;
             startActive += s.params.startActive;
             startSpawned += s.params.startSpawned;
+            ++startStates[s.params.startState];
+            forceMove += s.start.forceMove;
+            superJumpDefault += s.params.startState == 6 && s.start.superJumpHeight == runtime::kAiStartSuperJumpHeight;
+            std::size_t runTo = 0;
+            for (std::size_t i = 0; i < s.slots.size(); ++i) runTo += !s.start.targets[i].empty();
+            if (runtime::aiStartTargetKind(s.params.startState) == runtime::AiStartTargetKind::RunTo && runTo)
+                ++(runTo == s.slots.size() ? runToEverySlot : runToSome);
             extras += !s.params.mesh.empty() || !s.params.startEffect.empty() || !s.params.revealObject.empty() || !s.params.playerInsideBound.empty() ||
                       s.params.sfx != 0 || s.params.maxOnScreen != 0;
         }
@@ -100,6 +112,11 @@ void census(assets::FuseArchive& archive, const assets::ClassLookup& classOf) {
     require(offScreen == 24 && ownPlace == 104 && waitForDead == 97, "SpawnOnScreen 0, SpawnFromSpawner 0, WaitForDead 1 counts");
     require(startActive == 2 && startSpawned == 1, "StartActive 1 (goonspawner03, 6-1_mine_goon_spawner01) and StartSpawned 1 (goonspawner03)");
     require(extras == 0, "no spawner has a mesh, StartEffect, RevealObject, PlayerInsideBound, ATTR_SFX or MaxOnScreen");
+    require(startStates == std::map<std::uint16_t, std::size_t>{{0, 72}, {5, 3}, {6, 14}, {7, 3}, {8, 4}, {9, 13}},
+            "StartState of the 109 spawners: 0, 5, 6, 7, 8 and 9 (no spawner uses 1 to 4)");
+    require(forceMove == 9, "ForceMove 1 in 9 of the StartState 0 spawners");
+    require(runToEverySlot == 30 && runToSome == 0, "Runto for every slot in the 14 StartState 6 and 16 StartState 0 spawners, for some slots in none");
+    require(superJumpDefault == 5, "SuperjumpHeight of the StartState 6 spawners: the class value 3 in 5");
 }
 
 void missionFourteen(assets::FuseArchive& archive, const assets::ClassLookup& classOf) {
@@ -146,10 +163,28 @@ void missionFourteen(assets::FuseArchive& archive, const assets::ClassLookup& cl
         for (const std::string& c : e.characters) held += world.held(c) && world.disabled(c);
     }
     require(held == 17, "the 15 goons and two Booster Strange of the spawners are held from the level load");
+    const std::map<std::string, std::pair<std::vector<std::string>, float>> runTo = {
+        {"1-4_spawner_06", {{"1-4_ai_goon_07_goto", "1-4_ai_goon_08_goto", "1-4_ai_goon_14_goto"}, 5.0f}},
+        {"1-4_spawner_07", {{"1-4_ai_goon_15_goto", "1-4_ai_goon_16_goto", "1-4_ai_goon_17_goto"}, 3.0f}},
+        {"1-4_spawner_01", {{"1-4_ai_goon_01_goto", "1-4_ai_goon_02_goto"}, 3.0f}},
+    };
+    for (const auto& [name, expected] : runTo) {
+        const runtime::AiSpawner* s = set.find(name);
+        for (std::size_t i = 0; i < expected.first.size(); ++i) {
+            const runtime::AiStartOrder order = runtime::aiStartOrder(s->start, i);
+            require(order.action == runtime::AiStartAction::SuperJump && order.target == expected.first[i] && order.height == expected.second,
+                    "StartState 6: slot " + std::to_string(i) + " of " + name + " super-jumps to its Runto target");
+        }
+    }
+    for (const char* name : {"1-4_spawner_05", "1-4_spawner_03", "1-4_spawner_04", "1-4_boosterchaser_spawner", "1-4_pursuit_booster_spawner"})
+        for (std::size_t i = 0; i < set.find(name)->slots.size(); ++i)
+            require(runtime::aiStartOrder(set.find(name)->start, i).action == runtime::AiStartAction::Idle,
+                    std::string("StartState 0 without Runto: ") + name + " sends its characters idle (0x2246c0)");
 
     require(set.message("1-4_spawner_05", runtime::kAiSpawnerMessageOn, world), "1-4_ShowroomArrival's TriggerObject reaches 1-4_Spawner_05");
     for (int i = 0; i < 4; ++i) set.update(world);
     require(world.released.count("1-4_ai_goon_03") && world.released.count("1-4_ai_goon_06"), "update 2 and 4 release goons 03 and 06");
+    require(world.started == std::vector<std::string>{"1-4_ai_goon_03", "1-4_ai_goon_06"}, "the StartState word runs for each goon that came out");
     const auto goon = assets::objectStart(level, "1-4_AI_Goon_03");
     require(goon && std::fabs(world.released["1-4_ai_goon_03"][12] - goon->position[0]) < 1e-4f &&
                 std::fabs(world.released["1-4_ai_goon_03"][14] - goon->position[2]) < 1e-4f,

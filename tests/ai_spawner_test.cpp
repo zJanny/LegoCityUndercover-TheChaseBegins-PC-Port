@@ -32,6 +32,7 @@ struct FakeWorld : runtime::AiSpawnerWorld {
     void restore(const std::string& c) override { heldSet.erase(c), disabledSet.erase(c), log.push_back("restore " + c); }
     bool controllerAllowsSpawn(const std::string&) const override { return true; }
     bool inView(const assets::Matrix&) const override { return false; }
+    void startState(const AiSpawner& s, std::size_t slot) override { log.push_back("start state " + std::to_string(s.start.index) + " " + s.slots[slot].character); }
     bool release(const std::string& c, const assets::Matrix& m) override {
         log.push_back("release " + c + " at " + std::to_string(int(m[12])));
         if (!releaseWorks) return false;
@@ -81,7 +82,9 @@ void heldUntilTriggeredAndChainOnAllDone() {
     require(s.state == AiSpawnerState::Active && world.held("a"), "update 1: the state change to 1 only");
     set.update(world);
     require(!world.held("a") && world.held("b") && s.spawned == 1 && s.state == AiSpawnerState::Spawn, "update 2: slot 0 spawns");
-    require(world.log[world.log.size() - 3] == "release a at 7", "SpawnFromSpawner puts the character at the spawner's node");
+    require(world.log[world.log.size() - 4] == "release a at 7", "SpawnFromSpawner puts the character at the spawner's node");
+    require(world.log[world.log.size() - 3] == "start state 0 a" && world.log[world.log.size() - 2] == "AISpawned spawner",
+            "0x268978: the StartState spawn word +0xc runs after the release and before the AISpawned events");
     set.update(world);
     require(s.state == AiSpawnerState::Active, "update 3: back to state 1 (WaitForDead)");
     set.update(world);

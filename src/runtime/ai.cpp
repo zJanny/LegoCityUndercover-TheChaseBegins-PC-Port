@@ -345,8 +345,11 @@ void AiCore::advanceSuperJump(const std::string& name, AiCharacter& target, floa
     std::uint16_t heading = 0;
     if (stepGoToTarget(order, position, heading) == GoToTargetResult::Arrived) {
         target.state = AiState::Idle;
-        target.superJump.reset();
         ended_.push_back({name, 0});
+        // STAND-IN SCRIPT-S318: the jump locomotion (state 73) ends on its landing, not when state 11 arrives; a level character whose flight
+        // arrives above the target's height goes on as a released flight until the host lands it. The player falls by its own controller.
+        if (name != kPlayerAlias && position[1] > jump.target[1]) jump.released = true;
+        else target.superJump.reset();
         return;
     }
     target.heading = heading;

@@ -2184,8 +2184,8 @@ if(BUILD_TESTING)
       --start "715.44196 32.71405 641.61597" --facing -5.1416 --script "0 0 2;0 0 1 Y;0 0 20")
     set_tests_properties(game-script-attack-table PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "attack: message 62 to donuttable_14 at update 3.*attack: hit donuttable_14 \\(message 0, damage 1\\) at update 7.*attack: ended at update 17")
-    # A Y tap 1.5 m from 1-4_AI_Goon_07 (level data position (564.267, 35.741, 948.434)), Chase facing away from it: the grab search finds the bad
-    # guy all around and starts a fight move on it (0x1fdbd4 -> 0x1d3980, docs/re/player-attack.md; read from the code by 20261101-mission-D on
+    # A Y tap 1.5 m from 1-4_AI_Goon_07 where it lands after the super jump of its StartState to 1-4_AI_Goon_07_GoTo (the port's landing
+    # (565.144, 27.773, 952.65) in update 31, SCRIPT-418, docs/re/scripts-missions-1-4-spawners.md): the grab search finds the bad guy all around and starts a fight move on it (0x1fdbd4 -> 0x1d3980, docs/re/player-attack.md; read from the code by 20261101-mission-D on
     # 2026-11-01). No message 62 goes to the goon: oracle 20261101-mission-D-1, recorded from a save state of mission 1-4 (no 0x244fc8 call with 62).
     # The goon is held by 1-4_Spawner_06 until 1-4_SO_Phase1 triggers it (released in update 2, SCRIPT-410; the spawner of goon 01 is never
     # triggered, docs/re/scripts-missions-1-4-spawners.md); the update numbers are the port's.
@@ -2193,9 +2193,9 @@ if(BUILD_TESTING)
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
-      --call-script 1-4_SO_Phase1 --start "564.267 35.741 946.934" --facing 3.1416 --script "0 0 4;0 0 1 Y;0 0 2")
+      --call-script 1-4_SO_Phase1 --start "566.644 27.7749 952.65" --facing 270 --script "0 0 32;0 0 1 Y;0 0 2")
     set_tests_properties(game-script-attack-goon PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
-      PASS_REGULAR_EXPRESSION "attack: 99 characters, 8 fight moves.*ai spawner 1-4_spawner_06: spawned 1-4_ai_goon_07 \\(slot 0, 1/3\\) at update 2.*attack: fight move [0-7] on character 1-4_ai_goon_07 \\(state 227\\) at update 5.*attack: state 163 clip (261|437|453|467|469|471|473|475) at update 5"
+      PASS_REGULAR_EXPRESSION "attack: 99 characters, 8 fight moves.*ai spawner 1-4_spawner_06: spawned 1-4_ai_goon_07 \\(slot 0, 1/3\\) at update 2.*attack: fight move [0-7] on character 1-4_ai_goon_07 \\(state 227\\) at update 33.*attack: state 163 clip (261|437|453|467|469|471|473|475) at update 33"
       FAIL_REGULAR_EXPRESSION "attack: message 62 to 1-4_ai_goon_07")
     # The fight move's target (1-4_AI_Goon_07, released by 1-4_Spawner_06 as in game-script-attack-goon) goes through MELEE PUTDOWN (clip 468 grabbed_putdown_04), PUTDOWN STUN (arrest health 2 -> 1, timer 0.35 of
     # tablescombat sheet 5 row 0, 0.317 after the enter update) and GENERIC GETUP back to IDLE (0x1d6d04, 0x27726c, 0x28cbf8, 0x29ad90, read from the
@@ -2206,18 +2206,18 @@ if(BUILD_TESTING)
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
-      --call-script 1-4_SO_Phase1 --start "564.267 35.741 946.934" --facing 3.1416 --script "0 0 4;0 0 1 Y;0 0 160")
+      --call-script 1-4_SO_Phase1 --start "566.644 27.7749 952.65" --facing 270 --script "0 0 32;0 0 1 Y;0 0 160")
     set_tests_properties(game-script-takedown-goon PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
-      PASS_REGULAR_EXPRESSION "takedown: 57 takedown moves, 3 timing rows.*attack: fight move [0-7] on character 1-4_ai_goon_07 \\(state 227\\) at update 5.*character 1-4_ai_goon_07: state 227 MELEE PUTDOWN at update 6.*character 1-4_ai_goon_07: state 309 PUTDOWN STUN at update 47\n.*character 1-4_ai_goon_07: arrest health 2 -> 1, timer 0.317\n.*character 1-4_ai_goon_07: state 313 GENERIC GETUP at update 58.*character 1-4_ai_goon_07: state 1 IDLE"
+      PASS_REGULAR_EXPRESSION "takedown: 57 takedown moves, 3 timing rows.*attack: fight move [0-7] on character 1-4_ai_goon_07 \\(state 227\\) at update 33.*character 1-4_ai_goon_07: state 227 MELEE PUTDOWN at update 34.*character 1-4_ai_goon_07: state 309 PUTDOWN STUN at update 75\n.*character 1-4_ai_goon_07: arrest health 2 -> 1, timer 0.317\n.*character 1-4_ai_goon_07: state 313 GENERIC GETUP at update 86.*character 1-4_ai_goon_07: state 1 IDLE"
       FAIL_REGULAR_EXPRESSION "1-4_ai_goon_07: arrestable|1-4_ai_goon_07: event")
-    # A second Y tap on the same goon after it is back in IDLE takes the arrest health 1 -> 0: listed and CharacterArrestable raised through
+    # A second Y tap on the same goon after it is back in IDLE (from the start spot again, the throw turned Chase toward goon 08) takes the arrest health 1 -> 0: listed and CharacterArrestable raised through
     # ScriptRunner::fireObjectEvent in the enter of 309, removed by the exit to 313 (0x28d2a0..0x28d3a4, 0x283a3c..0x283ab4, read from the code by
     # 20261102-mission14-B on 2026-11-02; a second Y-tap throw was not measured in the oracle, docs/re/combat-characters.md).
     add_test(NAME game-script-takedown-arrestable COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
-      --call-script 1-4_SO_Phase1 --start "564.267 35.741 946.934" --facing 3.1416 --script "0 0 4;0 0 1 Y;0 0 100;0 0 1 Y;0 0 200")
+      --call-script 1-4_SO_Phase1 --start "566.644 27.7749 952.65" --facing 270 --script "0 0 32;0 0 1 Y;0 0 100;at 566.644 27.7749 952.65 270;0 0 1 Y;0 0 200")
     set_tests_properties(game-script-takedown-arrestable PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "1-4_ai_goon_07: arrest health 2 -> 1.*1-4_ai_goon_07: state 1 IDLE.*attack: fight move [0-7] on character 1-4_ai_goon_07 \\(state 227\\).*1-4_ai_goon_07: arrest health 1 -> 0, timer 3.967\ncharacter 1-4_ai_goon_07: arrestable \\(1 listed\\) at update [0-9]+\ncharacter 1-4_ai_goon_07: event CharacterArrestable at update [0-9]+\n.*1-4_ai_goon_07: not arrestable any more at update [0-9]+\ncharacter 1-4_ai_goon_07: state 313 GENERIC GETUP")
     # Five Y taps (15 updates apart) from the same spot: every hit lowers the table's WobbleHealth 5 by the damage 1 (oracle: 4, 3, 2, 1, 0 after the five
@@ -2524,11 +2524,15 @@ target_link_libraries(ai-driver-input-test PRIVATE chase_runtime)
 target_compile_options(ai-driver-input-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME ai-driver-input COMMAND ai-driver-input-test)
 
-target_sources(chase_runtime PRIVATE src/runtime/ai_spawner.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/ai_spawner.cpp src/runtime/ai_start_state.cpp)
 add_executable(ai-spawner-test tests/ai_spawner_test.cpp)
 target_link_libraries(ai-spawner-test PRIVATE chase_runtime chase_assets)
 target_compile_options(ai-spawner-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME ai-spawner COMMAND ai-spawner-test)
+add_executable(ai-start-state-test tests/ai_start_state_test.cpp)
+target_link_libraries(ai-start-state-test PRIVATE chase_runtime chase_assets)
+target_compile_options(ai-start-state-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME ai-start-state COMMAND ai-start-state-test)
 add_executable(ai-spawner-real-test tests/ai_spawner_real_test.cpp)
 target_link_libraries(ai-spawner-real-test PRIVATE chase_runtime chase_assets)
 target_compile_options(ai-spawner-real-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -2546,8 +2550,19 @@ if(TARGET chase-game)
     --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
     --call-script 1-4_ShowroomArrival --script "0 0 8")
   set_tests_properties(game-ai-spawner-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
-    PASS_REGULAR_EXPRESSION "ai spawners: 17, 42 characters held\n.*ai spawner 1-4_spawner_05: state 1 active at update 1\n.*ai spawner 1-4_spawner_05: spawned 1-4_ai_goon_03 \\(slot 0, 1/2\\) at update 2\n.*ai spawner 1-4_spawner_05: spawned 1-4_ai_goon_06 \\(slot 1, 2/2\\) at update 4")
+    PASS_REGULAR_EXPRESSION "ai spawners: 17, 42 characters held\n.*ai spawner 1-4_spawner_05: state 1 active at update 1\n.*ai start state 0 1-4_ai_goon_03: idle at update 2\n.*ai spawner 1-4_spawner_05: spawned 1-4_ai_goon_03 \\(slot 0, 1/2\\) at update 2\n.*ai start state 0 1-4_ai_goon_06: idle at update 4\n.*ai spawner 1-4_spawner_05: spawned 1-4_ai_goon_06 \\(slot 1, 2/2\\) at update 4")
   set_property(TEST game-ai-spawner-1-4 APPEND PROPERTY LABELS needs-game-data)
+  # SCRIPT-418: 1-4_SO_Phase1 triggers 1-4_Spawner_06 (StartState 6, SuperjumpHeight 5, staggertime 0.6); each goon that comes out gets the spawn word
+  # 0x2bae74 of the StartState table, the AISuperJump set-up 0x213300 to its Runto target (table and data read by 20261102-mission14b-A,
+  # docs/re/scripts-missions-1-4-spawners.md). The update numbers are the port's, not measured in the original.
+  add_test(NAME game-ai-start-state-1-4 COMMAND chase-game
+    --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+    --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+    --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+    --call-script 1-4_SO_Phase1 --script "0 0 45")
+  set_tests_properties(game-ai-start-state-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+    PASS_REGULAR_EXPRESSION "ai start state 6 1-4_ai_goon_07: super jump to 1-4_ai_goon_07_goto at update 2\n.*ai start state 6 1-4_ai_goon_08: super jump to 1-4_ai_goon_08_goto at update 22\n.*ai start state 6 1-4_ai_goon_14: super jump to 1-4_ai_goon_14_goto at update 42")
+  set_property(TEST game-ai-start-state-1-4 APPEND PROPERTY LABELS needs-game-data)
 endif()
 
 if(BUILD_TESTING)
