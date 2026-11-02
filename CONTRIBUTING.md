@@ -31,6 +31,7 @@ Before you open a pull request:
 - The build has no warnings.
 - The unit tests and the CTest tests pass.
 - Every new command-line option has a test that checks its rejection of bad input.
+- New files, tests, executables and libraries are named by what they do, never by a mission, round, agent or date, a number pair like `1_3` or a status word such as `fix`, `glue` or `temp`. The CTest test `file-names` (`tools/check_file_names.py`) checks it.
 
 ## Continuous integration
 

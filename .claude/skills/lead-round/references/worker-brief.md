@@ -30,7 +30,7 @@ You are worker {{agent}} of round {{round}} of the PC port of *LEGO City Underco
 - **Generic over hardcoded:** one rule for all users, as the original (or the spec) does it. A special case needs evidence from the original or the spec.
 - **Reserved IDs:** {{ranges}}. Use them in order from the first one, and report the unused ones. Take no other IDs.
 - **Long commands:** run builds and tests in the foreground or with `run_in_background`, which reports when they exit. Never wait in a `pgrep -f` loop: the pattern matches your own shell command, so the loop never ends.
-- **Code placement:** new runtime logic goes into its own file under `src/runtime/` (or the matching library), with its own CTest. `game.cpp` gets at most a few lines of glue. Your glue file: {{file}}.
+- **Code placement:** new runtime logic goes into its own file under `src/runtime/` (or the matching library), with its own CTest. `game.cpp` gets at most a few lines of glue. Your own new file(s), named by what they do (never by mission, round or status words, CLAUDE.md "Code and files"): {{file}}.
   - Parallel workers: {{who edits what}}. Stay out of their files. If you need their result, read it through a small interface and mark a labelled stand-in until the merge.
 - **Tests:**
   - Short only. Start at the point under test (`at X Y Z`, a level data position, recorded data). No long walks or drives, no route tuning. A test over about 5 s gets the label `slow`.

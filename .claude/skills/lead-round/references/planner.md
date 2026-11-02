@@ -7,7 +7,7 @@ You work in the main checkout, the first entry of `git worktree list`. Every pat
 ## Rules
 
 - **Read `CLAUDE.md` in full first, then the plan's rule file `docs/rules/<file>.md` (named in `docs/plans/README.md`).** Both are mandatory for you, and you write briefs that enforce them.
-- **Graphify** is the first step for every question about which code a package touches: `graphify query "<question>" --graph graphify-out/graph.json`. Check the answers against the source. Use what you learn to name glue files and to keep parallel workers apart.
+- **Graphify** is the first step for every question about which code a package touches: `graphify query "<question>" --graph graphify-out/graph.json`. Check the answers against the source. Use what you learn to name new files by what they do and to keep parallel workers apart.
 - **Gates:** plan only for a plan whose gate is open in `docs/plans/README.md`, and only packages of that plan. If a user request belongs to a gated plan, say so in the proposal instead of planning it.
 - **Never invent behaviour in a brief.** In `linux-port`, what the original does comes from `docs/re` or from the worker's reading of the code and oracle measurements. In other plans, it comes from the approved spec in `docs/design/`; a package whose spec is missing or open is not planned: its questions go under "User actions".
 - **Test labels and license:** briefs keep the test-label, license and git lines of `worker-brief.md`; a package that adds tests reading the game image or `artifacts/` says they get the label `needs-game-data`.
@@ -29,7 +29,7 @@ Choosing packages:
 - **The user's requests come first,** taken literally. Without requests, follow Next Action.
 - **Size (user, 2026-10-18):** every package finishes in well under an hour. That means one narrow item, or a few closely linked items, with a known starting point and little oracle work. Split anything bigger and propose the first part.
 - **Workers:** 3 by default, plus the servant if needed. More only if the user asked for this round.
-- **Independence:** no two workers edit the same function. When two touch the same file or area, give each its own glue file and name it in the proposal. A package that depends on another's result goes into a later round, or reads the result through a small interface with a labelled stand-in until the merge.
+- **Independence:** no two workers edit the same function. When two touch the same file or area, give each its own new file named by what it does, and name it in the proposal. A package that depends on another's result goes into a later round, or reads the result through a small interface with a labelled stand-in until the merge.
 - **RPC** (`linux-port` only; other plans use no emulator unless their rule file says so): if any package needs `--rpc` or an oracle state, plan an emulator servant and mark each such package `via servant`; the servant holds the only `--rpc` session and no worker does. Servant idle jobs come only from open items that need an oracle measurement with an existing state.
 - **Save states:** name the existing state and its game progress. If a package needs a state that does not exist, list it under "User actions", or choose another package. New state requests may be deferred by the user, so check Next Action.
 - **Feature files near 16 KB:** say that the worker splits the file first.
@@ -51,7 +51,7 @@ Basis: <one line: user requests / Next Action item k / priorities.md rank r>
 
 A. <title> — <item IDs> — <model> (<reason, max 8 words>) — ~<minutes> min
    Why now: <one line>
-   Scope: <what gets ported or measured, one or two lines> | Glue: <file or "none">
+   Scope: <what gets ported or measured, one or two lines> | New file: <file or "none">
    RPC: <no | via servant> | States: <name (game progress)> or none
    Review: <"combined sonnet" for a small package with no new reverse engineering | code <model or "skip">, docs <model>>
 B. ...
@@ -77,7 +77,7 @@ If the lead's prompt says `new plan: <name>`, follow `.claude/skills/lead-round/
    - Home: `artifacts/oracle/<round>-X-home`, or `artifacts/oracle/<round>-servant-home` for the servant.
 6. **Write the briefs.** Run `mkdir -p artifacts/rounds/<round>`. Write one file per worker, `<round>-X.md`, from `.claude/skills/lead-round/references/worker-brief.md`, and `<round>-servant.md` from `servant-brief.md` if there is a servant.
    - Fill in every `{{…}}`, including `{{plan}}`, `{{rule file}}` and `{{main}}`: the main checkout's path as `git worktree list | head -1` prints it. A worker in a worktree needs that path for the graph and the artifacts link. Putting it into the generated brief is fine; the skill itself stays free of machine paths. Delete the optional blocks that do not apply.
-   - A brief gives the worker what you learned: item IDs, feature files and their sizes, evidence links, states, glue files, what the other workers do, and the Graphify queries to start with. That way the worker does not plan again.
+   - A brief gives the worker what you learned: item IDs, feature files and their sizes, evidence links, states, new files, what the other workers do, and the Graphify queries to start with. That way the worker does not plan again.
    - Link to docs; don't copy their content.
 7. Final message, at most 10 lines:
 

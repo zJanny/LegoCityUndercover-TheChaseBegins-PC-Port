@@ -50,10 +50,11 @@ CTest also guards `game.cpp` size (`game-cpp-wiring`), GL outside `src/render/` 
 
 - **No SDL** in `chase_input`, `chase_audio`, `chase_save` or `chase_assets`.
 - **Decoders:** `chase_assets` holds every format decoder. Python tools call C++ through `tools/chase_native.py`, and no second decoder is written in Python.
-- **New runtime logic** lives in its own file under `src/runtime/` (or the matching library) with its own test. `game.cpp` and the level glue only gain a few lines.
+- **New runtime logic** lives in its own file under `src/runtime/` (or the matching library) with its own test. `game.cpp` and the level wiring only gain a few lines.
+- **Names say what the code does:** no new or renamed file under `src/`, `tests/` or `tools/`, CTest, executable or library is named after a mission, level, round, agent, date or status word (`fix`, `glue`, `patch`, `temp`, `misc`, `wip`, `hack`, `quick`, `todo`, stand-in) or a number pair like `1_3` (CLAUDE.md "Code and files"; only `game-*` scene tests may name their scene). Run `python3 tools/check_file_names.py` and list its output. A hit: RETURN.
 - **Strict input:** every new command-line option or script command fails with an error that names the option and the bad text, and has a rejection test.
 - **Native pointers** are not sized from ARM addresses. The code is portable C++17 with the standard library.
-- **Parallel workers:** the branch stayed in its own glue file and did not edit the other workers' files named in the brief.
+- **Parallel workers:** the branch stayed in its own new file and did not edit the other workers' files named in the brief.
 
 **Tests**
 

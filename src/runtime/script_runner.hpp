@@ -251,10 +251,10 @@ public:
     void loadObjectKinds(const assets::ClassLookup& classOf) {
         objectNatives_.loadKinds(level_, classOf);
         loadGeneratorNatives(classOf);
-        loadMission14Natives(classOf);
+        loadBulletTimeVehicleDebrisNatives(classOf);
     }
     // BulletTime, VehicleSetAI, VehicleSetChased and SpawnDebris2Colour (script_runner_bullet_time_vehicle_debris_natives.cpp).
-    void loadMission14Natives(const assets::ClassLookup& classOf) { classOf_ = classOf; }
+    void loadBulletTimeVehicleDebrisNatives(const assets::ClassLookup& classOf) { classOf_ = classOf; }
     const BulletTimeSystem& bulletTime() const { return bulletTime_; }
     BulletTimeSystem& bulletTime() { return bulletTime_; }
     const VehicleAiNatives& vehicleAi() const { return vehicleAi_; }

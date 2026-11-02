@@ -175,7 +175,7 @@ void spawnDebrisNative() {
     PlacedObjectState state;
     ScriptRunner runner(level, state);
     Level emptyClass;
-    runner.loadMission14Natives([&emptyClass](const std::string&) -> const Level* { return &emptyClass; });
+    runner.loadBulletTimeVehicleDebrisNatives([&emptyClass](const std::string&) -> const Level* { return &emptyClass; });
     runner.setObjectPositionSource([](const std::string& name, float out[3]) {
         if (name != "boosterskylightdebris") return false;
         out[0] = 5.0f;
