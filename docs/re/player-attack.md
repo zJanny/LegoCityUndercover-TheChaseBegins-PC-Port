@@ -2,6 +2,8 @@
 
 Chase's punch on foot: the button, the combat action states, the target search, the hit test and the messages the attack sends to the object it hits. Prop reactions to the hit (wobbly props, the table of mission 1-2) are in [vehicles-physics-props.md](vehicles-physics-props.md) and [debris.md](debris.md).
 
+Subtopics: [player-attack-characters.md](player-attack-characters.md)
+
 ## Current state
 
 - Y tap: 0x1bb690 counts the held updates of ctrl+0xc bit 0x20 (Y sets 0x60 in 0x200354). A release after 1 to 9 held updates sets the tap edge ctrl+0xe bit 0x20. A hold of 10 or more updates sets the held bit and no attack follows. The attack starts in the release update. [§2026-10-18T19:59:57](#ts-20261018-195957)
@@ -22,8 +24,9 @@ Chase's punch on foot: the button, the combat action states, the target search, 
 - The joint curves of the combo clips are 0xfa raw matrices; they are decoded now (cause of the missing punch animation): [skeleton-animation.md §2026-10-18T21:40:55+02:00](skeleton-animation.md#ts-20261018-214055)
 - The root step of the combo clips is the z translation of the extra joint curve (joint 21: 0.07549 per frame, 1.05684, 0.90586 and 0.67939 at the end of combo_1..3), sampled by 0x2327b4 through 0x270778; the equal sub-animation track 0xdcd633e2 is not its source. [§2026-10-19T08:03:14+02:00](#ts-20261019-080314)
 - Sounds: the enter 0x307e7c plays the weapon table (*0x376050) u16 +0xc through 0x23ae84, the hit event 0x319ffc plays +0xa when the hit test passes; the weapon row is byte +0x17 of the character record. Both ids are 0 for every character (id 0 plays nothing, 0x23fa54), so the attack is silent through these hooks. Port: `src/runtime/attack_sounds.*`. [§2026-10-19T12:54:52](#ts-20261019-125452)
-- Port: `src/runtime/player_attack.*`, glue `src/game_attack.cpp` (stand-ins PLAYER-S5 to PLAYER-S9). [§2026-10-18T19:59:57](#ts-20261018-195957)
-- Open: the track-to-event table, the writers of the range, the angle and the combo length, the line-of-sight test 0x219990, other target types and characters, the jump attack 0x1d5308, the weapon-out state 0x9a, and the exact update order of the tap read in the attack states.
+- Characters as targets, the grab test and the fight move on a goon: [player-attack-characters.md](player-attack-characters.md).
+- Port: `src/runtime/player_attack.*`, glue `src/game_attack.cpp` (stand-ins in [player-movement-attack.md](../plans/features/player-movement-attack.md)). [§2026-10-18T19:59:57](#ts-20261018-195957)
+- Open: the track-to-event table, the writers of the range, the angle and the combo length, the line-of-sight test 0x219990, the jump attack 0x1d5308, the weapon-out state 0x9a, and the exact update order of the tap read in the attack states.
 
 <a id="ts-20261018-195957"></a>
 

@@ -4,6 +4,7 @@
 // events 0x319ffc and 0x3204dc), the hit test 0x1f7f28 and the messages the attack sends to its target through 0x244fc8. No SDL dependency.
 #include "assets/assets.hpp"
 #include "assets/object_collision.hpp"
+#include "runtime/attack_targets.hpp"
 #include "runtime/player_intent.hpp"
 #include "runtime/player_locomotion.hpp"
 
@@ -81,6 +82,16 @@ AttackBody playerAttackBody(float x, float y, float z, std::int16_t facing);
 struct AttackCandidate {
     AttackBody body;
     bool collision = true;           // entity+0x10 bit 0x200 (0x21a2d4 drops an entity without it)
+    AttackEntity entity;             // kind, flags and controller as 0x21a2d4 and 0x1b7358 read them (a wobbly prop by default)
+    std::string name;                // lower-case instance name
+};
+
+// The arguments of 0x219c08 that differ between its callers in the attack.
+struct AttackSearch {
+    float range = 0;
+    float angle = 0;
+    unsigned flags = kAttackSearchFlags;   // 0x21a2d4 flags
+    bool allAround = true;                 // fourth argument: a bad guy is searched all around (every call of the player's attack sets it)
 };
 
 // STAND-IN PLAYER-S9: the level objects the attack can find are the props of class leprops/leprop_wobblydestructible (handler type 119, which
@@ -96,9 +107,40 @@ std::vector<AttackTargetObject> attackTargetObjects(const std::vector<assets::Ob
 // 0x21a1d8: len * (1.25 - cos) * 2 * weight for a candidate within the range and the angle, else FLT_MAX.
 float attackScore(float range, float maxAngle, float weight, const std::array<float, 3>& from, const std::array<float, 3>& direction,
                   const std::array<float, 3>& to);
-// 0x219c08 for the player (weight 0x1b7358 = 1.0 for props): the candidate with the lowest score, or none.
+// 0x219c08 over the near list (a range up to 5.0): among the candidates that pass 0x21a2d4, the one with the lowest score of 0x21a1d8 with the
+// weight 0x1b7358, the candidate's half width and depth beyond the attacker's added to the range and the angle of attackSearchAngle.
+// STAND-IN PLAYER-S13: the near list 0x23d4c0 (the player's list 0x593284, maintained elsewhere) is taken to hold every candidate.
+std::optional<std::size_t> findAttackTarget(const AttackSearch& search, const AttackEntity& attackerEntity, const AttackBody& attacker,
+                                            const std::array<float, 3>& direction, const std::vector<AttackCandidate>& candidates);
+// The same for the player with the flags of the Y tap.
 std::optional<std::size_t> findAttackTarget(float range, float maxAngle, const AttackBody& attacker, const std::array<float, 3>& direction,
                                             const std::vector<AttackCandidate>& candidates);
+
+// The player's entity: a character (kind 27) with collision, not a bad guy, on the ground.
+AttackEntity playerAttackEntity();
+
+// What 0x1fdbd4 does with a Y tap of the player.
+enum class PlayerAttackMove {
+    Punch,       // 0x214f40 variant 0 (3 running), with the melee target or none
+    FightMove,   // 0x1d3980: 0x214f40 variant 4 against the grab target, which is asked for state 0xe3
+    Struggle,    // 0x19bfc0: states 0xfe (player) and 0xff (target), for a target with ability 0x32 or 0x35 or a boss
+};
+struct PlayerAttackChoice {
+    PlayerAttackMove move = PlayerAttackMove::Punch;
+    std::optional<std::size_t> target;
+    bool running = false;
+};
+// The facts of the original's tables the choice needs.
+struct PlayerAttackTables {
+    std::uint8_t weaponRow = 13;     // character table byte +0x17 of the player (row 9 police: 13)
+    AbilitySet fightMoveAbilities{}; // the ability bytes +0xc of the eight fight moves of *0x372e28
+    std::vector<FightMove> moves;    // the eight fight moves
+};
+// 0x1fdbd4 for a Y tap of the player in ground locomotion: the grab search (3.0, 45 degrees) keeps a character that passes 0x28265c and 0x23d610;
+// otherwise the melee search (ctrl+0x80, 1.5 x running) drops a character unless the weapon row is 16.
+// STAND-IN PLAYER-S8: the line of sight 0x219990 of 0x28265c is taken as clear. The special target *(0x3746f4 + 8) (0x219b80) is not modelled.
+PlayerAttackChoice choosePlayerAttack(const AttackBody& attacker, const AttackEntity& player, const std::array<float, 3>& direction, bool running,
+                                      const std::vector<AttackCandidate>& candidates, const PlayerAttackTables& tables);
 // 0x1f7f28: the boxes overlap vertically by more than 0.2, the distance of the box centres minus the target's radius is below the range and the
 // horizontal direction to the target's node is within [minAngle, maxAngle] of the attacker's forward.
 bool attackHitTest(float range, float maxAngle, float minAngle, const AttackBody& attacker, const AttackBody& target);
@@ -113,6 +155,14 @@ struct AttackMessage {
     std::uint32_t kind = 0;          // record +0x14
 };
 
+// 0x1d3980 and 0x19bfc0: the fight move or grab struggle that the tap started against a character.
+struct FightStart {
+    std::size_t target = 0;
+    PlayerAttackMove move = PlayerAttackMove::FightMove;
+    int index = -1;                  // the fight move (combat record byte +0xb), -1 for a struggle
+};
+constexpr int kFightMoveVariant = 4;  // 0x1d3980: 0x214f40(player, ctrl, 4, 0)
+
 struct AttackInput {
     bool tap = false;                // AttackTap edge of this update
     bool allowed = false;            // the player is in a ground locomotion state that runs 0x20b984 -> 0x1fdbd4
@@ -120,6 +170,9 @@ struct AttackInput {
     StickIntent intent;
     float x = 0, y = 0, z = 0;       // player node position before the update
     const std::vector<AttackCandidate>* candidates = nullptr;
+    AttackEntity player = playerAttackEntity();
+    const PlayerAttackTables* tables = nullptr;  // null: the defaults (weapon row 13, no fight moves)
+    GameRandom* random = nullptr;    // 0x25b2b8 for the fight move choice
 };
 
 struct AttackStep {
@@ -131,6 +184,7 @@ struct AttackStep {
     int clip = 0;
     float deltaX = 0, deltaZ = 0;    // root step of this update along the target heading
     std::vector<AttackMessage> messages;
+    std::optional<FightStart> fight;  // the entering update chose a fight move or a struggle
 };
 
 // The clips of the attack, indexed by clip id.
@@ -143,6 +197,7 @@ class PlayerAttack {
 public:
     bool active() const { return state_ != 0; }
     int state() const { return state_; }
+    int variant() const { return variant_; }
     std::optional<std::size_t> target() const { return target_; }
     // One update: from locomotion a tap enters 0xa3; in the attack the facing (motion.facing) turns toward the target heading (motion.lastIntent),
     // the root step follows it, the clip events send the hit and a tap in the combo window starts the next state.
@@ -160,6 +215,7 @@ private:
     bool pendingTap_ = false;        // a tap edge of the previous update (the attack states read it one update later)
     const AttackClip* clip_ = nullptr;
     std::optional<std::size_t> target_;
+    int lastFightMove_ = -1;         // combat record byte +0xb (0xff before the first fight move)
 };
 
 }

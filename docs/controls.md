@@ -142,6 +142,7 @@ In the [development runtime](commands.md#development-runtime), on foot:
 - A short press of **Y** punches. Chase attacks when you let go of the button. A press held longer than about a third of a second does nothing.
 - Chase turns toward the nearest smashable prop in front of him, such as a table, and hits it.
 - Press **Y** again near the end of a punch to chain up to four punches.
+- Near an enemy, **Y** grabs and throws the enemy instead of punching. The enemy does not react yet.
 
 ## Driving a vehicle
 

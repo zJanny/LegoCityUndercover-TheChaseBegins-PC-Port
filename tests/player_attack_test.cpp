@@ -101,7 +101,10 @@ bool load(const char* fib, const char* names, Session& session) {
     session.objects = attackTargetObjects(assets::objectCollisionCandidates(archive, level));
     bool found = false;
     for (std::size_t i = 0; i < session.objects.size(); ++i) {
-        session.candidates.push_back({session.objects[i].body, session.objects[i].collisionDefault});
+        AttackCandidate candidate;
+        candidate.body = session.objects[i].body;
+        candidate.collision = session.objects[i].collisionDefault;
+        session.candidates.push_back(candidate);
         if (session.objects[i].instance == "DonutTable_14") {
             session.table = i;
             found = true;

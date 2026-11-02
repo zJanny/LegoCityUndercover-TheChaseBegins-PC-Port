@@ -2,7 +2,7 @@
 
 ## 1. Scope
 
-The character side of a hit: message 0 to a level character (the hit receiver 0x1b8570, damage, the reaction message 46), the hit states PUNCHED, KNOCKED DOWN and GET UP, the arrest health and the state in which a goon can be arrested. The player's punch is PLAYER-14 in [player-movement.md](player-movement.md); the death of a character (message 1) is [script-system-natives-world-death.md](script-system-natives-world-death.md); the goons' attack on the player (AIPursuit) and the arrest action are not in this file.
+The character side of a hit: message 0 to a level character (the hit receiver 0x1b8570, damage, the reaction message 46), the hit states PUNCHED, KNOCKED DOWN and GET UP, the arrest health and the state in which a goon can be arrested. The player's punch and the fight move on a goon are in [player-movement-attack.md](player-movement-attack.md) (open items PLAYER-26..29); the death of a character (message 1) is [script-system-natives-world-death.md](script-system-natives-world-death.md); the goons' attack on the player (AIPursuit) and the arrest action are not in this file.
 
 ## 2. Status
 

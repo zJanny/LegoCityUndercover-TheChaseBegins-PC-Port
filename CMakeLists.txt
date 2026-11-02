@@ -58,7 +58,7 @@ target_sources(chase_runtime PRIVATE src/runtime/shadow.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/award_viewer.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/reference_trigger_level.cpp src/runtime/reference_trigger_apply.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/switch_base.cpp src/runtime/switch_set.cpp src/runtime/lever_use.cpp)
-target_sources(chase_runtime PRIVATE src/runtime/player_attack.cpp src/runtime/attack_sounds.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/player_attack.cpp src/runtime/attack_targets.cpp src/runtime/attack_sounds.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_walk.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/vehicle_camera.cpp src/runtime/particles.cpp src/runtime/debris.cpp src/runtime/prop_destroy.cpp src/runtime/destroy_message.cpp src/runtime/character_death.cpp src/runtime/fall_apart.cpp src/runtime/stud_drop.cpp src/runtime/character_respawn.cpp src/runtime/character_hit.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/prop_wobbly_destructible.cpp src/runtime/prop_bouncer.cpp src/runtime/stud_callers.cpp src/runtime/stud_drop_classes.cpp src/runtime/super_brick.cpp src/runtime/prop_hit_sequence.cpp)
@@ -192,7 +192,7 @@ if(EPOXY_FOUND)
     target_sources(chase-game PRIVATE src/game_debris_pickup.cpp)
     target_sources(chase-game PRIVATE src/game_switch_glue.cpp src/game_switch_use_glue.cpp)
     target_sources(chase-game PRIVATE src/game_debris_super.cpp)
-    target_sources(chase-game PRIVATE src/game_attack.cpp src/game_screen_fade.cpp src/game_screen_shake.cpp src/game_save.cpp)
+    target_sources(chase-game PRIVATE src/game_attack.cpp src/runtime/game_attack_characters_glue.cpp src/game_screen_fade.cpp src/game_screen_shake.cpp src/game_save.cpp)
     target_sources(chase-game PRIVATE src/game_prop_rocking.cpp src/runtime/game_rocking_follow_glue.cpp src/runtime/game_attach_children_glue.cpp src/game_platform_nodes.cpp)
     target_sources(chase-game PRIVATE src/runtime/game_push_cart_glue.cpp src/runtime/game_mission13_fixes_glue.cpp src/runtime/qol_window.cpp src/runtime/qol_controls_bindings.cpp src/runtime/qol_pc_controls.cpp src/runtime/qol_game_wiring.cpp)
     target_sources(chase-game PRIVATE src/runtime/game_platform_riding_glue.cpp)
@@ -886,6 +886,12 @@ if(BUILD_TESTING)
   add_test(NAME player-attack COMMAND player-attack-test)
   add_test(NAME player-attack-real-data COMMAND player-attack-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(player-attack-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(attack-targets-test tests/attack_targets_test.cpp)
+  target_link_libraries(attack-targets-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(attack-targets-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME attack-targets COMMAND attack-targets-test)
+  add_test(NAME attack-targets-real-data COMMAND attack-targets-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+  set_tests_properties(attack-targets-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(attack-sounds-test tests/attack_sounds_test.cpp)
   target_link_libraries(attack-sounds-test PRIVATE chase_runtime chase_assets)
   target_compile_options(attack-sounds-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -2130,6 +2136,17 @@ if(BUILD_TESTING)
       --start "715.44196 32.71405 641.61597" --facing -5.1416 --script "0 0 2;0 0 1 Y;0 0 20")
     set_tests_properties(game-script-attack-table PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
       PASS_REGULAR_EXPRESSION "attack: message 62 to donuttable_14 at update 3.*attack: hit donuttable_14 \\(message 0, damage 1\\) at update 7.*attack: ended at update 17")
+    # A Y tap 1.5 m from 1-4_AI_Goon_01 (level data position (552.138, 38.946, 980.847)), Chase facing away from it: the grab search finds the bad
+    # guy all around and starts a fight move on it (0x1fdbd4 -> 0x1d3980, docs/re/player-attack.md; read from the code by 20261101-mission-D on
+    # 2026-11-01). No message 62 goes to the goon: oracle 20261101-mission-D-1, recorded from a save state of mission 1-4 (no 0x244fc8 call with 62).
+    add_test(NAME game-script-attack-goon COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+      --start "552.138 38.946 979.347" --facing 3.1416 --script "0 0 2;0 0 1 Y;0 0 2")
+    set_tests_properties(game-script-attack-goon PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+      PASS_REGULAR_EXPRESSION "attack: 99 characters, 8 fight moves.*attack: fight move [0-7] on character 1-4_ai_goon_01 \\(state 227\\) at update 3.*attack: state 163 clip (261|437|453|467|469|471|473|475) at update 3"
+      FAIL_REGULAR_EXPRESSION "attack: message 62 to 1-4_ai_goon_01")
     # Five Y taps (15 updates apart) from the same spot: every hit lowers the table's WobbleHealth 5 by the damage 1 (oracle: 4, 3, 2, 1, 0 after the five
     # punches), the fifth destroys DonutTable_14 and DonutTable_14_Script runs in the update of the destroy (docs/re/props-wobbly-bouncer.md).
     add_test(NAME game-script-wobbly-table COMMAND chase-game
@@ -2457,7 +2474,7 @@ foreach(game_data_test
   ladder-real-data fence-vault-real-data carry-animation-real-data lever-use-real-data nested-object-collision-real-data super-buildit-real-data layout-text-real-data layout-scale-real-data fast-travel-pad-real-data map-buttons-real-data pause-menu-real-data buildit-real-data
   prop-animation-real-data animal-props-real-data cat-rescue-real-data prop-parts-real-data vehicle-boarding-real-data vehicle-drive-real-data
   floor-graph-real-data vehicle-collision-real-data vehicle-box-contact-real-data vehicle-sphere-sweep-real-data vehicle-prop-smash-real-data
-  destroy-effects-real-data character-death-real-data character-hit-real-data player-attack-real-data attack-sounds-real-data vehicle-world-real-data vehicle-rest-real-data
+  destroy-effects-real-data character-death-real-data character-hit-real-data player-attack-real-data attack-targets-real-data attack-sounds-real-data vehicle-world-real-data vehicle-rest-real-data
   vehicle-wheels-real-data vehicle-hud-real-data vehicle-real-data objectives-real-data object-kinds progress-readme priorities-current
   camera-records-real-data locomotion-real-data streaming-real-data room-streaming-real-data collision-real-data fog-real-data lighting-real-data reflection-real-data
   sky-real-data shadow-real-data level-start-real-data dcam-real-data npc-idle-real-data pedestrian-limit-real-data ai-real-data nav-path-real-data
@@ -2475,7 +2492,7 @@ foreach(game_data_test
   game-mission-1-1 game-detective-1-2 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-girder-guy-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-garage-key-1-3 game-key-use-1-3 game-use-spot-1-2 game-use-marker-detective-1-2 game-player-script-animation game-super-buildit-prompt
   game-super-buildit-build game-helipad-collision game-fast-travel-exit game-cage-release-1-2 game-doorlock-detective-1-2 game-mission-1-2-start-timing game-mission-1-1-start game-script-dialog
   game-same-level-entry game-scene-change-exit game-scene-change-entry game-director-hold game-director-release game-script-zipline game-script-zipline-handcuffs
-  game-script-attack-table game-script-wobbly-table game-script-bounce game-script-bounce-grab game-script-acrobat-poles game-script-zipline-use-a
+  game-script-attack-table game-script-attack-goon game-script-wobbly-table game-script-bounce game-script-bounce-grab game-script-acrobat-poles game-script-zipline-use-a
   game-script-zipline-use-b game-script-brick-grab game-script-brick-rail game-script-pole game-script-ladder game-script-ladder-walk-in
   game-script-jump game-pause-menu-clean game-pause-menu game-options-reload game-script-hud game-room-streaming game-stream-room-in soundtest-real-smoke soundtest-id-smoke fmv-real-smoke
   prop-wobbly-real-data stud-callers-real-data stud-drop-classes-real-data prop-hit-sequence-real-data super-brick-real-data

@@ -30,6 +30,7 @@ void LevelSession::loadAttack(assets::FuseArchive& archive, const std::vector<as
         attackClips.clips.push_back(runtime::makeAttackClip(id, player->animations.at(id)));
     }
     std::cout << "attack: " << attackClips.clips.size() << " clips, " << attackTargets.size() << " targets\n";
+    loadAttackCharacters(archive);
 }
 
 // The player step with the attack on foot (docs/re/player-attack.md): a Y tap in ground locomotion enters the attack state after the locomotion
@@ -41,12 +42,23 @@ game_player::PlayerAnimation LevelSession::attackMovePlayer(const runtime::Stick
     if (!player || attackClips.clips.empty()) return climbBarMovePlayer(intent, jumpPressed, usePressed, dt);
     std::vector<runtime::AttackCandidate> candidates;
     candidates.reserve(attackTargets.size());
-    for (const runtime::AttackTargetObject& object : attackTargets)
-        candidates.push_back({object.body, !objectState.isDisabled(object.instance) && objectState.collisionEnabled(object.instance, object.collisionDefault)});
+    for (const runtime::AttackTargetObject& object : attackTargets) {
+        runtime::AttackCandidate candidate;
+        candidate.body = object.body;
+        candidate.collision = !objectState.isDisabled(object.instance) && objectState.collisionEnabled(object.instance, object.collisionDefault);
+        candidate.name = lowerCase(object.instance);
+        candidates.push_back(candidate);
+    }
+    appendAttackCharacters(candidates);
     runtime::AttackInput input;
     input.tap = tapped;
     input.intent = intent;
     input.candidates = &candidates;
+    input.player = attackPlayer;
+    input.player.character.onGround = player->vertical.posture == runtime::Posture::Ground;
+    input.player.character.groundY = player->vertical.y;
+    input.tables = &attackTables;
+    input.random = &breakRandomStandIn;
     const auto readPosition = [&]() {
         input.x = player->motion.x;
         input.y = player->vertical.y;
@@ -61,9 +73,12 @@ game_player::PlayerAnimation LevelSession::attackMovePlayer(const runtime::Stick
     }
     readPosition();
     const runtime::AttackStep step = attack.update(input, player->motion, attackClips);
+    deliverAttackCharacterMessages(step, candidates);
     for (const runtime::AttackMessage& message : step.messages) {
-        const std::string instance = lowerCase(attackTargets[message.target].instance);
-        attackMessages.emplace_back(instance, message);
+        const std::string& instance = candidates[message.target].name;
+        const bool character = runtime::isAttackCharacter(candidates[message.target].entity);
+        if (!character) attackMessages.emplace_back(instance, message);
+        if (message.id == runtime::kAttackMessageHit && character) continue;
         if (message.id == runtime::kAttackMessageHit)
             std::cout << "attack: hit " << instance << " (message 0, damage " << message.damage << ") at update " << updates << '\n';
         else

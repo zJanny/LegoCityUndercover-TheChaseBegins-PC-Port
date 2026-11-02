@@ -17,6 +17,11 @@ constexpr std::uint32_t kTinyLengthBits = 0x34000000;   // 0x257ea0: a length at
 constexpr std::uint32_t kVerticalGapBits = 0xbe4ccccc;  // 0x1f7f28: the gaps must compare above this as unsigned words (at or below -0.2)
 constexpr float kUpdatesPerSecond = 30.0f;
 
+const PlayerAttackTables& tablesOf(const AttackInput& input) {
+    static const PlayerAttackTables kDefaults;
+    return input.tables ? *input.tables : kDefaults;
+}
+
 std::uint32_t bitsOf(float value) {
     std::uint32_t bits = 0;
     std::memcpy(&bits, &value, sizeof bits);
@@ -176,14 +181,15 @@ float attackScore(float range, float maxAngle, float weight, const std::array<fl
     return FLT_MAX;
 }
 
-std::optional<std::size_t> findAttackTarget(float range, float maxAngle, const AttackBody& attacker, const std::array<float, 3>& direction,
-                                            const std::vector<AttackCandidate>& candidates) {
+std::optional<std::size_t> findAttackTarget(const AttackSearch& search, const AttackEntity& attackerEntity, const AttackBody& attacker,
+                                            const std::array<float, 3>& direction, const std::vector<AttackCandidate>& candidates) {
     const std::array<float, 3> from = transformPoint(attacker.node, attacker.centre);
     std::optional<std::size_t> best;
     float bestScore = FLT_MAX;
     for (std::size_t i = 0; i < candidates.size(); ++i) {
         const AttackCandidate& candidate = candidates[i];
         if (!candidate.collision) continue;
+        if (!attackCandidatePasses(candidate.entity, attackerEntity, search.flags)) continue;
         const AttackBody& body = candidate.body;
         std::array<float, 3> to = transformPoint(body.node, body.centre);
         float extra = 0.0f;
@@ -191,13 +197,52 @@ std::optional<std::size_t> findAttackTarget(float range, float maxAngle, const A
         if (attacker.half[2] < body.half[2]) extra += body.half[2] - attacker.half[2];
         const float rise = attacker.node[13] - body.node[13];
         if (rise < body.half[1] - attacker.half[1] && -body.half[1] < rise) to[1] = from[1];
-        const float score = attackScore(range + extra, maxAngle, 1.0f, from, direction, to);
+        const float angle = attackSearchAngle(candidate.entity, search.angle, search.allAround);
+        const float score = attackScore(search.range + extra, angle, attackWeight(candidate.entity), from, direction, to);
         if (score < bestScore) {
             best = i;
             bestScore = score;
         }
     }
     return best;
+}
+
+AttackEntity playerAttackEntity() {
+    AttackEntity player;
+    player.kind = kEntityKindCharacter;
+    player.player = true;
+    return player;
+}
+
+std::optional<std::size_t> findAttackTarget(float range, float maxAngle, const AttackBody& attacker, const std::array<float, 3>& direction,
+                                            const std::vector<AttackCandidate>& candidates) {
+    return findAttackTarget({range, maxAngle, kAttackSearchFlags, true}, playerAttackEntity(), attacker, direction, candidates);
+}
+
+PlayerAttackChoice choosePlayerAttack(const AttackBody& attacker, const AttackEntity& player, const std::array<float, 3>& direction, bool running,
+                                      const std::vector<AttackCandidate>& candidates, const PlayerAttackTables& tables) {
+    PlayerAttackChoice choice;
+    choice.running = running;
+    const std::optional<std::size_t> grab = findAttackTarget({kGrabSearchRange, kGrabSearchAngle, kAttackSearchFlags, true}, player, attacker, direction, candidates);
+    if (grab) {
+        const AttackEntity& target = candidates[*grab].entity;
+        const bool fight = isAttackCharacter(target) && fightTargetPasses(target, player, tables.fightMoveAbilities, true);
+        if (fight || (target.word & kEntityWordBoss)) {
+            if (!grabStateAllows(target.character.state)) return choice;
+            const bool struggle = hasAbility(target.character.abilities, 0x32) || (target.word & kEntityWordBoss) || hasAbility(target.character.abilities, 0x35);
+            choice.move = struggle ? PlayerAttackMove::Struggle : PlayerAttackMove::FightMove;
+            choice.target = grab;
+            choice.running = false;
+            return choice;
+        }
+    }
+    const float range = running ? kPlayerMeleeRangeStandIn * kRunningAttackRangeScale : kPlayerMeleeRangeStandIn;
+    const std::optional<std::size_t> melee = findAttackTarget({range, kPlayerAttackAngleStandIn, kAttackSearchFlags, true}, player, attacker, direction, candidates);
+    if (melee && (!isAttackCharacter(candidates[*melee].entity) || tables.weaponRow == kWeaponRowCharacterMelee)) choice.target = melee;
+    if (choice.running && choice.target &&
+        length3(difference(nodePosition(attacker.node), nodePosition(candidates[*choice.target].body.node))) < kPlayerMeleeRangeStandIn)
+        choice.running = false;
+    return choice;
 }
 
 bool attackHitTest(float range, float maxAngle, float minAngle, const AttackBody& attacker, const AttackBody& target) {
@@ -258,19 +303,36 @@ void PlayerAttack::enter(const AttackInput& input, LocomotionState& motion, cons
     const std::vector<AttackCandidate>& candidates = input.candidates ? *input.candidates : kNoCandidates;
     const AttackBody attacker = playerAttackBody(input.x, input.y, input.z, motion.facing);
     const std::array<float, 3> direction = input.intent.active ? headingDirection(input.intent.heading) : headingDirection(motion.facing);
-    const float range = running ? kPlayerMeleeRangeStandIn * kRunningAttackRangeScale : kPlayerMeleeRangeStandIn;
-    target_ = findAttackTarget(range, kPlayerAttackAngleStandIn, attacker, direction, candidates);
-    if (running && target_ &&
-        length3(difference(nodePosition(attacker.node), nodePosition(candidates[*target_].body.node))) < kPlayerMeleeRangeStandIn)
-        running = false;
-    const int clipId = running ? kAttackRunningClip : kAttackFirstComboClip + int(comboIndex_);
+    const PlayerAttackChoice choice = choosePlayerAttack(attacker, input.player, direction, running, candidates, tablesOf(input));
+    target_ = choice.target;
+    running = choice.running;
+    if (choice.move == PlayerAttackMove::Struggle) {
+        step.fight = FightStart{*target_, choice.move, -1};
+        target_.reset();
+        return;
+    }
+    std::optional<int> move;
+    if (choice.move == PlayerAttackMove::FightMove) {
+        if (input.random) move = chooseFightMove(lastFightMove_, input.player.character.abilities, tablesOf(input).moves, *input.random);
+        if (!move) {
+            target_.reset();
+            return;
+        }
+    }
+    const int clipId = move ? tablesOf(input).moves[std::size_t(*move)].clip : running ? kAttackRunningClip : kAttackFirstComboClip + int(comboIndex_);
     const AttackClip* clip = clips.find(clipId);
     if (!clip || clip->updates == 0) {
         target_.reset();
         return;
     }
-    if (!running) comboIndex_ = comboIndex_ + 1 >= kPlayerComboLengthStandIn ? 0 : comboIndex_ + 1;
-    variant_ = running ? 3 : 0;
+    if (move) {
+        lastFightMove_ = *move;
+        step.fight = FightStart{*target_, choice.move, *move};
+        variant_ = kFightMoveVariant;
+    } else {
+        if (!running) comboIndex_ = comboIndex_ + 1 >= kPlayerComboLengthStandIn ? 0 : comboIndex_ + 1;
+        variant_ = running ? 3 : 0;
+    }
     state_ = state_ == kAttackStateAction ? kAttackStateRepeat : kAttackStateAction;
     clip_ = clip;
     elapsed_ = 0;
@@ -278,7 +340,7 @@ void PlayerAttack::enter(const AttackInput& input, LocomotionState& motion, cons
     step.started = true;
     if (target_) {
         if (const std::optional<std::int16_t> heading = attackTargetHeading(attacker, candidates[*target_])) motion.lastIntent = *heading;
-        if (length3(difference(nodePosition(attacker.node), nodePosition(candidates[*target_].body.node))) < kPlayerMeleeRangeStandIn)
+        if (!move && length3(difference(nodePosition(attacker.node), nodePosition(candidates[*target_].body.node))) < kPlayerMeleeRangeStandIn)
             step.messages.push_back({*target_, kAttackMessageNotice, 0, 0});
     }
 }
@@ -301,12 +363,15 @@ void PlayerAttack::advance(const AttackInput& input, LocomotionState& motion, At
         const AttackBody attacker = playerAttackBody(input.x + step.deltaX, input.y, input.z + step.deltaZ, motion.facing);
         if (!target_) {
             const std::array<float, 3> direction = input.intent.active ? headingDirection(input.intent.heading) : headingDirection(motion.facing);
-            target_ = findAttackTarget(kPlayerMeleeRangeStandIn, kPlayerAttackAngleStandIn, attacker, direction, candidates);
-        } else if (*target_ >= candidates.size() || !candidates[*target_].collision) {
+            const bool punch = (variant_ == 0 || variant_ == 3) && tablesOf(input).weaponRow != kWeaponRowCharacterMelee;
+            const unsigned flags = punch ? kAttackStrikeFlagsPunch : kAttackStrikeFlags;
+            target_ = findAttackTarget({kPlayerMeleeRangeStandIn, kPlayerAttackAngleStandIn, flags, true}, input.player, attacker, direction, candidates);
+        } else if (*target_ >= candidates.size() || !candidates[*target_].collision ||
+                   !attackCandidatePasses(candidates[*target_].entity, input.player, kAttackStrikeFlags)) {
             target_.reset();
         }
         if (target_ && attackHitTest(kPlayerMeleeRangeStandIn, kPlayerAttackAngleStandIn, 0.0f, attacker, candidates[*target_].body))
-            step.messages.push_back({*target_, kAttackMessageHit, kAttackDamage, kAttackHitKind});
+            step.messages.push_back({*target_, kAttackMessageHit, kAttackDamage, variant_ == 0 || variant_ == 3 ? kAttackHitKind : 0u});
     }
     if (clip_->passes(clip_->windowFrames, k)) window_ = true;
 }

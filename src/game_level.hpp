@@ -225,6 +225,9 @@ private:
     void logDrawnFixes();
     void landReleasedFlights(float dt);
     void loadAttack(chase::assets::FuseArchive& archive, const std::vector<chase::assets::ObjectCollision>& placed);
+    void loadAttackCharacters(chase::assets::FuseArchive& archive);
+    void appendAttackCharacters(std::vector<chase::runtime::AttackCandidate>& candidates);
+    void deliverAttackCharacterMessages(const chase::runtime::AttackStep& step, const std::vector<chase::runtime::AttackCandidate>& candidates);
     game_player::PlayerAnimation attackMovePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, bool attackHeld,
                                                   bool attackAllowed, float dt);
     bool scannerView(float eye[3], float& yaw, float& pitch, float& fieldOfView) const;
@@ -510,6 +513,16 @@ private:
     chase::runtime::AttackClips attackClips;
     std::vector<chase::runtime::AttackTargetObject> attackTargets;
     std::vector<std::pair<std::string, chase::runtime::AttackMessage>> attackMessages;  // the messages the attack sent in this update, by target instance
+    struct AttackCharacter {
+        std::string name;
+        int room = 0;
+        chase::runtime::AttackEntity entity;
+    };
+    std::vector<AttackCharacter> attackCharacters;
+    chase::runtime::PlayerAttackTables attackTables;
+    chase::runtime::AttackEntity attackPlayer;
+    chase::runtime::CharacterHitSink characterHitSink;      // message 0 of the attack to a character (until set: a log line, PLAYER-S12)
+    chase::runtime::CharacterFightSink characterFightSink;  // the fight move or struggle a tap started on a character (until set: a log line)
     chase::runtime::VehiclePairManifolds vehiclePairs;
     std::vector<std::string> vehicleTableNames;
     chase::runtime::VehicleHud vehicleHud;
