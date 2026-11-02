@@ -47,6 +47,10 @@ void InputState::rebind(std::vector<Binding> bindings) { bindings_ = std::move(b
 void InputState::fix(Action action, Source source, int code) {
     fixed_.push_back({action, source, code, Mode::Hold});
 }
+void InputState::retargetFixed(Source source, int code, Action action) {
+    for (auto& binding : fixed_)
+        if (binding.source == source && binding.code == code && !binding.down) binding.action = action;
+}
 bool InputState::active(Action action) const {
     for (const auto* group : {&bindings_, &fixed_})
         for (const auto& binding : *group)

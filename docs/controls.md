@@ -91,7 +91,7 @@ In the [development runtime](commands.md#development-runtime), while the scanner
 In `chase-game`, Escape never closes the program. It is a fixed second key for **Start**; it does not follow `config/controls.cfg` and cannot be unbound.
 
 - While you play, it opens the pause menu, like Start.
-- In the pause menu it does what Start does there: it closes the pause menu. On the options and language pages that also closes the pause menu at once, not one page back; use **B** to go back one page.
+- In the pause menu it acts as **B** on every page: on the main wheel it closes the pause menu (with the back sound); on the options and language pages it goes back one page (after a change on the options page it first saves, as B does); a second Escape on the main wheel then closes the pause menu.
 - In the PC settings menu it goes back: it first closes an open list, prompt or question, then the menu.
 - On the start screens it skips the Fusion Games movie when you have played before, like Start. It does nothing on the logos, the language list, the question pages and the slot list, and nothing in cutscenes and movies of a level, because the original has no skip there.
 - To quit, close the window, or choose Quit game in the [PC settings menu](#pc-settings-menu). The model viewer, the movie player and the input laboratory keep Escape = quit.

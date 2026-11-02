@@ -170,6 +170,7 @@ public:
     void handOverProgress();
     unsigned updateCount() const { return updates; }
     bool pauseSettingsConsume(const SDL_Event& event, SDL_Window* window);
+    chase::frontend::PausePage pausePage() const;
     void mouseCameraEvent(const SDL_Event& event, SDL_Window* window);
     void mouseCameraFrame(SDL_Window* window);
     bool frameDue() const { return !script.empty() || pacer.due(now()); }

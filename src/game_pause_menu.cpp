@@ -90,6 +90,10 @@ bool LevelSession::pauseSettingsConsume(const SDL_Event& event, SDL_Window* wind
     return qol::pauseEntryConsumes(pauseSettings, event, window);
 }
 
+chase::frontend::PausePage LevelSession::pausePage() const {
+    return pauseMenu && pauseMenu->isOpen() ? pauseMenu->page() : fe::PausePage::None;
+}
+
 void LevelSession::mouseCameraEvent(const SDL_Event& event, SDL_Window* window) {
     mouseCamera.event(event, window, mouseScreenOf(window));
 }

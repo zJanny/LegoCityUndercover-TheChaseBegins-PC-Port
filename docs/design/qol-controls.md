@@ -11,6 +11,7 @@ The user's words, after playing the new settings menu ([playtests-qol.md §2026-
 The lead asked what Escape does on the game window. The user chose **"Never closes the game"** (2026-11-01), option text: "Esc always means back/close menu/pause, like in typical PC games; quitting goes through a menu entry."
 
 Decided (the user, 2026-11-01):
+- Pause screen (the user, 2026-11-02, "Yes, back too"): on every page of the open pause screen Escape acts as B, including the main wheel, where B resumes the game with the back sound; in play Escape stays Start.
 - Escape never closes the game, in any state. In gameplay it opens the pause menu (it is also bound to Start, Keypad Enter second); in a menu or dialog it goes back or closes it (the settings menu already follows this: [qol-settings-drawing.md §2026-10-30T21:56:04](qol-settings-drawing.md#ts-20261030-215604)).
 - Quit entry, "PC Settings + title (Rec.)": a "Quit game" row with Yes/No on the PC Settings Game tab, and the same on the title and save slot screens. The original menus stay unchanged. Closing the window still ends the program.
 - Quit game in the front end (the user, 2026-11-01, "Only via PC Settings (Recommended)"): the front end has no title screen with entries, so Quit game is reached there only through the PC Settings menu opened from the slot page (Game tab, Quit game row, Yes/No, mouse and keyboard); no new button on the slot page art. The screens before the slot page (logos, movie, language list, prompt pages) can be left only by closing the window.

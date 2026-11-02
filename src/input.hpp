@@ -27,6 +27,7 @@ public:
     void reset();
     void rebind(std::vector<Binding> bindings);
     void fix(Action action, Source source, int code);
+    void retargetFixed(Source source, int code, Action action);
     bool active(Action action) const;
     int horizontal() const;
     int vertical() const;

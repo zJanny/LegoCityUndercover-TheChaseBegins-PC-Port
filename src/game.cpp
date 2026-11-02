@@ -82,6 +82,7 @@ void pollEvents(chase::InputState& input, PadDevice& pad, bool& running, game_to
         switch (event.type) {
         case SDL_QUIT: running = false; break;
         case SDL_KEYDOWN: case SDL_KEYUP:
+            if (event.type == SDL_KEYDOWN) runtime::routeEscape(input, event.key.keysym.sym, session.pausePage());
             input.event(chase::Source::Key, event.key.keysym.sym, event.type == SDL_KEYDOWN, event.key.repeat != 0);
             break;
         case SDL_MOUSEBUTTONDOWN: case SDL_MOUSEBUTTONUP:

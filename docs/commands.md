@@ -114,6 +114,7 @@ The table lists some of the tests. `ctest --test-dir build -N` lists all of them
 |---|---|
 | `input-core` | Input core, no SDL, including the `DebugOverlay` binding |
 | `escape-binding` | Escape as the fixed Start binding: survives a controls-file rebind and focus loss, and with the front-end flow it skips the movie of a returning player, not the logos, the first-run movie or a question page (`tests/escape_test.cpp`) |
+| `escape-pause-pages` | Escape on the real pause screen: Start on the main wheel (closes), B on the Options and Languages pages (back one page, then a second Escape closes), Start in play; a held key keeps its button (`tests/escape_pause_test.cpp`) |
 | `qol-settings` | Quality-of-life toggle store, no SDL: master state Original/Improved/Custom, per-feature switches, strict `config/qol.cfg` read and write including `window_mode` and `resolution` (`tests/qol/`) |
 | `qol-ui-nav` | Navigation and focus model of the new settings menu, no SDL and no GL: shared mouse and keyboard focus, rows, tab bar reach and wrap, Esc and right-click layering over prompt, dialog and dropdown, slider drag, wheel scroll, pad buttons, as plain-type actions (`tests/qol/`) |
 | `qol-game-tab` | Model of the Game tab, no SDL: SFX and Music volume 0 to 10, Invert camera, a read-only language value and a Language row that requests the Languages page, over a fake options interface, in-sync reads, ranges and rejections (`tests/qol/`) |
