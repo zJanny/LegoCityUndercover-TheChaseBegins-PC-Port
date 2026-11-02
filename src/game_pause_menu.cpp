@@ -20,6 +20,13 @@ constexpr const char* kHintText = "localisation/hinttext_uk.loc";
 constexpr const char* kSystemText = "localisation/systemtext_uk.loc";
 constexpr std::size_t kSlotStart = 10, kSlotDpadUp = 0, kSlotDpadDown = 1, kSlotDpadLeft = 2, kSlotDpadRight = 3;
 const char* const kEntryNames[] = {"Resume", "Options", "Credits", "Exit"};
+
+qol::MouseScreen mouseScreenOf(SDL_Window* window) {
+    int width = 0, height = 0;
+    SDL_GetWindowSize(window, &width, &height);
+    const game_hud::Rect bottom = game_hud::screensFor(width, height).bottom;
+    return {width, height, {bottom.x, height - (bottom.y + bottom.height), bottom.width, bottom.height}};
+}
 }
 
 bool LevelSession::holdForPause(float dt, const runtime::PadState& padInput) {
@@ -81,6 +88,14 @@ bool LevelSession::holdForPause(float dt, const runtime::PadState& padInput) {
 
 bool LevelSession::pauseSettingsConsume(const SDL_Event& event, SDL_Window* window) {
     return qol::pauseEntryConsumes(pauseSettings, event, window);
+}
+
+void LevelSession::mouseCameraEvent(const SDL_Event& event, SDL_Window* window) {
+    mouseCamera.event(event, window, mouseScreenOf(window));
+}
+
+void LevelSession::mouseCameraFrame(SDL_Window* window) {
+    mouseCamera.frame(window, pauseRequested || (pauseMenu && pauseMenu->isOpen()), mouseScreenOf(window));
 }
 
 bool LevelSession::drawPause(int width, int height) {

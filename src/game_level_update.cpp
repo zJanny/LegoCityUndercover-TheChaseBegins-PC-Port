@@ -1,5 +1,6 @@
 #include "runtime/collision_enable.hpp"
 #include "game_level.hpp"
+#include "qol/active_settings.hpp"
 #include "runtime/follow_camera.hpp"
 #include "runtime/player_intent.hpp"
 #include "runtime/update_order.hpp"
@@ -232,7 +233,8 @@ void LevelSession::updateFollowCamera(float dt) {
     input.target[2] = player->motion.z;
     input.targetFacing = runtime::headingRadians(player->motion.facing);
     input.stickTurn = runtime::stickTurnInput(pad.slot(kSlotStickX).value, game_player::kPlayerEntityType);
-    input.shoulderTurn = runtime::shoulderTurnInput(pad.slot(kSlotLeftShoulder).value, pad.slot(kSlotRightShoulder).value,
+    const float mouseTurn = qol::enabled(qol::Feature::PcControls) ? mouseCamera.take(dt) : 0.0f;
+    input.shoulderTurn = runtime::shoulderTurnInput(pad.slot(kSlotLeftShoulder).value, pad.slot(kSlotRightShoulder).value + mouseTurn,
                                                    shared.progress.options.size() > 3 && (shared.progress.options[3] & runtime::kInvertCameraBit));
     selectCameraSubject(input);
     runtime::DirectorCamera& director = levelScripts.director();

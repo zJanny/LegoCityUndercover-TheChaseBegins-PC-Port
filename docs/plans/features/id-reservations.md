@@ -14,8 +14,6 @@ Ranges of item IDs held by parallel agents, named like `20261021-audio-A`. The p
 | PLAYER-S | 15 | 16 | 20261102-mission14-D | 2026-11-02T14:46:05+01:00 |
 | QOLCTL | 13 | 14 | 20261102-qolctl2-A | 2026-11-02T14:47:45+01:00 |
 | QOLCTL-S | 4 | 4 | 20261102-qolctl2-A | 2026-11-02T14:47:45+01:00 |
-| QOLCTL | 15 | 16 | 20261102-qolctl2-B | 2026-11-02T14:47:45+01:00 |
-| QOLCTL-S | 5 | 5 | 20261102-qolctl2-B | 2026-11-02T14:47:45+01:00 |
 | QOLCTL | 17 | 17 | 20261102-qolctl2-C | 2026-11-02T14:47:45+01:00 |
 | QOLBOT | 24 | 26 | 20261102-qolctl2-D | 2026-11-02T14:47:45+01:00 |
 | QOLBOT-S | 2 | 2 | 20261102-qolctl2-D | 2026-11-02T14:47:45+01:00 |

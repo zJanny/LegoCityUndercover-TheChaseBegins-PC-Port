@@ -61,7 +61,8 @@ With PC controls on, `chase-game` reads the keys from `config/controls.pc.cfg` i
 
 - The right mouse button is unused. The lower-screen menus are used by clicking them. A left click on the lower screen is still a touch.
 - Escape is a fixed second key for Start in this set too (see [Escape](#escape)).
-- Driving keys and the mouse camera are not built yet.
+- Driving keys are not built yet.
+- Mouse camera: moving the mouse left and right turns the camera, like Z and C but with the size of the motion (up and down does nothing). Invert camera flips it. The cursor is hidden and captured while you play. It is released while the pause screen or the PC settings menu is open, and when you move the mouse down onto the lower screen: the cursor appears there and you click as usual. Move it back up out of the lower screen and the capture starts again. A mouse button held down (a touch drag) never starts a capture. The sensitivity is fixed for now; a setting for it comes later.
 - A change of the Quality of life row takes effect at once, without restarting.
 
 ## Fast travel pad

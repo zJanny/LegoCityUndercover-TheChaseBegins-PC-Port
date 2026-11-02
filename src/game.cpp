@@ -78,6 +78,7 @@ void pollEvents(chase::InputState& input, PadDevice& pad, bool& running, game_to
     while (SDL_PollEvent(&event)) {
         if (session.pauseSettingsConsume(event, window)) continue;
         if (touch.consume(event, window)) continue;
+        session.mouseCameraEvent(event, window);
         switch (event.type) {
         case SDL_QUIT: running = false; break;
         case SDL_KEYDOWN: case SDL_KEYUP:
@@ -92,6 +93,7 @@ void pollEvents(chase::InputState& input, PadDevice& pad, bool& running, game_to
         default: pad.handle(event, input); break;
         }
     }
+    session.mouseCameraFrame(window);
 }
 
 void shutDown(SDL_GLContext context, SDL_Window* window) {

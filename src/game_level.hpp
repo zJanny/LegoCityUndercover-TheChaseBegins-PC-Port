@@ -10,6 +10,7 @@
 #include "frontend/award_viewer.hpp"
 #include "frontend/pause_menu.hpp"
 #include "qol/pause_entry.hpp"
+#include "qol/pc_mouse_camera_sdl.hpp"
 #include "frontend/resources.hpp"
 #include "game_audio.hpp"
 #include "game_characters.hpp"
@@ -168,6 +169,8 @@ public:
     void handOverProgress();
     unsigned updateCount() const { return updates; }
     bool pauseSettingsConsume(const SDL_Event& event, SDL_Window* window);
+    void mouseCameraEvent(const SDL_Event& event, SDL_Window* window);
+    void mouseCameraFrame(SDL_Window* window);
     bool frameDue() const { return !script.empty() || pacer.due(now()); }
     std::optional<chase::runtime::SceneChangeDestination> switchTo;
 
@@ -435,6 +438,7 @@ private:
     game_fast_travel::State fastTravelState;
     std::optional<chase::frontend::PauseMenu> pauseMenu;
     qol::PauseSettings pauseSettings;
+    qol::MouseCameraSdl mouseCamera;
     bool pauseRequested = false;
     std::optional<chase::frontend::AwardViewer> awardViewer;
     std::size_t pauseStickDirection = chase::runtime::kNoStickDirection;
