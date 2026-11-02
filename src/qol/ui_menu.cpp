@@ -72,6 +72,7 @@ MenuOutcome outcomeOf(const ControlsPageOutcome& r) {
     out.changed = r.event == ControlsPageEvent::Changed;
     if (r.event == ControlsPageEvent::NeedsConfirm) out.confirm = r.text;
     if (r.event == ControlsPageEvent::Rejected) out.message = r.text;
+    out.settingsChanged = r.settingsChanged || r.event == ControlsPageEvent::SettingsChanged;
     return out;
 }
 
@@ -140,7 +141,7 @@ void UiMenu::open(const MenuSetup& setup) {
         pages_.push_back(std::move(entry));
     }
     if (setup.controls) {
-        controls_.emplace(*setup.controls);
+        controls_.emplace(*setup.controls, setup.settings);
         controls_->setPadConnected(padConnected_);
         MenuPageEntry entry = entryFor("Controls", MenuStore::Controls, *controls_);
         entry.columnTitles = controls_->columnTitles();

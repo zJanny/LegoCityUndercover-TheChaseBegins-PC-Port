@@ -39,6 +39,7 @@ public:
     const std::optional<Resolution>& resolution() const { return resolution_; }
     std::optional<Resolution> effectiveResolution(const Resolution& desktop) const;
     int viewDistanceStep() const { return viewDistanceStep_; }
+    int mouseSensitivityStep() const { return mouseSensitivityStep_; }
 
     bool setMaster(Master master);
     Master cycleMaster();
@@ -47,6 +48,7 @@ public:
     bool setResolution(const Resolution& resolution);
     void clearResolution() { resolution_.reset(); }
     bool setViewDistanceStep(int step);
+    bool setMouseSensitivityStep(int step);
 
 private:
     Master master_ = Master::Original;
@@ -55,6 +57,7 @@ private:
     WindowMode windowMode_ = defaultWindowMode;
     std::optional<Resolution> resolution_;
     int viewDistanceStep_ = 0;
+    int mouseSensitivityStep_ = 3;
 };
 
 Settings readSettings(std::istream& stream);

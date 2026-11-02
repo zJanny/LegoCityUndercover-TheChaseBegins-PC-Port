@@ -125,7 +125,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [qol-settings-drawing](qol-settings-drawing.md) | IN_PROGRESS | QOLSET-53 slot page bar; stores behind the open menu; stand-ins S4 and S6 |
 | [qol-settings-ui](qol-settings-ui.md) | DONE | Modern PC settings menu: font, layout, painter, wiring and the picture behind the menu |
 | [qol-settings-ui-pages](qol-settings-ui-pages.md) | DONE | Pages and dialogs of the modern menu (models done) |
-| [qol-controls](qol-controls.md) | IN_PROGRESS | QOLCTL-3 vehicle layout; QOLCTL-7 seated bindings; QOLCTL-15 mouse sensitivity slider; QOLCTL-11 Quit game before the slot page |
+| [qol-controls](qol-controls.md) | IN_PROGRESS | QOLCTL-3 vehicle layout; QOLCTL-7 seated bindings; QOLCTL-11 Quit game before the slot page |
 | [qol-fullscreen](qol-fullscreen.md) | IN_PROGRESS | QOLFS-11 load qol.cfg into the active store; QOLFS-1 widened view (wired above the bottom screen); QOLFS-2 corner-anchored HUD; QOLFS-3 pop-in at the edges; QOLFS-20 load rooms only the wide view reaches |
 | [qol-view-distance](qol-view-distance.md) | IN_PROGRESS | QOLVD-4 help text (question); QOLVD-5 room loading (question); QOLVD-6 traffic distances (needs a port capability) |
 | [qol-minimap](qol-minimap.md) | IN_PROGRESS | QOLMAP-5 minimap and HUD overlap (question); QOLMAP-6 hide in more panels |

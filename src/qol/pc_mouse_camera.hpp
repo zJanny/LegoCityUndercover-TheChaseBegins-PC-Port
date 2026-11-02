@@ -18,8 +18,6 @@ struct MouseScreen {
     PixelRect lower;
 };
 
-inline constexpr float mouseShoulderSecondsPerPixel = 0.0018f;
-
 class MouseCamera {
 public:
     bool captured() const { return captured_; }

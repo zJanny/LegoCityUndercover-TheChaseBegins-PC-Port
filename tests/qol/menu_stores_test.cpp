@@ -180,7 +180,7 @@ void controlsTabUsesBindingsAndFile() {
     Menu m(f.ports);
     m.open();
     m.go("Controls");
-    require(m.menu.screen().rows.size() > 1 && m.menu.screen().rows[0].label == "Up", "the Controls tab has the bindings rows");
+    require(m.menu.screen().rows.size() > 2 && m.menu.screen().rows[0].label == "Mouse sensitivity" && m.menu.screen().rows[1].label == "Up", "the Controls tab has the bindings rows");
     m.press(Key::Right);
     m.press(Key::Enter);
     require(m.menu.promptOpen(), "waiting for an input");

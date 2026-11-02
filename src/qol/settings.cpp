@@ -1,5 +1,6 @@
 #include "qol/settings.hpp"
 
+#include "qol/mouse_sensitivity.hpp"
 #include "qol/view_distance.hpp"
 
 #include <filesystem>
@@ -84,6 +85,12 @@ bool Settings::setViewDistanceStep(int step) {
     return true;
 }
 
+bool Settings::setMouseSensitivityStep(int step) {
+    if (!mouseSensitivityStepValid(step)) return false;
+    mouseSensitivityStep_ = step;
+    return true;
+}
+
 bool Settings::customSwitch(Feature feature) const {
     return switches_.at(indexOf(feature));
 }
@@ -130,6 +137,7 @@ Settings readSettings(std::istream& stream) {
     bool windowModeSeen = false;
     bool resolutionSeen = false;
     bool viewDistanceSeen = false;
+    bool mouseSensitivitySeen = false;
     bool wantCustom = false;
     std::string line;
     std::size_t lineNumber = 0;
@@ -172,6 +180,14 @@ Settings readSettings(std::istream& stream) {
             settings.setViewDistanceStep(*step);
             continue;
         }
+        if (name == "mouse_sensitivity") {
+            if (mouseSensitivitySeen) reject(lineNumber, line);
+            mouseSensitivitySeen = true;
+            const std::optional<int> step = parseMouseSensitivity(value);
+            if (!step) reject(lineNumber, line);
+            settings.setMouseSensitivityStep(*step);
+            continue;
+        }
         bool found = false;
         for (const FeatureInfo& info : featureTable) {
             if (name != info.name) continue;
@@ -195,6 +211,8 @@ void writeSettings(std::ostream& stream, const Settings& settings) {
         stream << "resolution " << resolutionText(*settings.resolution()) << '\n';
     if (settings.viewDistanceStep() != 0)
         stream << "view_distance " << viewDistanceText(settings.viewDistanceStep()) << '\n';
+    if (settings.mouseSensitivityStep() != defaultMouseSensitivityStep)
+        stream << "mouse_sensitivity " << mouseSensitivityText(settings.mouseSensitivityStep()) << '\n';
     if (!settings.mixSet()) return;
     for (const FeatureInfo& info : featureTable)
         stream << info.name << ' ' << (settings.customSwitch(info.feature) ? "on" : "off") << '\n';

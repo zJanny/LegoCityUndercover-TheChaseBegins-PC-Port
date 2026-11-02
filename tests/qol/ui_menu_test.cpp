@@ -352,7 +352,7 @@ void swapDialog() {
     f.key(Key::Left);
     require(f.menu.dialog()->focusedButton == 0, "Left moves the focus to Swap");
     const MenuEffects e = f.key(Key::Enter);
-    require(e.controlsChanged && f.menu.modal() == Modal::None && f.row(0).cells[1] == "Space" && f.row(1).cells[0] == "Up",
+    require(e.controlsChanged && f.menu.modal() == Modal::None && f.row(1).cells[1] == "Space" && f.row(2).cells[0] == "Up",
         "Swap exchanges the two bindings");
 }
 
@@ -367,7 +367,7 @@ void swapByClick(int width, int height) {
     f.event(mouseMove(swap.x + swap.width / 2, swap.y + swap.height / 2));
     require(f.menu.dialog()->focusedButton == 0, "hovering Swap focuses it at " + std::to_string(height));
     const MenuEffects e = f.event(mouseDown(swap.x + swap.width / 2, swap.y + swap.height / 2));
-    require(e.controlsChanged && f.row(0).cells[1] == "Space", "a click on Swap swaps at " + std::to_string(height));
+    require(e.controlsChanged && f.row(1).cells[1] == "Space", "a click on Swap swaps at " + std::to_string(height));
 }
 
 void helpTexts(int width, int height) {

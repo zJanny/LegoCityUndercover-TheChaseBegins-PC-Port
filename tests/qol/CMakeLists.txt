@@ -223,6 +223,11 @@ target_link_libraries(qol-ui-page-controls-test PRIVATE chase_qol)
 target_compile_options(qol-ui-page-controls-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME qol-ui-page-controls COMMAND qol-ui-page-controls-test)
 
+add_executable(qol-mouse-sensitivity-test mouse_sensitivity_test.cpp)
+target_link_libraries(qol-mouse-sensitivity-test PRIVATE chase_qol)
+target_compile_options(qol-mouse-sensitivity-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-mouse-sensitivity COMMAND qol-mouse-sensitivity-test)
+
 add_executable(qol-ui-page-qol-test ui_page_qol_test.cpp)
 target_link_libraries(qol-ui-page-qol-test PRIVATE chase_qol)
 target_compile_options(qol-ui-page-qol-test PRIVATE -Wall -Wextra -Wpedantic)

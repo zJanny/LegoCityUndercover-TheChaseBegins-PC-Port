@@ -61,7 +61,7 @@ With PC controls on, `chase-game` reads the keys from `config/controls.pc.cfg` i
 
 - The right mouse button is unused. The lower-screen menus are used by clicking them. A left click on the lower screen is still a touch.
 - Escape is a fixed second key for Start in this set too (see [Escape](#escape)).
-- Mouse camera: moving the mouse left and right turns the camera, like Z and C but with the size of the motion (up and down does nothing). Invert camera flips it. The cursor is hidden and captured while you play. It is released while the pause screen or the PC settings menu is open, and when you move the mouse down onto the lower screen: the cursor appears there and you click as usual. Move it back up out of the lower screen and the capture starts again. A mouse button held down (a touch drag) never starts a capture. The sensitivity is fixed for now; a setting for it comes later.
+- Mouse camera: moving the mouse left and right turns the camera, like Z and C but with the size of the motion (up and down does nothing). Invert camera flips it. The cursor is hidden and captured while you play. It is released while the pause screen or the PC settings menu is open, and when you move the mouse down onto the lower screen: the cursor appears there and you click as usual. Move it back up out of the lower screen and the capture starts again. A mouse button held down (a touch drag) never starts a capture. The "Mouse sensitivity" slider at the top of the Controls tab sets the speed from x0.25 to x3.00 (default x1.0); it is greyed out in the Original preset. "Reset to defaults" on the Controls tab sets it back to x1.0.
 - A change of the Quality of life row takes effect at once, without restarting.
 
 ### Keys in a vehicle
@@ -98,7 +98,7 @@ Every action has two key slots (Slot 1 and Slot 2): either key does the action. 
 5. Escape cancels without a change. Delete clears the slot.
 6. If another action of the same set already uses the key, the menu asks "Swap" or "Cancel". Swap exchanges the two bindings.
 7. The Mode column switches an action between Hold and Toggle.
-8. "Reset to defaults" at the end of the list asks first, then restores the built-in keys of the chosen set only.
+8. "Reset to defaults" at the end of the list asks first, then restores the built-in keys of the chosen set only and sets the Mouse sensitivity back to x1.0.
 
 The menu keys (Escape, Q, E, Page Up, Page Down, the arrows, Enter) cannot be bound.
 

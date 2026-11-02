@@ -132,9 +132,14 @@ struct Menu {
 };
 
 
-std::string firstRowLabel(Menu& m) { return m.menu.screen().rows.front().label; }
+const qol::ui::RowSpec& firstListRow(Menu& m) {
+    const auto& rows = m.menu.screen().rows;
+    return rows.front().label == "Mouse sensitivity" ? rows[1] : rows.front();
+}
 
-std::string firstRowValue(Menu& m) { return m.menu.screen().rows.front().value; }
+std::string firstRowLabel(Menu& m) { return firstListRow(m).label; }
+
+std::string firstRowValue(Menu& m) { return firstListRow(m).value; }
 
 void originalHasNoSwitch() {
     Fixture f("original");
@@ -156,6 +161,7 @@ void switchOperatesWithEveryDevice() {
     m.toggleOnQolTab();
     m.go("Controls");
     require(firstRowLabel(m) == "Controls for" && firstRowValue(m) == "On foot", "PC controls on: the switch is the top row, on foot");
+    m.focus("Controls for");
     require(m.menu.helpText().find("controls.pc.cfg") != std::string::npos, "the hint names the on-foot file");
     m.focus("Controls for");
     m.press(Key::Right);

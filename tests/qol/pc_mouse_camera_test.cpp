@@ -5,6 +5,7 @@
 // recorded from the original: the sensitivity is a stand-in and the turn goes through the recorded shoulderTurnInput (R value 1 gives 2,
 // tests/runtime_test.cpp) and the recorded turn gain 0.6 of the OnFoot preset (follow_camera.hpp).
 #include "qol/active_settings.hpp"
+#include "qol/mouse_sensitivity.hpp"
 #include "qol/pc_mouse_camera.hpp"
 #include "qol/pc_mouse_camera_sdl.hpp"
 #include "runtime/follow_camera.hpp"
@@ -61,7 +62,7 @@ void motionMakesTheTurn() {
     camera.motion(10, 0, screen);
     camera.motion(8, 3, screen);
     const float value = camera.take(kDt);
-    require(near(value, 18 * qol::mouseShoulderSecondsPerPixel / kDt), "pixels of one update add up to one analog value");
+    require(near(value, 18 * qol::mouseSecondsPerPixel() / kDt), "pixels of one update add up to one analog value");
     require(camera.take(kDt) == 0.0f, "taking clears the accumulation");
     camera.motion(-5, 0, screen);
     require(camera.take(kDt) < 0.0f, "motion to the left is negative");

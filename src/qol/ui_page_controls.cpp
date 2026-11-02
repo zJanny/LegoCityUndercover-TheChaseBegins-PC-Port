@@ -2,9 +2,11 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
 #include <iterator>
 
 #include "qol/controls_file.hpp"
+#include "qol/mouse_sensitivity.hpp"
 
 namespace qol::ui {
 
@@ -12,6 +14,7 @@ namespace {
 
 const char* const promptMessage = "Press a key... (Esc cancel, Del clear)";
 const char* const resetQuestionText = "Reset all controls to their defaults?";
+const char* const mouseSensitivityRowText = "Mouse sensitivity";
 const char* const unboundText = "Unbound";
 const char* const menuKeyMessage = "That key is used by the menu";
 const char* const padMessage = "No gamepad is connected";
@@ -56,13 +59,35 @@ bool isMenuKey(const std::string& keyName) {
     return std::find(std::begin(names), std::end(names), name) != std::end(names);
 }
 
-ControlsPage::ControlsPage(ControlsPort& port) : port_(port) {}
+ControlsPage::ControlsPage(ControlsPort& port, Settings* settings) : port_(port), settings_(settings) {}
+
+bool ControlsPage::hasSensitivityRow() const {
+    return settings_ && (settings_->master() == Master::Original || settings_->enabled(Feature::PcControls));
+}
+
+RowSpec ControlsPage::sensitivityRowSpec() const {
+    const int step = settings_->mouseSensitivityStep();
+    RowSpec row{mouseSensitivityRowText, RowKind::Slider, mouseSensitivityLabel(step),
+        static_cast<double>(step) / mouseSensitivitySteps, settings_->master() != Master::Original};
+    row.steps = mouseSensitivitySteps;
+    row.widestValue = mouseSensitivityLabel(mouseSensitivitySteps);
+    return row;
+}
+
+ControlsPageOutcome ControlsPage::changeSensitivity(const Action& action) {
+    if (settings_->master() == Master::Original) return outcome(ControlsPageEvent::Nothing);
+    const int step = std::clamp(static_cast<int>(std::lround(action.fraction * mouseSensitivitySteps)), 0, mouseSensitivitySteps);
+    if (step == settings_->mouseSensitivityStep()) return outcome(ControlsPageEvent::Nothing);
+    settings_->setMouseSensitivityStep(step);
+    return outcome(ControlsPageEvent::SettingsChanged);
+}
 
 std::vector<std::string> ControlsPage::columnTitles() const { return {"Action", "Slot 1", "Slot 2", "Mode"}; }
 
 std::vector<RowSpec> ControlsPage::rows() const {
     const ControlsTab& tab = port_.tab();
     std::vector<RowSpec> out;
+    if (hasSensitivityRow()) out.push_back(sensitivityRowSpec());
     if (port_.hasSets()) {
         RowSpec setSpec;
         setSpec.label = "Controls for";
@@ -168,6 +193,7 @@ ControlsPageOutcome ControlsPage::clearPromptSlot() {
 ControlsPageOutcome ControlsPage::handle(const Action& action) {
     switch (action.kind) {
     case ActionKind::ValueChanged:
+        if (hasSensitivityRow() && action.index == sensitivityRow()) return changeSensitivity(action);
         if (port_.hasSets() && action.index == setRow()) return stepSet();
         return outcome(ControlsPageEvent::Nothing);
     case ActionKind::Activate: return activateCell(action.index, action.item < 0 ? 0 : action.item);
@@ -212,6 +238,7 @@ std::string ControlsPage::setHint() const {
 std::string ControlsPage::help(int row) const {
     if (port_.hasSets() && row == setRow())
         return "Switch between the on foot keys and the vehicle keys; each has its own list and Reset. " + setHint();
+    if (hasSensitivityRow() && row == sensitivityRow()) return "How fast the camera turns when you move the mouse.";
     if (row == resetRow()) {
         if (!port_.hasSets()) return "Sets all bindings and modes back to the shipped controls.";
         return std::string("Sets all ") + (port_.set() == ControlsSet::Vehicle ? "vehicle" : "on foot") + " bindings and modes back to the shipped controls.";
@@ -221,8 +248,13 @@ std::string ControlsPage::help(int row) const {
 }
 
 ControlsPageOutcome ControlsPage::reset() {
-    if (port_.confirmReset() == ControlsResult::Changed) return outcome(ControlsPageEvent::Changed);
-    return outcome(ControlsPageEvent::Nothing);
+    ControlsPageOutcome result = outcome(ControlsPageEvent::Nothing);
+    if (port_.confirmReset() == ControlsResult::Changed) result.event = ControlsPageEvent::Changed;
+    if (settings_ && settings_->mouseSensitivityStep() != defaultMouseSensitivityStep) {
+        settings_->setMouseSensitivityStep(defaultMouseSensitivityStep);
+        result.settingsChanged = true;
+    }
+    return result;
 }
 
 }

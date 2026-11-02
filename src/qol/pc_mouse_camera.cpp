@@ -1,5 +1,7 @@
 #include "qol/pc_mouse_camera.hpp"
 
+#include "qol/mouse_sensitivity.hpp"
+
 #include <algorithm>
 
 namespace qol {
@@ -40,7 +42,7 @@ std::optional<PixelPoint> MouseCamera::takeRelease() {
 float MouseCamera::take(float dt) {
     const long pixels = pixels_;
     pixels_ = 0;
-    return dt > 0.0f ? static_cast<float>(pixels) * mouseShoulderSecondsPerPixel / dt : 0.0f;
+    return dt > 0.0f ? static_cast<float>(pixels) * mouseSecondsPerPixel() / dt : 0.0f;
 }
 
 }
