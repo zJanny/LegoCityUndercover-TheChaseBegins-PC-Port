@@ -9,6 +9,7 @@
 #include "qol/hud_parts_hook.hpp"
 #include "qol/minimap.hpp"
 #include "qol/movie_subtitle_overlay.hpp"
+#include "qol/view_distance.hpp"
 #include "qol/view_hook.hpp"
 #include "runtime/fog.hpp"
 #include "runtime/glow.hpp"
@@ -435,7 +436,7 @@ void LevelSession::draw(int width, int height) {
     beginFrame(1.0f);
     const runtime::ClipPlanes followPlanes = runtime::followClipPlanes(follow ? follow->follow().nearPlane() : runtime::kCameraNearLimit);
     const runtime::ScannerRender scannerLook = runtime::scannerRender(scanner.viewShown());
-    if (!scannerLook.noFog) applyFog(followPlanes);
+    if (!scannerLook.noFog) applyFog(qol::withFarPlane(followPlanes));
     const float* eye = follow ? follow->eye() : camera.eye;
     float viewYaw = follow ? follow->yaw() : camera.yaw, viewPitch = follow ? follow->pitch() : camera.pitch;
     float fieldOfView = follow ? follow->verticalFieldOfView() : 1.0f;
@@ -453,6 +454,7 @@ void LevelSession::draw(int width, int height) {
         nearPlane = game_cutscene::kNearPlane;
         farPlane = game_cutscene::kFarPlane;
     }
+    farPlane = qol::viewDistance(farPlane);
     Mat4 mvp = chase::render::multiply(
         perspective(shownFieldOfView, chase::render::viewAspect(topView), nearPlane, farPlane), viewMatrix);
     const Mat4 viewToWorld = chase::render::rigidInverse(viewMatrix);

@@ -1051,7 +1051,7 @@ if(BUILD_TESTING)
       include_without_hook|src/runtime/inc.cpp
       unlisted_hook|src/runtime/door.cpp
       listed_without_code|src/runtime/door.cpp
-      malformed_entry|qol-settings-menu.md
+      malformed_entry|qol-settings-menu-hooks.md
       copied_port_file|src/qol/other.cpp
       test_leak|tests/door_test.cpp)
     string(REPLACE "|" ";" rejectionParts "${rejection}")

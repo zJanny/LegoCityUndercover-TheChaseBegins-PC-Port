@@ -180,16 +180,16 @@ void slotPage(fe::Resources& resources) {
         "the menu opens on the first row of its first tab (here Display: no Game or Controls store is given)");
     require(!menu.consume(mouse(SDL_MOUSEBUTTONUP, SDL_BUTTON_LEFT, cx, cy), width, height, flow), "button releases pass on");
 
-    require(menu.consume(key(SDL_KEYDOWN, SDLK_DOWN), width, height, flow) && menu.menu()->screen().focusRow == 2,
-        "keys go to the menu (Down skips the greyed-out Resolution row in full screen)");
+    require(menu.consume(key(SDL_KEYDOWN, SDLK_DOWN), width, height, flow) && menu.menu()->screen().focusRow == 3,
+        "keys go to the menu (Down skips the greyed-out Resolution and View distance rows in full screen and Original)");
     require(!menu.consume(key(SDL_KEYUP, SDLK_DOWN), width, height, flow), "key releases pass on");
     SDL_Event repeat = key(SDL_KEYDOWN, SDLK_UP);
     repeat.key.repeat = 1;
-    require(menu.consume(repeat, width, height, flow) && menu.menu()->screen().focusRow == 2, "key repeats are swallowed and do nothing");
+    require(menu.consume(repeat, width, height, flow) && menu.menu()->screen().focusRow == 3, "key repeats are swallowed and do nothing");
     SDL_Event wheel{};
     wheel.type = SDL_MOUSEWHEEL;
     wheel.wheel.y = 1;
-    require(menu.consume(wheel, width, height, flow) && menu.menu()->screen().focusRow == 2, "the wheel goes to the menu");
+    require(menu.consume(wheel, width, height, flow) && menu.menu()->screen().focusRow == 3, "the wheel goes to the menu");
     SDL_Event pad{};
     pad.type = SDL_CONTROLLERBUTTONDOWN;
     pad.cbutton.button = SDL_CONTROLLER_BUTTON_RIGHTSHOULDER;

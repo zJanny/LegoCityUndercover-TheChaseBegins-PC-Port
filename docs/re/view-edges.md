@@ -10,6 +10,7 @@ Findings from the port's draw path and the recorded findings of the original abo
 - The port has no frustum test (the original's list frustum 0x24f2a4 is not ported, RENDER-S71), so nothing is dropped at the 5:3 edge in the port. [§2026-10-30T14:03:24](#ts-20261030-140324)
 - The largest camera record FOV over all levels is 43 (every Bound setup; two Room setups hold 0 and are never a pose), so the pedestrian spawn cone holds the 16:9 view in every shipped record pose (limit 52.2 degrees). [§2026-11-02T15:16:57](#ts-20261102-151657)
 - Rooms that only the 16:9 strip reaches and that are not loaded exist in every world level (follow camera, sampled), but in each level the 5:3 view already reaches an unloaded room nearer than any of them: the strip adds more of the same far, fogged pop-in, no new kind. [§2026-11-02T15:16:57](#ts-20261102-151657)
+- Distances of drawing and loading and what a view distance factor reaches: the far planes, the fog and the pedestrian fade words are scaled; room loading has no distance (it follows the room graph); the traffic removal radius 50 is not an input of the traffic step. [§2026-11-02T21:25:47](#ts-20261102-212547)
 - Left open as items: the cutscene and scanner cameras, and loading the strip's rooms with the widened view on (QOLFS-20, the user said yes on 2026-11-02, [qol-screen-layout.md §2026-11-02T15:42:07](../design/qol-screen-layout.md#ts-20261102-154207)). [§2026-10-30T14:03:24](#ts-20261030-140324), [§2026-11-02T15:16:57](#ts-20261102-151657)
 
 <a id="ts-20261030-140324"></a>
@@ -64,3 +65,27 @@ Method: C++ test `qol-view-edges-real-data` (`tests/qol/view_edges_real_test.cpp
 
 - Whether the original shows these far rooms unloaded at the sides at all (the oracle saw no abrupt pop-in at 5:3, [rendering-fog.md](rendering-fog.md)); the scan uses the port's rule and box geometry, not an oracle picture of the wide frame.
 - Whether the user wants the extra rooms loaded for the widened view: item QOLFS-20.
+
+<a id="ts-20261102-212547"></a>
+
+## 2026-11-02T21:25:47+01:00 — Distances the port uses for drawing and loading, and what a view distance factor can reach (20261102-qolmenu-E)
+
+Method: Graphify queries on the traffic removal radius (`TrafficSystem::syncCars`) and on room requests (neighbours, preloads), then `src/game_camera.cpp`, `src/game_cutscene.cpp`, `src/game_traffic.cpp`, `src/runtime/traffic_system.cpp`, `src/runtime/room_streaming.cpp` and the linked findings. Code reading only.
+
+**Distances a factor can scale (the hooks scale them)**
+- The follow far plane `kFollowFarPlane` 260, the cutscene far plane `game_cutscene::kFarPlane` 4000 and the free camera's `radius * 20`.
+- The level fog start and end and the fog table built from them ([rendering-fog.md](rendering-fog.md)).
+- The fade-in and fade-out words of the pedestrian `DistanceFadeTable` (36/72/108 and 38/76/114): the pedestrian spawn window is x0.5 and x1.5 of them, and the node fade and the pedestrian draw test read the same words ([pedestrians-fade.md](pedestrians-fade.md)).
+
+**Distances that are not draw or load distances (not scaled)**
+- The near planes, shadows (`kShadowFar` 25), the scanner marker fade (20 and 180), head icons (6 and 10), near-camera fades (8), pickup and AI distances.
+
+**Room loading has no distance to multiply**
+- Rooms are requested by the room graph: the current room, its neighbours and up to three preloads of the best-dot neighbour (`planRoomStreaming`, [streaming-rooms.md](streaming-rooms.md)). The 98 to 260 of the findings in [rendering-fog.md](rendering-fog.md) is where loads were seen, not a constant of the code. A wider view therefore loads rooms only by a new rule (for example rooms whose nearest box point lies within the scaled far plane), which is a change of the game's streaming, not a scale of a number.
+
+**Traffic**
+- The spawn band (x0.7 to x1.75 of the step's LOD bands) and the fade come from the step's LOD table and are reachable from `game_traffic.cpp`.
+- The removal radius (`kTrafficStandInDespawnRadius`, 50, TRAFFIC-S8) is set inside `TrafficSystem::syncCars` in `chase_runtime`, not passed in by `TrafficSystemStep`, so a hook cannot reach it. Scaling only the band would spawn cars that the radius removes at once; the radius has to be an input of the step with default 50.
+
+**Unknowns, last**
+- Whether the user wants a streaming rule for a wider view (QOLVD-5).

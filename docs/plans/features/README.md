@@ -120,11 +120,13 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | Feature | Status | Top open items |
 |---|---|---|
 | [qol-settings-menu](qol-settings-menu.md) | NOT_STARTED | QOLSET-1 toggle store and master (first); QOLSET-2 menu with tabs; QOLSET-7 `qol-separation` guard; QOLSET-8 PC Settings entry; QOLSET-9 mirrored options |
+| [qol-settings-menu-hooks](qol-settings-menu-hooks.md) | IN_PROGRESS | The list of hook points that the `qol-separation` guard reads |
 | [qol-settings-tabs](qol-settings-tabs.md) | IN_PROGRESS | QOLSET-3 Display tab; QOLSET-4 Controls tab |
 | [qol-settings-drawing](qol-settings-drawing.md) | IN_PROGRESS | QOLSET-53 slot page bar; stores behind the open menu; stand-ins S4 and S6 |
 | [qol-settings-ui](qol-settings-ui.md) | DONE | Modern PC settings menu: font, layout, painter, wiring and the picture behind the menu |
 | [qol-settings-ui-pages](qol-settings-ui-pages.md) | DONE | Pages and dialogs of the modern menu (models done) |
 | [qol-controls](qol-controls.md) | IN_PROGRESS | QOLCTL-3 vehicle layout; QOLCTL-7 seated bindings; QOLCTL-15 mouse sensitivity slider; QOLCTL-11 Quit game before the slot page |
 | [qol-fullscreen](qol-fullscreen.md) | IN_PROGRESS | QOLFS-11 load qol.cfg into the active store; QOLFS-1 widened view (wired above the bottom screen); QOLFS-2 corner-anchored HUD; QOLFS-3 pop-in at the edges; QOLFS-20 load rooms only the wide view reaches |
+| [qol-view-distance](qol-view-distance.md) | IN_PROGRESS | QOLVD-4 help text (question); QOLVD-5 room loading (question); QOLVD-6 traffic distances (needs a port capability) |
 | [qol-minimap](qol-minimap.md) | IN_PROGRESS | QOLMAP-5 minimap and HUD overlap (question); QOLMAP-6 hide in more panels |
 | [qol-bottom-screen](qol-bottom-screen.md) | IN_PROGRESS | QOLBOT-21 front-end pages; QOLBOT-2..4 panels; QOLBOT-5 pause PC menu; QOLBOT-7..10 scanner, build-it, shop, award viewer |

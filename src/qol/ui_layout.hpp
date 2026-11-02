@@ -61,6 +61,8 @@ struct RowSpec {
     double fraction = 0;
     bool enabled = true;
     std::vector<std::string> cells{};
+    int steps = 0;
+    std::string widestValue{};
 };
 
 struct Screen {

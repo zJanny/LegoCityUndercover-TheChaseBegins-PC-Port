@@ -179,7 +179,7 @@ std::vector<Action> UiNav::changeValue(int row, int direction) {
         return {a};
     }
     if (spec.kind == RowKind::Slider) {
-        const int steps = std::max(sliderSteps_, 1);
+        const int steps = std::max(spec.steps > 0 ? spec.steps : sliderSteps_, 1);
         const double target = std::clamp(std::round(spec.fraction * steps) + direction, 0.0, static_cast<double>(steps)) / steps;
         if (std::fabs(target - spec.fraction) < fractionEpsilon) return {};
         spec.fraction = target;
@@ -325,7 +325,7 @@ std::vector<Action> UiNav::dragSlider(int x) {
     const UiLayout lay = layout();
     if (dragRow_ < 0 || dragRow_ >= static_cast<int>(lay.rows.size())) return {};
     RowSpec& spec = screen_.rows[dragRow_];
-    const double target = sliderFractionAt(lay.rows[dragRow_], x, std::max(sliderSteps_, 1));
+    const double target = sliderFractionAt(lay.rows[dragRow_], x, std::max(spec.steps > 0 ? spec.steps : sliderSteps_, 1));
     if (std::fabs(target - spec.fraction) < fractionEpsilon) return {};
     spec.fraction = target;
     Action a = make(ActionKind::ValueChanged, dragRow_);

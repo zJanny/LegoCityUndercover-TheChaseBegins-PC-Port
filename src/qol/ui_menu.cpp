@@ -18,6 +18,7 @@ struct MenuOutcome {
     std::optional<KeepSettingsChange> keep;
     std::string message;
     bool quit = false;
+    bool settingsChanged = false;
 };
 
 struct MenuPageEntry {
@@ -57,7 +58,7 @@ bool isPadKey(Key key) {
 
 MenuOutcome outcomeOf(const GamePageResult& r) { return {r.changed, r.needsConfirm, std::nullopt, {}, r.quitAsked}; }
 
-MenuOutcome outcomeOf(const DisplayPageResult& r) { return {r.changed, r.needsConfirm, r.needsKeepSettings, {}, false}; }
+MenuOutcome outcomeOf(const DisplayPageResult& r) { return {r.changed, r.needsConfirm, r.needsKeepSettings, {}, false, r.settingsChanged}; }
 
 MenuOutcome outcomeOf(const QolPageOutcome& r) {
     MenuOutcome out;
@@ -318,6 +319,7 @@ void UiMenu::applyOutcome(const MenuOutcome& outcome, MenuEffects& effects, doub
         case MenuStore::Qol: effects.settingsChanged = true; break;
         }
     }
+    if (outcome.settingsChanged) effects.settingsChanged = true;
     if (outcome.confirm) {
         confirm_ = outcome.confirm;
         confirmQuit_ = outcome.quit;

@@ -59,7 +59,7 @@ void layoutControl(RowLayout& row, const RowSpec& spec, const Scale& s, const Pr
         break;
     }
     case RowKind::Slider: {
-        const int number = rounded(measure("100", s.textPixels)) + 2 * s.padding;
+        const int number = rounded(std::max(measure("100", s.textPixels), measure(spec.widestValue, s.textPixels))) + 2 * s.padding;
         row.numberBox = {c.x + c.width - number, c.y, number, c.height};
         const int trackWidth = c.width - number - s.margin;
         const int trackHeight = std::max(2, rounded(c.height * p.sliderTrackOfRow));

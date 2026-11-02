@@ -2,6 +2,8 @@
 // desktop size by default, display modes of at least 400x240), 2026-10-29T10:31:01 (clamp to the largest mode,
 // no resolution line while the desktop size is used); F11 binding: 2026-10-28T09:37:29.
 // Cases written by 20261029-qolview-B on 2026-10-29. Display mode lists and sizes are test fixtures.
+// toggleKeepsMenuChanges by 20261102-qolmenu-E on 2026-11-02: F11 starts from the active settings and changes only the window mode, so a value set
+// in the menu after the start (here the master) survives the key (an existing bug, fixed on the lead's answer of 2026-11-02).
 #include "input.hpp"
 #include "qol/active_settings.hpp"
 #include "qol/window_apply.hpp"
@@ -222,15 +224,35 @@ void loadedConfigReachesTheActiveStore() {
     auto controller = qol::makeWindowController(path.string());
     require(qol::enabled(qol::Feature::WidenedView), "Custom with the switch on enables the widened view");
     controller->start(reported, desktop);
-    qol::setActiveSettings(qol::Settings{});
     controller->toggle();
-    require(qol::enabled(qol::Feature::WidenedView), "a saved change reaches the active store");
+    require(qol::activeSettings().windowMode() == qol::WindowMode::Windowed && qol::enabled(qol::Feature::WidenedView),
+        "a saved change reaches the active store");
 
     std::filesystem::remove_all(dir);
     qol::setActiveSettings(qol::Settings{});
 }
 
+void toggleKeepsMenuChanges() {
+    const auto path = std::filesystem::temp_directory_path() / "qol-window-apply-menu.cfg";
+    std::filesystem::remove(path);
+    qol::setActiveSettings(qol::Settings{});
+    auto controller = qol::makeWindowController(path.string());
+    controller->start(reported, desktop);
+    qol::Settings menu = qol::activeSettings();
+    menu.setMaster(qol::Master::Improved);
+    qol::saveSettings(path.string(), menu);
+    qol::setActiveSettings(menu);
+    const qol::WindowPlan plan = controller->toggle();
+    require(plan.mode == qol::WindowMode::Windowed && qol::activeSettings().windowMode() == qol::WindowMode::Windowed,
+        "F11 after a menu change switches the window mode");
+    require(qol::activeSettings().master() == qol::Master::Improved && qol::loadSettings(path.string()).master() == qol::Master::Improved,
+        "F11 keeps a master set in the menu after the start, in the active store and in qol.cfg");
+    std::filesystem::remove(path);
+    qol::setActiveSettings(qol::Settings{});
+}
+
 int main() {
+    toggleKeepsMenuChanges();
     loadedConfigReachesTheActiveStore();
     modesAreFilteredSortedAndUnique();
     defaultsAreFullscreenAtTheDesktopSize();

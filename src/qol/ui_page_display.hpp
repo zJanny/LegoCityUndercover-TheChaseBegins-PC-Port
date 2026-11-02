@@ -12,6 +12,7 @@ namespace qol::ui {
 
 extern const char* const displayResetQuestion;
 extern const char* const desktopResolutionText;
+extern const char* const viewDistanceRowText;
 
 struct DisplayState {
     WindowMode windowMode = defaultWindowMode;
@@ -30,6 +31,7 @@ struct DisplayPageResult {
     bool changed = false;
     std::optional<KeepSettingsChange> needsKeepSettings;
     std::optional<std::string> needsConfirm;
+    bool settingsChanged = false;
 };
 
 class DisplayPage {
@@ -50,6 +52,9 @@ private:
     DisplayPageResult chooseResolution(int item);
     DisplayPageResult keepSettings(const DisplayState& previous) const;
     std::optional<Resolution> effectiveResolution() const;
+    RowSpec viewDistanceRow() const;
+    DisplayPageResult changeViewDistance(const Action& action);
+    bool resetViewDistance();
 
     Settings& settings_;
     ResolutionChoices choices_;

@@ -5,6 +5,8 @@
 // answer 24 (the resolution already in use opens no keep-settings dialog).
 // Defaults: window mode fullscreen and no stored resolution (src/qol/settings.hpp defaultWindowMode; tests/qol/display_tab_test.cpp).
 // Cases written by 20261101-qolui3-B on 2026-11-01. The resolution list and desktop size are test fixtures.
+// The View distance row (index 2, greyed out in Original): docs/design/qol-view-distance.md entry 2026-11-02T18:43:07, row indices updated by
+// 20261102-qolmenu-E on 2026-11-02.
 #include "qol/ui_page_display.hpp"
 
 #include <iostream>
@@ -76,11 +78,12 @@ void originalDefaultsUnchanged() {
     require(written(d.settings) == written(qol::Settings{}), "building the page and its rows leaves the settings untouched");
     require(d.settings.windowMode() == qol::WindowMode::Fullscreen && !d.settings.resolution(), "defaults: fullscreen, no stored resolution");
     const auto rows = d.page.rows();
-    require(rows.size() == 3, "three rows: window mode, resolution, reset");
+    require(rows.size() == 4, "four rows: window mode, resolution, view distance, reset");
     require(rows[0].label == "Window mode" && rows[0].kind == qol::ui::RowKind::Selector && rows[0].value == "Fullscreen" && rows[0].enabled,
         "window mode selector shows Fullscreen");
     require(rows[1].label == "Resolution" && rows[1].kind == qol::ui::RowKind::Dropdown, "resolution dropdown row");
-    require(rows[2].label == "Reset to defaults" && rows[2].kind == qol::ui::RowKind::Button && rows[2].enabled, "reset button");
+    require(rows[2].label == "View distance" && rows[2].kind == qol::ui::RowKind::Slider && !rows[2].enabled, "view distance slider, greyed out in Original");
+    require(rows[3].label == "Reset to defaults" && rows[3].kind == qol::ui::RowKind::Button && rows[3].enabled, "reset button");
 }
 
 void resolutionGreyInFullscreen() {
@@ -88,7 +91,7 @@ void resolutionGreyInFullscreen() {
     const auto rows = d.page.rows();
     require(!rows[1].enabled && rows[1].value == "Desktop resolution", "full screen: resolution disabled, reads Desktop resolution (answer 9)");
     d.press(Key::Down);
-    require(d.nav.screen().focusRow == 2, "Down jumps over the greyed resolution row (answer 14)");
+    require(d.nav.screen().focusRow == 3, "Down jumps over the greyed resolution and view distance rows (answer 14)");
     d.press(Key::Up);
     require(d.nav.screen().focusRow == 0, "Up jumps back over it");
     d.settings.setResolution({1280, 720});

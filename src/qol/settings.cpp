@@ -1,5 +1,7 @@
 #include "qol/settings.hpp"
 
+#include "qol/view_distance.hpp"
+
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -76,6 +78,12 @@ std::optional<Resolution> Settings::effectiveResolution(const Resolution& deskto
     return desktop;
 }
 
+bool Settings::setViewDistanceStep(int step) {
+    if (!viewDistanceStepValid(step)) return false;
+    viewDistanceStep_ = step;
+    return true;
+}
+
 bool Settings::customSwitch(Feature feature) const {
     return switches_.at(indexOf(feature));
 }
@@ -121,6 +129,7 @@ Settings readSettings(std::istream& stream) {
     bool masterSeen = false;
     bool windowModeSeen = false;
     bool resolutionSeen = false;
+    bool viewDistanceSeen = false;
     bool wantCustom = false;
     std::string line;
     std::size_t lineNumber = 0;
@@ -155,6 +164,14 @@ Settings readSettings(std::istream& stream) {
             settings.setResolution(parsed);
             continue;
         }
+        if (name == "view_distance") {
+            if (viewDistanceSeen) reject(lineNumber, line);
+            viewDistanceSeen = true;
+            const std::optional<int> step = parseViewDistance(value);
+            if (!step) reject(lineNumber, line);
+            settings.setViewDistanceStep(*step);
+            continue;
+        }
         bool found = false;
         for (const FeatureInfo& info : featureTable) {
             if (name != info.name) continue;
@@ -176,6 +193,8 @@ void writeSettings(std::ostream& stream, const Settings& settings) {
     stream << "window_mode " << windowModeName(settings.windowMode()) << '\n';
     if (settings.resolution())
         stream << "resolution " << resolutionText(*settings.resolution()) << '\n';
+    if (settings.viewDistanceStep() != 0)
+        stream << "view_distance " << viewDistanceText(settings.viewDistanceStep()) << '\n';
     if (!settings.mixSet()) return;
     for (const FeatureInfo& info : featureTable)
         stream << info.name << ' ' << (settings.customSwitch(info.feature) ? "on" : "off") << '\n';

@@ -1,4 +1,5 @@
 #include "game_level.hpp"
+#include "qol/view_distance.hpp"
 #include "runtime/fog.hpp"
 #include "runtime/room_locator.hpp"
 #include "runtime/scene_start.hpp"
@@ -69,7 +70,7 @@ bool LevelSession::roomShown(int room) const {
 }
 
 void LevelSession::applyFog(const runtime::ClipPlanes& planes) const {
-    const runtime::FogSetting fog = runtime::levelFog(fogObjects, roomStreamer ? roomStreamer->currentRoom() : 0);
+    const runtime::FogSetting fog = qol::withFogDistance(runtime::levelFog(fogObjects, roomStreamer ? roomStreamer->currentRoom() : 0));
     if (!fog.enabled) return;
     chase::render::setFog({runtime::buildFogLut(fog.start, fog.end, planes), fog.colour, planes.nearZ, planes.farZ});
 }

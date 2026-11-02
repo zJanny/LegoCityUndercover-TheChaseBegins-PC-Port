@@ -63,8 +63,12 @@ std::unique_ptr<WindowController> makeWindowController(const std::string& path) 
 }
 
 WindowPlan WindowController::toggle() {
-    settings_.setWindowMode(settings_.windowMode() == WindowMode::Windowed
+    Settings next = activeSettings();
+    next.setWindowMode(settings_.windowMode() == WindowMode::Windowed
         ? WindowMode::Fullscreen : WindowMode::Windowed);
+    if (settings_.resolution()) next.setResolution(*settings_.resolution());
+    else next.clearResolution();
+    settings_ = next;
     saveSettings(path_, settings_);
     setActiveSettings(settings_);
     return plan();

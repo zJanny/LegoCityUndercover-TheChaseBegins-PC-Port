@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1072 open items and stand-ins, 194 linked to game usage, 878 with unknown reach.
+Items: 1076 open items and stand-ins, 194 linked to game usage, 882 with unknown reach.
 
 ## Top 50 overall
 
@@ -154,7 +154,7 @@ Items: 1072 open items and stand-ins, 194 linked to game usage, 878 with unknown
 
 ## World and levels
 
-7 of 83 items linked.
+7 of 84 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -201,7 +201,7 @@ No linked items.
 
 ## Quality of life (`qol` plan)
 
-0 of 29 items linked.
+0 of 32 items linked.
 
 No linked items.
 
@@ -235,7 +235,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [level-transitions.md](features/level-transitions.md): TRANS-3 (+4), TRANS-13 (+2), TRANS-15 (+2), TRANS-8 (+2), TRANS-10 (+1), TRANS-12 (+1), TRANS-14 (+1), TRANS-16 (+1), TRANS-S1, TRANS-S3, TRANS-S4, TRANS-S5, TRANS-S6
 - [movies-cutscenes.md](features/movies-cutscenes.md): MOVIE-22 (+1), MOVIE-24 (+1), MOVIE-36 (+1), MOVIE-37 (+1), MOVIE-S33 (+1), MOVIE-1, MOVIE-12, MOVIE-20, MOVIE-21, MOVIE-3, MOVIE-35, MOVIE-4, MOVIE-40, MOVIE-41, MOVIE-S10, MOVIE-S11, MOVIE-S2, MOVIE-S21, MOVIE-S3, MOVIE-S30, MOVIE-S31, MOVIE-S32, MOVIE-S34, MOVIE-S36
 - [particles.md](features/particles.md): PART-4 (+1), PART-6 (+1), PART-5, PART-7, PART-S1, PART-S2, PART-S3, PART-S4
-- [pedestrians-traffic-cars.md](features/pedestrians-traffic-cars.md): TRAFFIC-7 (+26), TRAFFIC-8 (+26), TRAFFIC-9 (+26), TRAFFIC-2 (+25), TRAFFIC-12 (+2), TRAFFIC-10 (+1), TRAFFIC-11 (+1), TRAFFIC-3 (+1), TRAFFIC-6, TRAFFIC-S1, TRAFFIC-S2, TRAFFIC-S3, TRAFFIC-S4, TRAFFIC-S5, TRAFFIC-S7, TRAFFIC-S8
+- [pedestrians-traffic-cars.md](features/pedestrians-traffic-cars.md): TRAFFIC-7 (+26), TRAFFIC-8 (+26), TRAFFIC-9 (+26), TRAFFIC-2 (+25), TRAFFIC-12 (+2), TRAFFIC-10 (+1), TRAFFIC-11 (+1), TRAFFIC-13 (+1), TRAFFIC-3 (+1), TRAFFIC-6, TRAFFIC-S1, TRAFFIC-S2, TRAFFIC-S3, TRAFFIC-S4, TRAFFIC-S5, TRAFFIC-S7, TRAFFIC-S8
 - [pedestrians-traffic-pedestrians-fade.md](features/pedestrians-traffic-pedestrians-fade.md): PED-22 (+1), PED-21, PED-S11, PED-S12
 - [pedestrians-traffic-pedestrians-vehicles.md](features/pedestrians-traffic-pedestrians-vehicles.md): PED-18 (+1), PED-19 (+1), PED-S10, PED-S9
 - [pedestrians-traffic-pedestrians.md](features/pedestrians-traffic-pedestrians.md): PED-27 (+2), PED-16 (+1), PED-24 (+1), PED-25 (+1), PED-26 (+1), PED-28 (+1), PED-9 (+1), PED-29, PED-S13, PED-S14, PED-S15, PED-S16, PED-S2, PED-S4, PED-S5, PED-S6, PED-S7, PED-S8
@@ -254,6 +254,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [qol-settings-drawing.md](features/qol-settings-drawing.md): QOLSET-53, QOLSET-S4, QOLSET-S6
 - [qol-settings-menu.md](features/qol-settings-menu.md): QOLSET-2 (+3), QOLSET-25 (+2), QOLSET-36, QOLSET-59, QOLSET-61
 - [qol-settings-tabs.md](features/qol-settings-tabs.md): QOLSET-3, QOLSET-4
+- [qol-view-distance.md](features/qol-view-distance.md): QOLVD-4, QOLVD-5, QOLVD-6
 - [rendering-draw-order.md](features/rendering-draw-order.md): RENDER-65 (+1), RENDER-78 (+1), RENDER-79 (+1), RENDER-S64, RENDER-S71, RENDER-S72
 - [rendering-reflections.md](features/rendering-reflections.md): RENDER-75 (+1), RENDER-S69
 - [rendering-shadows.md](features/rendering-shadows.md): RENDER-72 (+1), RENDER-73 (+1), RENDER-74 (+1), RENDER-S67, RENDER-S68

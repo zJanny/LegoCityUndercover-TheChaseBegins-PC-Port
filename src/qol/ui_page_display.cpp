@@ -11,7 +11,7 @@ const char* const desktopResolutionText = "Desktop resolution";
 
 namespace {
 
-enum Row { WindowModeRow, ResolutionRow, ResetRow };
+enum Row { WindowModeRow, ResolutionRow, ViewDistanceRow, ResetRow };
 
 const char* windowModeLabel(WindowMode mode) {
     return mode == WindowMode::Fullscreen ? "Fullscreen" : "Windowed";
@@ -40,6 +40,7 @@ std::vector<RowSpec> DisplayPage::rows() const {
     return {
         {"Window mode", RowKind::Selector, windowModeLabel(settings_.windowMode()), 0, true},
         {"Resolution", RowKind::Dropdown, resolution, 0, !fullscreen},
+        viewDistanceRow(),
         {resetToDefaultsText, RowKind::Button, resetToDefaultsText, 0, true},
     };
 }
@@ -89,7 +90,7 @@ DisplayPageResult DisplayPage::changeValue(const Action& action) {
 
 DisplayPageResult DisplayPage::handle(const Action& action) {
     switch (action.kind) {
-    case ActionKind::ValueChanged: return changeValue(action);
+    case ActionKind::ValueChanged: return action.index == ViewDistanceRow ? changeViewDistance(action) : changeValue(action);
     case ActionKind::DropdownSelected:
         return action.index == ResolutionRow ? chooseResolution(action.item) : DisplayPageResult{};
     case ActionKind::Activate:
@@ -116,7 +117,10 @@ DisplayPageResult DisplayPage::reset() {
     const DisplayState previous = state();
     settings_.setWindowMode(defaultWindowMode);
     settings_.clearResolution();
-    return keepSettings(previous);
+    const bool viewDistanceReset = resetViewDistance();
+    DisplayPageResult result = keepSettings(previous);
+    result.settingsChanged = viewDistanceReset;
+    return result;
 }
 
 }

@@ -1,4 +1,5 @@
 #include "game_pedestrian_fade.hpp"
+#include "qol/view_distance.hpp"
 
 #include <cmath>
 
@@ -29,7 +30,7 @@ void SlotFades::spawned(const runtime::PedestrianSystem& system, std::size_t slo
 void SlotFades::step(const runtime::PedestrianSystem& system, const std::vector<bool>& live, const runtime::PedestrianVec3& fadePoint) {
     runtime::PedestrianFadeInputs inputs;
     inputs.fadePoint = fadePoint;
-    inputs.table = table_;
+    inputs.table = qol::withViewDistance(table_);
     const std::vector<runtime::Pedestrian>& pedestrians = system.manager().pedestrians();
     for (std::size_t slot = 0; slot < pedestrians.size() && slot < live.size(); ++slot)
         if (live[slot]) fades_.step(slot, pedestrians[slot].node, system.body(slot).node, inputs);
@@ -37,7 +38,7 @@ void SlotFades::step(const runtime::PedestrianSystem& system, const std::vector<
 
 std::optional<runtime::PedestrianDrawTest> SlotFades::drawTest(const runtime::PedestrianSystem& system, std::size_t slot,
                                                                const runtime::PedestrianVec3& fadePoint) const {
-    return runtime::pedestrianDrawTest(system.manager().pedestrians()[slot].node, fadePoint, table_);
+    return runtime::pedestrianDrawTest(system.manager().pedestrians()[slot].node, fadePoint, qol::withViewDistance(table_));
 }
 
 void applyOpacity(render::Scene& scene, const render::CharacterInstance& instance, float opacity) {

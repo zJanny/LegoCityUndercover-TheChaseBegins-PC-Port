@@ -38,6 +38,7 @@ public:
     WindowMode windowMode() const { return windowMode_; }
     const std::optional<Resolution>& resolution() const { return resolution_; }
     std::optional<Resolution> effectiveResolution(const Resolution& desktop) const;
+    int viewDistanceStep() const { return viewDistanceStep_; }
 
     bool setMaster(Master master);
     Master cycleMaster();
@@ -45,6 +46,7 @@ public:
     void setWindowMode(WindowMode mode) { windowMode_ = mode; }
     bool setResolution(const Resolution& resolution);
     void clearResolution() { resolution_.reset(); }
+    bool setViewDistanceStep(int step);
 
 private:
     Master master_ = Master::Original;
@@ -52,6 +54,7 @@ private:
     std::array<bool, featureCount> switches_{};
     WindowMode windowMode_ = defaultWindowMode;
     std::optional<Resolution> resolution_;
+    int viewDistanceStep_ = 0;
 };
 
 Settings readSettings(std::istream& stream);

@@ -1,5 +1,6 @@
 #include "game_pedestrians.hpp"
 #include "game_level.hpp"
+#include "qol/view_distance.hpp"
 #include "runtime/player_controller_state.hpp"
 
 #include <algorithm>
@@ -106,6 +107,7 @@ void LevelPedestrians::updateSystem(const SystemInputs& inputs, assets::PlacedOb
     step.room = [&](int room) { return std::optional<runtime::PedestrianRoom>(runtime::pedestrianRoomObject(room, inputs.roomLoaded(room))); };
     game_pedestrian_blocking::wireSystemStep(step, inputs.blocking, system_, random_);
     step.meshNodeType = runtime::kMeshNodeType;
+    step.fade = qol::withViewDistance(step.fade);
     const runtime::PedestrianUpdate update = system_.update(step, random_);
     if (update.spawned) {
         state.disabled.erase(lower(system_.slots()[*update.spawned].instance));
