@@ -8,7 +8,8 @@ namespace qol {
 
 class Settings;
 
-inline constexpr int viewDistanceSteps = 12;
+inline constexpr int viewDistanceFineSteps = 12;
+inline constexpr int viewDistanceSteps = 28;
 
 bool viewDistanceStepValid(int step);
 float viewDistanceFactor(int step);

@@ -10,6 +10,7 @@ Findings from the port's draw path and the recorded findings of the original abo
 - The port has no frustum test (the original's list frustum 0x24f2a4 is not ported, RENDER-S71), so nothing is dropped at the 5:3 edge in the port. [§2026-10-30T14:03:24](#ts-20261030-140324)
 - The largest camera record FOV over all levels is 43 (every Bound setup; two Room setups hold 0 and are never a pose), so the pedestrian spawn cone holds the 16:9 view in every shipped record pose (limit 52.2 degrees). [§2026-11-02T15:16:57](#ts-20261102-151657)
 - Rooms that only the 16:9 strip reaches and that are not loaded exist in every world level (follow camera, sampled), but in each level the 5:3 view already reaches an unloaded room nearer than any of them: the strip adds more of the same far, fogged pop-in, no new kind. [§2026-11-02T15:16:57](#ts-20261102-151657)
+- At x20 the hooks scale by the same rule as at x4 with no overflow; the depth buffer resolves coarser far away (QOLVD-7). [§20261102-221857](#ts-20261102-221857)
 - Distances of drawing and loading and what a view distance factor reaches: the far planes, the fog and the pedestrian fade words are scaled; room loading has no distance (it follows the room graph); the traffic removal radius 50 is not an input of the traffic step. [§2026-11-02T21:25:47](#ts-20261102-212547)
 - Left open as items: the cutscene and scanner cameras, and loading the strip's rooms with the widened view on (QOLFS-20, the user said yes on 2026-11-02, [qol-screen-layout.md §2026-11-02T15:42:07](../design/qol-screen-layout.md#ts-20261102-154207)). [§2026-10-30T14:03:24](#ts-20261030-140324), [§2026-11-02T15:16:57](#ts-20261102-151657)
 
@@ -89,3 +90,18 @@ Method: Graphify queries on the traffic removal radius (`TrafficSystem::syncCars
 
 **Unknowns, last**
 - Whether the user wants a streaming rule for a wider view (QOLVD-5).
+
+<a id="ts-20261102-221857"></a>
+
+## 2026-11-02T22:18:57+01:00 — What a view distance factor of x20 does to the hooks (20261102-qolmore-C)
+
+Method: code reading of `src/game_level.cpp`, `src/runtime/fog.cpp`, `src/render/scene.cpp` and `src/render/draw_order.cpp`, the factor math in a test (`qol-view-distance`) and the depth formulas computed by hand. Range: x1.0 to x4.0 in quarters, then whole steps to x20.0 ([qol-view-distance.md §2026-11-02T18:43:07](../design/qol-view-distance.md#ts-20261102-184307)).
+
+- Far plane: follow 260 gives 5200, cutscene 4000 gives 80000, free and scanner cameras times 20; all floats, no overflow. The fog start and end scale together; the fog table (128 entries from near and far plane) is built by the same rule, so its shape in the fog band is the same relative to the far plane at every factor.
+- Pedestrian fade tables times 20 (fade-in 720, 1440, 2160; fade-out 760, 1520, 2280); the spawn window of tier 0 becomes 360 to 1140 m. Whether pedestrian nodes exist that far out was not measured; the windows only choose among existing nodes.
+- Depth precision (QOLVD-7): the near plane does not scale, so a 24-bit depth buffer resolves z^2 / (near x 2^24) at distance z. At the far plane with near 0.5 that is 0.01 m at x1.0, 0.13 m at x4.0 and 3.2 m at x20.0; the cutscene camera (near 0.1, far 80000) gives about 3800 m. Distant coplanar surfaces can therefore flicker at high factors. Computed only; no picture was taken.
+- `depthSortKey` and the integer fog table conversions work on the scaled values without overflow (range scaled with the far plane).
+
+**Unknowns, last**
+
+- Whether the flicker is visible in play at x20 and how far out; needs a picture check.

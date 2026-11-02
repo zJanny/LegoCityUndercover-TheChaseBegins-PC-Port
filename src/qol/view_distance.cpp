@@ -10,7 +10,13 @@ namespace {
 
 constexpr int quartersPerUnit = 4;
 constexpr int firstQuarters = quartersPerUnit;
+constexpr int coarseQuarters = quartersPerUnit;
 constexpr std::array<const char*, quartersPerUnit> quarterDigits{"0", "25", "5", "75"};
+
+int quartersOfStep(int step) {
+    if (step <= viewDistanceFineSteps) return firstQuarters + step;
+    return firstQuarters + viewDistanceFineSteps + (step - viewDistanceFineSteps) * coarseQuarters;
+}
 
 void requireStep(int step) {
     if (!viewDistanceStepValid(step))
@@ -23,12 +29,12 @@ bool viewDistanceStepValid(int step) { return step >= 0 && step <= viewDistanceS
 
 float viewDistanceFactor(int step) {
     requireStep(step);
-    return static_cast<float>(firstQuarters + step) / static_cast<float>(quartersPerUnit);
+    return static_cast<float>(quartersOfStep(step)) / static_cast<float>(quartersPerUnit);
 }
 
 std::string viewDistanceText(int step) {
     requireStep(step);
-    const int quarters = firstQuarters + step;
+    const int quarters = quartersOfStep(step);
     return std::to_string(quarters / quartersPerUnit) + "." + quarterDigits[static_cast<std::size_t>(quarters % quartersPerUnit)];
 }
 

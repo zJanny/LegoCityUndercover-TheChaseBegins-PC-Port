@@ -12,4 +12,3 @@ Ranges of item IDs held by parallel agents, named like `20261021-audio-A`. The p
 | SCRIPT-S | 325 | 325 | 20261102-mission14b-C | 2026-11-02T21:59:12+01:00 |
 | QOLCTL | 17 | 19 | 20261102-qolmore-A | 2026-11-02T22:00:22+01:00 |
 | QOLCTL-S | 6 | 6 | 20261102-qolmore-A | 2026-11-02T22:00:22+01:00 |
-| QOLVD | 7 | 8 | 20261102-qolmore-C | 2026-11-02T22:05:47+01:00 |

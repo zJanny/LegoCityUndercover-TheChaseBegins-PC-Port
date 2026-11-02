@@ -1,6 +1,6 @@
 // The View distance slider of the Display tab driven through the menu controller and the stores, by key and mouse.
-// Spec: docs/design/qol-view-distance.md entry 2026-11-02T18:43:07 (the user's decisions of 2026-11-02): Display tab, x1.0 to x4.0 in 0.25
-// steps shown as "x1.0", always live in every preset except Original, which shows x1.0 greyed out and skipped by Up and Down and keeps
+// Spec: docs/design/qol-view-distance.md entry 2026-11-02T18:43:07 (the user's decisions of 2026-11-02): Display tab, x1.0 to x20.0 (0.25 steps to x4.0, whole steps above)
+// shown as "x1.0", always live in every preset except Original, which shows x1.0 greyed out and skipped by Up and Down and keeps
 // the stored value, Reset to defaults on the Display tab sets x1.0, `view_distance <factor>` in config/qol.cfg. Menu keys and the reset
 // question: docs/design/qol-settings-drawing.md entry 2026-10-30T21:56:04 (answers 14 and 33). Cases written by 20261102-qolmenu-E on
 // 2026-11-02; display modes and the window size are test fixtures.
@@ -117,19 +117,29 @@ void keysMoveInQuarterSteps() {
     require(slurp(m.path).find("view_distance 1.25\n") != std::string::npos, "qol.cfg has view_distance 1.25");
     require(qol::viewDistance(260.0f) == 325.0f, "the active store applies at once: far plane 325");
     for (int i = 0; i < 11; ++i) m.press(Key::Right);
-    require(m.row(viewRow).value == "x4.0" && m.row(viewRow).fraction == 1.0, "twelve steps reach x4.0");
-    require(!m.press(Key::Right).settingsChanged && m.row(viewRow).value == "x4.0", "Right at x4.0 stays");
+    require(m.row(viewRow).value == "x4.0" && m.stores->settings().viewDistanceStep() == 12, "twelve steps reach x4.0");
+    m.press(Key::Right);
+    require(m.row(viewRow).value == "x5.0" && slurp(m.path).find("view_distance 5.0\n") != std::string::npos, "above x4.0 one step is a whole unit");
+    for (int i = 0; i < 15; ++i) m.press(Key::Right);
+    require(m.row(viewRow).value == "x20.0" && m.row(viewRow).fraction == 1.0 && m.stores->settings().viewDistanceStep() == 28,
+        "28 presses reach x20.0");
+    require(qol::viewDistance(260.0f) == 5200.0f, "x20.0: far plane 5200");
+    require(!m.press(Key::Right).settingsChanged && m.row(viewRow).value == "x20.0", "Right at x20.0 stays");
     m.press(Key::Left);
-    require(m.row(viewRow).value == "x3.75" && slurp(m.path).find("view_distance 3.75\n") != std::string::npos, "Left goes back to x3.75");
+    require(m.row(viewRow).value == "x19.0" && slurp(m.path).find("view_distance 19.0\n") != std::string::npos, "Left goes back to x19.0");
+    for (int i = 0; i < 15; ++i) m.press(Key::Left);
+    require(m.row(viewRow).value == "x4.0", "Left steps back to x4.0");
+    m.press(Key::Left);
+    require(m.row(viewRow).value == "x3.75", "and on in quarter steps");
 }
 
 void mouseSetsTheValue() {
     Menu m;
     m.setMaster(qol::Master::Improved);
     qol::MenuEffects clicked = m.clickTrack(1.0);
-    require(clicked.settingsChanged && m.row(viewRow).value == "x4.0", "a click at the right end gives x4.0");
+    require(clicked.settingsChanged && m.row(viewRow).value == "x20.0", "a click at the right end gives x20.0");
     clicked = m.clickTrack(0.5);
-    require(clicked.settingsChanged && m.row(viewRow).value == "x2.5", "a click in the middle gives x2.5");
+    require(clicked.settingsChanged && m.row(viewRow).value == "x6.0" && m.stores->settings().viewDistanceStep() == 14, "a click in the middle gives step 14, x6.0");
     clicked = m.clickTrack(0.0);
     require(clicked.settingsChanged && m.row(viewRow).value == "x1.0", "a click at the left end gives x1.0");
     require(slurp(m.path).find("view_distance") == std::string::npos, "x1.0 writes no view_distance line");
@@ -139,7 +149,7 @@ void mouseSetsTheValue() {
 void presetsKeepTheValue() {
     Menu m;
     m.setMaster(qol::Master::Improved);
-    m.clickTrack(0.75);
+    m.clickTrack(9.0 / 28.0);
     require(m.row(viewRow).value == "x3.25" && qol::viewDistance(260.0f) == 845.0f, "fixture: x3.25 in Improved");
     m.setMaster(qol::Master::Original);
     require(m.row(viewRow).value == "x1.0" && !m.row(viewRow).enabled, "Original shows x1.0 greyed out");
@@ -158,7 +168,7 @@ void resetSetsOne() {
     m.press(Key::Down);
     require(m.menu.screen().focusRow == resetRow, "fixture: the reset button has the focus");
     m.press(Key::Enter);
-    require(m.menu.modal() == Modal::Dialog && m.stores->settings().viewDistanceStep() == 12, "the reset asks first and changes nothing yet");
+    require(m.menu.modal() == Modal::Dialog && m.stores->settings().viewDistanceStep() == 28, "the reset asks first and changes nothing yet");
     m.press(Key::Left);
     const qol::MenuEffects reset = m.press(Key::Enter);
     require(reset.settingsChanged && m.row(viewRow).value == "x1.0" && m.stores->settings().viewDistanceStep() == 0, "Yes sets x1.0");

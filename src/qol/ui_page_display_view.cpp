@@ -14,7 +14,8 @@ RowSpec DisplayPage::viewDistanceRow() const {
     RowSpec row{viewDistanceRowText, RowKind::Slider, viewDistanceLabel(step),
         static_cast<double>(step) / viewDistanceSteps, settings_.master() != Master::Original};
     row.steps = viewDistanceSteps;
-    row.widestValue = viewDistanceLabel(viewDistanceSteps - 1);
+    for (int candidate = 0; candidate <= viewDistanceSteps; ++candidate)
+        if (const std::string label = viewDistanceLabel(candidate); label.size() > row.widestValue.size()) row.widestValue = label;
     return row;
 }
 

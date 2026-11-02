@@ -1,6 +1,6 @@
 // The View distance slider (src/qol/view_distance.*) and its hooks.
-// Spec: docs/design/qol-view-distance.md entry 2026-11-02T18:43:07 (the user's decisions of 2026-11-02): Display tab, x1.0 to x4.0 in
-// 0.25 steps shown as "x1.0", fog start and end scale with the far plane, far plane, fog and pedestrian distances scale, Original always
+// Spec: docs/design/qol-view-distance.md entry 2026-11-02T18:43:07 (the user's decisions of 2026-11-02): Display tab, x1.0 to x20.0 (0.25 steps to x4.0,
+// whole steps above) shown as "x1.0", fog start and end scale with the far plane, far plane, fog and pedestrian distances scale, Original always
 // x1.0, all cameras, Reset to defaults sets x1.0, `view_distance <factor>` in config/qol.cfg (strict, off-step rejected), greyed out at
 // x1.0 in Original. The original far plane 260 is kFollowFarPlane (src/runtime/clip_planes.hpp); the fog distances and the distance fade
 // table are fixtures or the port's defaults (DistanceFadeTable). Cases written by 20261102-qolmenu-E on 2026-11-02.
@@ -56,14 +56,21 @@ std::string readError(const std::string& text) {
 }
 
 void stepsAndLabels() {
-    const std::vector<std::string> labels{"x1.0", "x1.25", "x1.5", "x1.75", "x2.0", "x2.25", "x2.5", "x2.75", "x3.0", "x3.25", "x3.5", "x3.75", "x4.0"};
-    require(qol::viewDistanceSteps + 1 == static_cast<int>(labels.size()), "13 positions x1.0 to x4.0");
+    std::vector<std::string> labels;
+    std::vector<float> factors;
+    for (int quarters = 4; quarters <= 16; ++quarters) factors.push_back(static_cast<float>(quarters) / 4.0f);
+    for (int whole = 5; whole <= 20; ++whole) factors.push_back(static_cast<float>(whole));
+    const std::vector<std::string> fine{"x1.0", "x1.25", "x1.5", "x1.75", "x2.0", "x2.25", "x2.5", "x2.75", "x3.0", "x3.25", "x3.5", "x3.75", "x4.0"};
+    labels = fine;
+    for (int whole = 5; whole <= 20; ++whole) labels.push_back("x" + std::to_string(whole) + ".0");
+    require(qol::viewDistanceSteps + 1 == 29 && labels.size() == 29, "29 positions: 0.25 steps to x4.0, whole steps to x20.0");
     for (int step = 0; step <= qol::viewDistanceSteps; ++step) {
         require(qol::viewDistanceLabel(step) == labels[static_cast<std::size_t>(step)], "label of step " + std::to_string(step));
-        require(qol::viewDistanceFactor(step) == 1.0f + 0.25f * static_cast<float>(step), "factor of step " + std::to_string(step));
+        require(qol::viewDistanceFactor(step) == factors[static_cast<std::size_t>(step)], "factor of step " + std::to_string(step));
         require(qol::parseViewDistance(qol::viewDistanceText(step)) == step, "the text of step " + std::to_string(step) + " parses back");
     }
-    for (int bad : {-1, 13}) {
+    require(qol::viewDistanceLabel(qol::viewDistanceSteps) == "x20.0", "the last label is x20.0");
+    for (int bad : {-1, 29}) {
         bool threw = false;
         try { qol::viewDistanceFactor(bad); } catch (const std::invalid_argument&) { threw = true; }
         require(threw && !qol::viewDistanceStepValid(bad), "step " + std::to_string(bad) + " is rejected");
@@ -80,13 +87,18 @@ void configKeyIsStrict() {
     require(qol::readSettings(back).viewDistanceStep() == 4, "round trip keeps x2.0");
     std::istringstream quarter("view_distance 3.75\n");
     require(qol::readSettings(quarter).viewDistanceStep() == 11, "view_distance 3.75 is step 11");
+    std::istringstream top("view_distance 20.0\n");
+    require(qol::readSettings(top).viewDistanceStep() == qol::viewDistanceSteps, "view_distance 20.0 is the last step");
+    std::istringstream coarse("view_distance 7.0\n");
+    require(qol::readSettings(coarse).viewDistanceStep() == 15, "view_distance 7.0 is step 15");
     std::istringstream one("view_distance 1.0\n");
     require(qol::readSettings(one).viewDistanceStep() == 0, "view_distance 1.0 is accepted");
 
     const std::vector<std::string> rejected{
-        "view_distance 1.1",    "view_distance 2.2",  "view_distance 4.25", "view_distance 0.75", "view_distance 5.0",
+        "view_distance 1.1",    "view_distance 2.2",  "view_distance 4.25", "view_distance 0.75", "view_distance 5.5",
         "view_distance -1.0",   "view_distance 1",    "view_distance 2.50", "view_distance x2.0", "view_distance far",
-        "view_distance",        "view_distance 2.0 3.0"};
+        "view_distance",        "view_distance 2.0 3.0", "view_distance 20.25", "view_distance 21.0",
+        "view_distance 20",     "view_distance 0",    "view_distance 4.5", "view_distance 19.5"};
     for (const std::string& line : rejected)
         require(readError("master Original\n" + line + "\n") == "Invalid QoL configuration at line 2: " + line, "rejects: " + line);
     require(readError("view_distance 2.0\nview_distance 2.0\n") == "Invalid QoL configuration at line 2: view_distance 2.0",
@@ -134,6 +146,12 @@ void fogAndFarScaleTogether() {
     require(rt::buildFogLut(fogHooked.start, fogHooked.end, hooked) != rt::buildFogLut(fog.start, fog.end, planes), "x2.0 changes the fog table");
     qol::setActiveSettings(with(qol::Master::Custom, 12));
     require(qol::viewDistance(rt::kFollowFarPlane) == 1040.0f && qol::viewDistance(4000.0f) == 16000.0f, "x4.0 scales every camera's far plane");
+    qol::setActiveSettings(with(qol::Master::Improved, qol::viewDistanceSteps));
+    require(qol::viewDistance(rt::kFollowFarPlane) == 5200.0f && qol::viewDistance(4000.0f) == 80000.0f, "x20.0: far planes 5200 and 80000 (20261102-qolmore-C)");
+    const rt::FogSetting fog20 = qol::withFogDistance(rt::FogSetting{true, 30.0f, 120.0f, {200, 210, 220}});
+    require(fog20.start == 600.0f && fog20.end == 2400.0f, "x20.0: fog start and end scale together");
+    const rt::DistanceFadeTable table20 = qol::withViewDistance(rt::DistanceFadeTable{});
+    require(table20.fadeIn == std::array<float, 3>{720.0f, 1440.0f, 2160.0f} && table20.fadeOut == std::array<float, 3>{760.0f, 1520.0f, 2280.0f}, "x20.0: fade tables");
 }
 
 void pedestriansAtTwo() {
