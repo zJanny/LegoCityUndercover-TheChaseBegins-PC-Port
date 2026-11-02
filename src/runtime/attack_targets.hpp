@@ -65,6 +65,8 @@ struct AttackEntity {
     bool listedKind = false;                     // 0x236b6c: the kind is in the list 0x3743ec (kinds 121, 159, 242)
     bool pathRecord = false;                     // kind 19: entity +0x90 not null
     bool player = false;                         // the entity is *0x3772c0
+    std::array<float, 3> boxCentre{};            // entity +0x60 (the class's CollisionBound record, 0x23aff8)
+    std::array<float, 3> boxHalf{};              // entity +0x6c
     AttackCharacter character;
 };
 

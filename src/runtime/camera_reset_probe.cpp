@@ -51,25 +51,6 @@ Ray rayOf(const Segment& segment) {
     return ray;
 }
 
-// Slab test of a segment against a box in its own space: the distance fraction of the entry point, 0 when the start is inside.
-bool segmentMeetsBox(const float from[3], const float to[3], const float centre[3], const float half[3], float& entry) {
-    float low = 0.0f, high = 1.0f;
-    for (int a = 0; a < 3; ++a) {
-        const float start = from[a] - centre[a], delta = to[a] - from[a];
-        if (delta == 0.0f) {
-            if (start <= -half[a] || start >= half[a]) return false;
-            continue;
-        }
-        float near = (-half[a] - start) / delta, far = (half[a] - start) / delta;
-        if (near > far) std::swap(near, far);
-        low = std::max(low, near);
-        high = std::min(high, far);
-        if (low > high) return false;
-    }
-    entry = low;
-    return true;
-}
-
 void toBoxSpace(const CollisionWorld::Entry& entry, const float p[3], float out[3]) {
     const float d[3] = {p[0] - entry.matrix[12], p[1] - entry.matrix[13], p[2] - entry.matrix[14]};
     for (int i = 0; i < 3; ++i) out[i] = d[0] * entry.matrix[std::size_t(i) * 4] + d[1] * entry.matrix[std::size_t(i) * 4 + 1] + d[2] * entry.matrix[std::size_t(i) * 4 + 2];
@@ -128,6 +109,24 @@ float rayTriangleDistance(const float v0[3], const float v1[3], const float v2[3
     const float t = dot(e2, q) / determinant;
     if (t < 0.0f || t > limit) return -1.0f;
     return t;
+}
+
+bool segmentMeetsBox(const float from[3], const float to[3], const float centre[3], const float half[3], float& entry) {
+    float low = 0.0f, high = 1.0f;
+    for (int a = 0; a < 3; ++a) {
+        const float start = from[a] - centre[a], delta = to[a] - from[a];
+        if (delta == 0.0f) {
+            if (start <= -half[a] || start >= half[a]) return false;
+            continue;
+        }
+        float near = (-half[a] - start) / delta, far = (half[a] - start) / delta;
+        if (near > far) std::swap(near, far);
+        low = std::max(low, near);
+        high = std::min(high, far);
+        if (low > high) return false;
+    }
+    entry = low;
+    return true;
 }
 
 bool CameraResetProbe::segmentBlocked(const float from[3], const float to[3]) const {

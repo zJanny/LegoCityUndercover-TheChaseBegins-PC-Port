@@ -229,6 +229,7 @@ private:
     void landReleasedFlights(float dt);
     void loadAttack(chase::assets::FuseArchive& archive, const std::vector<chase::assets::ObjectCollision>& placed);
     void loadAttackCharacters(chase::assets::FuseArchive& archive);
+    void installAttackFacts();
     void appendAttackCharacters(std::vector<chase::runtime::AttackCandidate>& candidates);
     void deliverAttackCharacterMessages(const chase::runtime::AttackStep& step, const std::vector<chase::runtime::AttackCandidate>& candidates);
     game_player::PlayerAnimation attackMovePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, bool attackHeld,

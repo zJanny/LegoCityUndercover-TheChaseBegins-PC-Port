@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1074 open items and stand-ins, 193 linked to game usage, 881 with unknown reach.
+Items: 1076 open items and stand-ins, 193 linked to game usage, 883 with unknown reach.
 
 ## Top 50 overall
 
@@ -87,7 +87,7 @@ Items: 1074 open items and stand-ins, 193 linked to game usage, 881 with unknown
 
 ## Player and camera
 
-20 of 218 items linked.
+20 of 220 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -97,7 +97,7 @@ Items: 1074 open items and stand-ins, 193 linked to game usage, 881 with unknown
 | 4 | [ANIM-S13](features/animation-characters.md?display=source#L25) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The player's script clip (PlayCharAnim on Player1) is shown at full weight from the native's update instead ... |
 | 5 | [CAMERA-55](features/camera.md?display=source#L46) | 495 | 0 | 8 | 0 | 1 implemented | `positionobject` | After PositionObject of `1-1_Release_Car_Script` the port's police car stays on its locator while the ... |
 | 6 | [CAMERA-S51](features/camera.md?display=source#L26) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
-| 7 | [PLAYER-S13](features/player-movement-attack.md?display=source#L25) | 97 | 0 | 7 | 0 | 1 stand-in | `enabletargetable` | `appendAttackCharacters` — every enabled level character of a shown room is in the player's near list, with ... |
+| 7 | [PLAYER-S15](features/player-movement-attack.md?display=source#L25) | 97 | 0 | 7 | 0 | 1 stand-in | `enabletargetable` | `appendAttackCharacters` — the character facts besides the box and the near list: the `MeshCollision` branch ... |
 | 8 | [TRAV-55](features/player-traversal-zipline.md?display=source#L40) | 0 | 66 | 7 | 0 | - | `props/parkour_zipline` | The zipline poles (`props/parkour_zipline` anchors) can be walked through in `chase-game` (user report); in ... |
 | 9 | [TRAV-66](features/player-traversal.md?display=source#L26) | 0 | 39 | 4 | 0 | - | `props/parkour_fencevault` | The other kinds that share the fence's B press list are not identified or ported (their order decides who ... |
 | 10 | [TRAV-48](features/player-traversal-zipline.md?display=source#L35) | 0 | 22 | 5 | 1 | - | `props/parkour_tightrope` | The ropes of the tightrope anchors (`GrappleLineType` 0) use the same draw 0x1a9dc4 and are not loaded, so ... |
@@ -240,7 +240,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [pedestrians-traffic-pedestrians-vehicles.md](features/pedestrians-traffic-pedestrians-vehicles.md): PED-18 (+1), PED-19 (+1), PED-S10, PED-S9
 - [pedestrians-traffic-pedestrians.md](features/pedestrians-traffic-pedestrians.md): PED-27 (+2), PED-16 (+1), PED-24 (+1), PED-25 (+1), PED-26 (+1), PED-28 (+1), PED-9 (+1), PED-29, PED-S13, PED-S14, PED-S15, PED-S16, PED-S2, PED-S4, PED-S5, PED-S6, PED-S7, PED-S8
 - [pedestrians-traffic.md](features/pedestrians-traffic.md): PREGEN-7 (+3), PREGEN-6, PREGEN-S1, PREGEN-S2, PREGEN-S4
-- [player-movement-attack.md](features/player-movement-attack.md): PLAYER-16 (+2), PLAYER-15 (+1), PLAYER-22 (+1), PLAYER-27 (+1), PLAYER-28 (+1), PLAYER-29 (+1), PLAYER-13, PLAYER-18, PLAYER-21, PLAYER-23, PLAYER-24, PLAYER-26, PLAYER-S10, PLAYER-S11, PLAYER-S12, PLAYER-S14, PLAYER-S5, PLAYER-S6, PLAYER-S8
+- [player-movement-attack.md](features/player-movement-attack.md): PLAYER-16 (+2), PLAYER-31 (+2), PLAYER-15 (+1), PLAYER-22 (+1), PLAYER-28 (+1), PLAYER-30 (+1), PLAYER-32 (+1), PLAYER-13, PLAYER-18, PLAYER-21, PLAYER-23, PLAYER-24, PLAYER-26, PLAYER-S10, PLAYER-S11, PLAYER-S12, PLAYER-S14, PLAYER-S16, PLAYER-S5, PLAYER-S6, PLAYER-S8
 - [player-movement.md](features/player-movement.md): PLAYER-11 (+1), PLAYER-25 (+1), PLAYER-1, PLAYER-10, PLAYER-2, PLAYER-3, PLAYER-5, PLAYER-6, PLAYER-7, PLAYER-8, PLAYER-S1, PLAYER-S2, PLAYER-S4
 - [player-traversal-ladders.md](features/player-traversal-ladders.md): TRAV-61 (+2), TRAV-59 (+1), TRAV-58, TRAV-60, TRAV-62, TRAV-S34, TRAV-S35, TRAV-S36, TRAV-S37
 - [player-traversal-pole.md](features/player-traversal-pole.md): TRAV-S9 (+1), TRAV-11, TRAV-13, TRAV-14, TRAV-15, TRAV-16, TRAV-S5, TRAV-S6, TRAV-S7, TRAV-S8

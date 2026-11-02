@@ -58,7 +58,7 @@ target_sources(chase_runtime PRIVATE src/runtime/shadow.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/award_viewer.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/reference_trigger_level.cpp src/runtime/reference_trigger_apply.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/switch_base.cpp src/runtime/switch_set.cpp src/runtime/lever_use.cpp)
-target_sources(chase_runtime PRIVATE src/runtime/player_attack.cpp src/runtime/attack_targets.cpp src/runtime/attack_sounds.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/player_attack.cpp src/runtime/attack_targets.cpp src/runtime/attack_facts.cpp src/runtime/attack_sounds.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/pedestrian_walk.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/vehicle_camera.cpp src/runtime/particles.cpp src/runtime/debris.cpp src/runtime/prop_destroy.cpp src/runtime/destroy_message.cpp src/runtime/character_death.cpp src/runtime/fall_apart.cpp src/runtime/stud_drop.cpp src/runtime/character_respawn.cpp src/runtime/character_hit.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/prop_wobbly_destructible.cpp src/runtime/prop_bouncer.cpp src/runtime/stud_callers.cpp src/runtime/stud_drop_classes.cpp src/runtime/super_brick.cpp src/runtime/prop_hit_sequence.cpp)
@@ -193,7 +193,7 @@ if(EPOXY_FOUND)
     target_sources(chase-game PRIVATE src/game_debris_pickup.cpp)
     target_sources(chase-game PRIVATE src/game_switch_glue.cpp src/game_switch_use_glue.cpp)
     target_sources(chase-game PRIVATE src/game_debris_super.cpp)
-    target_sources(chase-game PRIVATE src/game_attack.cpp src/runtime/game_attack_characters_glue.cpp src/game_screen_fade.cpp src/game_screen_shake.cpp src/game_save.cpp)
+    target_sources(chase-game PRIVATE src/game_attack.cpp src/runtime/game_attack_characters_glue.cpp src/runtime/game_attack_facts_glue.cpp src/game_screen_fade.cpp src/game_screen_shake.cpp src/game_save.cpp)
     target_sources(chase-game PRIVATE src/game_prop_rocking.cpp src/runtime/game_rocking_follow_glue.cpp src/runtime/game_attach_children_glue.cpp src/game_platform_nodes.cpp)
     target_sources(chase-game PRIVATE src/runtime/game_push_cart_glue.cpp src/runtime/game_mission13_fixes_glue.cpp src/runtime/qol_window.cpp src/runtime/qol_controls_bindings.cpp src/runtime/qol_pc_controls.cpp src/runtime/qol_game_wiring.cpp)
     target_sources(chase-game PRIVATE src/runtime/game_platform_riding_glue.cpp)
@@ -897,6 +897,12 @@ if(BUILD_TESTING)
   add_test(NAME attack-targets COMMAND attack-targets-test)
   add_test(NAME attack-targets-real-data COMMAND attack-targets-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(attack-targets-real-data PROPERTIES SKIP_RETURN_CODE 77)
+  add_executable(attack-facts-test tests/attack_facts_test.cpp)
+  target_link_libraries(attack-facts-test PRIVATE chase_runtime chase_assets)
+  target_compile_options(attack-facts-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME attack-facts COMMAND attack-facts-test)
+  add_test(NAME attack-facts-real-data COMMAND attack-facts-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+  set_tests_properties(attack-facts-real-data PROPERTIES SKIP_RETURN_CODE 77)
   add_executable(attack-sounds-test tests/attack_sounds_test.cpp)
   target_link_libraries(attack-sounds-test PRIVATE chase_runtime chase_assets)
   target_compile_options(attack-sounds-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -2498,7 +2504,7 @@ foreach(game_data_test
   ladder-real-data fence-vault-real-data carry-animation-real-data lever-use-real-data nested-object-collision-real-data super-buildit-real-data layout-text-real-data layout-scale-real-data fast-travel-pad-real-data map-buttons-real-data pause-menu-real-data buildit-real-data
   prop-animation-real-data animal-props-real-data cat-rescue-real-data prop-parts-real-data vehicle-boarding-real-data vehicle-drive-real-data
   floor-graph-real-data vehicle-collision-real-data vehicle-box-contact-real-data vehicle-sphere-sweep-real-data vehicle-prop-smash-real-data
-  destroy-effects-real-data character-death-real-data character-hit-real-data player-attack-real-data attack-targets-real-data attack-sounds-real-data vehicle-world-real-data vehicle-rest-real-data
+  destroy-effects-real-data character-death-real-data character-hit-real-data player-attack-real-data attack-targets-real-data attack-facts-real-data attack-sounds-real-data vehicle-world-real-data vehicle-rest-real-data
   vehicle-wheels-real-data vehicle-hud-real-data vehicle-real-data objectives-real-data object-kinds progress-readme priorities-current
   camera-records-real-data locomotion-real-data streaming-real-data room-streaming-real-data collision-real-data fog-real-data lighting-real-data reflection-real-data
   sky-real-data shadow-real-data level-start-real-data dcam-real-data npc-idle-real-data pedestrian-limit-real-data ai-real-data nav-path-real-data

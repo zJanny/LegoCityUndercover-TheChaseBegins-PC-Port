@@ -1,5 +1,6 @@
 #include "game_level.hpp"
 #include "runtime/ability_table.hpp"
+#include "runtime/attack_facts.hpp"
 #include "runtime/level_start.hpp"
 
 #include <cctype>
@@ -70,6 +71,14 @@ void LevelSession::loadAttackCharacters(assets::FuseArchive& archive) {
             entry.entity.kind = runtime::kEntityKindCharacter;
             if (intParam(object, cls, "AIBadGuy", 0) != 0) entry.entity.word |= runtime::kEntityWordBadGuy;
             if (intParam(object, cls, "Boss_IsBoss", 0) != 0) entry.entity.word |= runtime::kEntityWordBoss;
+            if (cls) {
+                const runtime::EntityBox box = runtime::characterEntityBox(*cls, intParam(object, cls, "BoundCollision", 1) != 0);
+                entry.entity.boxCentre = box.centre;
+                entry.entity.boxHalf = box.half;
+                if (!box.collision) entry.entity.flags &= std::uint16_t(~runtime::kEntityFlagCollision);
+            } else {
+                entry.entity.flags &= std::uint16_t(~runtime::kEntityFlagCollision);
+            }
             entry.entity.character.abilities = rowAbilities(sheet, row);
             entry.entity.character.classFlag0 = (rowByte(sheet, row, kCharacterClassFlagsByte) & 1) != 0;
             attackCharacters.push_back(entry);
@@ -92,25 +101,28 @@ void LevelSession::loadAttackCharacters(assets::FuseArchive& archive) {
         characterFightSink = [this](const runtime::CharacterFightStart& fight) {
             std::cout << "attack: fight move " << fight.move << " on character " << fight.name << " (state " << fight.state << ") at update " << updates << '\n';
         };
+    installAttackFacts();
     std::cout << "attack: " << attackCharacters.size() << " characters, " << attackTables.moves.size() << " fight moves\n";
 }
 
-// STAND-IN PLAYER-S13: every enabled character of a shown room is in the near list; its box is the player's (entity +0x60 / +0x6c), its state
-// 1, on the ground, with ctrl+0x240 at its node height, held by nobody, and its target mode 0 unless EnableTargetable switched it off.
+// The level characters as candidates: the box is the class's CollisionBound (entity +0x60 / +0x6c), owner flag 0x200 only with it.
+// STAND-IN PLAYER-S15: state 1, on the ground, ctrl+0x240 at the node height, abilities of the class row without the state changes, the target
+// mode 0 unless EnableTargetable switched it off, and held by nobody unless attackTables.engagedOn says so.
 void LevelSession::appendAttackCharacters(std::vector<runtime::AttackCandidate>& candidates) {
     if (!levelCharacters) return;
-    const runtime::PlayerBox box;
     for (std::size_t i = 0; i < attackCharacters.size(); ++i) {
         const AttackCharacter& character = attackCharacters[i];
         if (objectState.isDisabled(character.name) || !roomShown(character.room)) continue;
         const std::optional<assets::Matrix> world = levelCharacters->world(character.name);
         if (!world) continue;
         runtime::AttackCandidate candidate;
-        candidate.body = runtime::attackBody(*world, {box.centre[0], box.centre[1], box.centre[2]}, {box.half[0], box.half[1], box.half[2]});
         candidate.entity = character.entity;
+        candidate.body = runtime::attackBody(*world, candidate.entity.boxCentre, candidate.entity.boxHalf);
+        candidate.collision = (candidate.entity.flags & runtime::kEntityFlagCollision) != 0;
         candidate.entity.character.groundY = (*world)[13];
         const runtime::ObjectNativeFlags* flags = levelScripts.objectNatives().flags(character.name);
         if (flags && flags->targetable && !*flags->targetable) candidate.entity.character.targetMode = kTargetModeNobody;
+        if (attackTables.engagedOn) candidate.entity.character.heldByOther = attackTables.engagedOn(character.name);
         candidate.name = character.name;
         candidates.push_back(candidate);
     }

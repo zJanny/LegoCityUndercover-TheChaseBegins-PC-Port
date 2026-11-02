@@ -1,4 +1,5 @@
 #include "game_level.hpp"
+#include "runtime/attack_facts.hpp"
 #include "runtime/player_motion.hpp"
 #include <cctype>
 #include <iostream>
@@ -50,6 +51,7 @@ game_player::PlayerAnimation LevelSession::attackMovePlayer(const runtime::Stick
         candidates.push_back(candidate);
     }
     appendAttackCharacters(candidates);
+    runtime::markAttackNearList(candidates, {player->motion.x, player->vertical.y, player->motion.z});
     runtime::AttackInput input;
     input.tap = tapped;
     input.intent = intent;

@@ -33,6 +33,9 @@ private:
     std::uint64_t excludedSurfaces_ = kCameraExcludedSurfaces;
 };
 
+// The segment against a box in its own space (0x2040e8): the fraction of the segment at which it enters the box, 0 when the start is inside.
+bool segmentMeetsBox(const float from[3], const float to[3], const float centre[3], const float half[3], float& entry);
+
 // 0x17e0f8 without the surface test: the distance along the unit direction at which the ray from `origin` meets the triangle,
 // or a negative value. Triangles seen from behind and parallel ones (determinant below 1e-5) are missed; hits beyond `limit` too.
 float rayTriangleDistance(const float v0[3], const float v1[3], const float v2[3], const float origin[3], const float direction[3], float limit);

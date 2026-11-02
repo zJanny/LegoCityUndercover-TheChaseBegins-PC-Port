@@ -11,6 +11,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <string>
 #include <vector>
@@ -84,6 +85,7 @@ struct AttackCandidate {
     bool collision = true;           // entity+0x10 bit 0x200 (0x21a2d4 drops an entity without it)
     AttackEntity entity;             // kind, flags and controller as 0x21a2d4 and 0x1b7358 read them (a wobbly prop by default)
     std::string name;                // lower-case instance name
+    bool listed = true;              // in the player's near list 0x23d4c0 (markAttackNearList); the search skips the others
 };
 
 // The arguments of 0x219c08 that differ between its callers in the attack.
@@ -109,7 +111,7 @@ float attackScore(float range, float maxAngle, float weight, const std::array<fl
                   const std::array<float, 3>& to);
 // 0x219c08 over the near list (a range up to 5.0): among the candidates that pass 0x21a2d4, the one with the lowest score of 0x21a1d8 with the
 // weight 0x1b7358, the candidate's half width and depth beyond the attacker's added to the range and the angle of attackSearchAngle.
-// STAND-IN PLAYER-S13: the near list 0x23d4c0 (the player's list 0x593284, maintained elsewhere) is taken to hold every candidate.
+// The near list 0x23d4c0 (the player's list 0x593284) is the candidates with `listed` (markAttackNearList).
 std::optional<std::size_t> findAttackTarget(const AttackSearch& search, const AttackEntity& attackerEntity, const AttackBody& attacker,
                                             const std::array<float, 3>& direction, const std::vector<AttackCandidate>& candidates);
 // The same for the player with the flags of the Y tap.
@@ -131,14 +133,19 @@ struct PlayerAttackChoice {
     bool running = false;
 };
 // The facts of the original's tables the choice needs.
+using AttackLineOfSight = std::function<bool(const AttackBody& attacker, const std::vector<AttackCandidate>& candidates, std::size_t target)>;
 struct PlayerAttackTables {
     std::uint8_t weaponRow = 13;     // character table byte +0x17 of the player (row 9 police: 13)
     AbilitySet fightMoveAbilities{}; // the ability bytes +0xc of the eight fight moves of *0x372e28
     std::vector<FightMove> moves;    // the eight fight moves
+    AttackLineOfSight lineOfSight;   // 0x219990 for the grab test; empty: clear
+    // The engaged list 0x58deb0 of 0x28265c: true when one of its entities has this character (lower-case instance) as ctrl+0x140 with the next
+    // state ctrl+0x6e 0x132. Read by the glue; empty: nobody is engaged (STAND-IN PLAYER-S15).
+    std::function<bool(const std::string& lowerInstance)> engagedOn;
 };
 // 0x1fdbd4 for a Y tap of the player in ground locomotion: the grab search (3.0, 45 degrees) keeps a character that passes 0x28265c and 0x23d610;
 // otherwise the melee search (ctrl+0x80, 1.5 x running) drops a character unless the weapon row is 16.
-// STAND-IN PLAYER-S8: the line of sight 0x219990 of 0x28265c is taken as clear. The special target *(0x3746f4 + 8) (0x219b80) is not modelled.
+// The line of sight 0x219990 of 0x28265c is tables.lineOfSight. The special target *(0x3746f4 + 8) (0x219b80) is not modelled.
 PlayerAttackChoice choosePlayerAttack(const AttackBody& attacker, const AttackEntity& player, const std::array<float, 3>& direction, bool running,
                                       const std::vector<AttackCandidate>& candidates, const PlayerAttackTables& tables);
 // 0x1f7f28: the boxes overlap vertically by more than 0.2, the distance of the box centres minus the target's radius is below the range and the

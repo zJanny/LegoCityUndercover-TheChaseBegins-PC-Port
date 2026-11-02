@@ -7,7 +7,9 @@ Subtopic of [player-attack.md](player-attack.md): which characters the player's 
 - Characters: the gate 0x21a2d4 keeps the characters of the other side (entity +0xc bit 2 = `AIBadGuy`) whose target mode ctrl+0xda & 7 allows the player; a bad guy weighs 0.4 and is searched all around (180 degrees). [§2026-11-01T15:19:31](#ts-20261101-151931)
 - A Y tap first searches 3.0 / 45 degrees for a character to grab (0x28265c); a goon found there gets a fight move (0x1d3980: variant 4, a random `grab_putdown*` clip of `tables/tablescombat.bxls` sheet 1, target state 0xe3), or the grab struggle 0x19bfc0 for abilities 0x32 / 0x35. The punch's melee search drops characters for Chase's weapon row 13. Not measured yet. [§2026-11-01T15:19:31](#ts-20261101-151931)
 - Measured (20261101-mission-D-1, -2): a tap next to two goons takes the nearer one (1.0 m) in every stick direction into the fight move (state 163 with variant 4, move clip `grab_putdown_04` or `_07`, goon state 227 one update later); no message 62 or 0 is sent; *0x372e28 equals `tables/tablescombat.bxls` sheet 1. [§2026-11-01T16:02:02](#ts-20261101-160202)
+- Measured (20261102-mission14-servant): a tap with two goons lying knocked down (state 309) and Chase idle is a plain punch in the air: the search gate passes the lying goons, no fight move starts and no message 0 or 62 goes to them. [§2026-11-02T15:50:34](#ts-20261102-155034)
 - Port: `src/runtime/attack_targets.*`, `choosePlayerAttack` in `src/runtime/player_attack.*`, glue `src/runtime/game_attack_characters_glue.cpp`. [§2026-11-01T15:19:31](#ts-20261101-151931)
+- The line of sight 0x219990 is the ray 0x21ab20 between the box centres with the query words include 5 / exclude 0x10, clear when the nearest entry is the target's; a character's box is its class's `CollisionBound` (the player's box (0, 1.15, 0.08) / (0.6, 0.85, 0.52) in every level character class that has the record); the player's near list is the mask 4 / 6 entries in a box of half 5.0 around his node. Port: `src/runtime/attack_facts.*`, glue `src/runtime/game_attack_facts_glue.cpp`. [§2026-11-02T15:32:44](#ts-20261102-153244)
 
 <a id="ts-20261101-151931"></a>
 
@@ -130,3 +132,60 @@ Unknowns:
 - A tap with a goon knocked down and Chase idle, which needs the second state waited out (about 150 updates).
 - What messages 39 (lr 0x1d6328, before and during the fight), 36 (to the player) and 38 do, and who keeps ctrl+0x140 set in the idle state.
 - Which 3 of the 15 near-list candidates passed 0x21a2d4.
+
+<a id="ts-20261102-153244"></a>
+
+## 2026-11-02T15:32:44+01:00 — The attack's line of sight, the player's near list and the box of a character (llvm-objdump; no emulator; 20261102-mission14-D)
+
+Reads what [§2026-11-01T15:19:31](#ts-20261101-151931) listed under its unknowns. Nothing there is contradicted.
+
+### Method
+
+- llvm-objdump (`--triple=armv6k-none-eabi --mattr=+vfp2`) of `artifacts/game/game.arm.elf`: 0x219990, 0x21ab20, 0x27cab4, 0x237f30, 0x23d4c0, 0x219c08 (the loop over the near list), 0x2e5330..0x2e5418 and 0x2f6af4..0x2f6b54 (the gathers of the player's list), 0x28265c, 0x23aff8, 0x236d74, 0x242df4, 0x254250. REA was not used, so no REA result is claimed here.
+- A probe with the C++ loaders over the class files of the characters placed in lvl_01 (`Level::bounds`).
+
+### Line of sight 0x219990(attacker, target)
+
+- Both entities' box centres (entity +0x60) go through the node matrix (0x250810 of entity +0x3c, the point transform 0x254250) and become the ray from the attacker's centre to the target's centre.
+- The query descriptor is built on the stack (0x2199f4..0x219a38): vtable 0x362298, include mask 5, exclude mask 0x10, kinds -1 / 0, owner +0xc include 0 and exclude 0x1800, owner +0x10 include 0x200 and exclude 3, the excluded owner = the attacker, mode byte 1, and no excluded surface (words 0). Masks 1 (static level), 4 (characters) and 6 (dynamic props) pass; 2, 16 and 17 (vehicle boxes) do not.
+- 0x21ab20 gathers up to 100 entries (0x237f30) in the box around the segment (centre = midpoint, half extents = half the absolute difference), then 0x27cab4 keeps the nearest hit and stores the hit entry in the out record. Box entries (type 0) are cut in the box's own space by 0x2040e8 (owners with flag 0x800 loop over sub-boxes of the model's records), mesh entries (type 1) by 0x22f978; the entry matrix is the owner's node matrix (0x21bb78).
+- Result: no hit gives 1; with a hit, 1 when the entry's owner (entry +0x10) is the target and 0 otherwise. So a wall, a prop or another character between the two centres blocks the grab; the attacker itself is never hit.
+
+### The box of a character
+
+- The character create 0x182e40 calls 0x236d74, which calls `0x23aff8(entity, 0, 0, 0, autoBox 0, margin 0)` (0x236f28): with the class's `CollisionBound` record the box is its centre (+0x10) and half extents (+0x1c) in entity +0x60 / +0x6c, and owner flag +0x10 bit 9 (0x200) is set; the parameter `BoundCollision` 0 clears it again. The dynamic argument is 0, so the grid entry has mask 4 (no flag 0x100), and the last argument 0 ors 0x20000 into entity +0xc (the oracle's goons read +0xc = 0x00020004).
+- Probe: the character classes of lvl_01 that carry `CollisionBound` (`chars/char_ai_*`, `char_journalist`, `char_boosterstrange`, `char_racecardriver`, the classes of the 15 goons of mission 1-4 among them) all have centre (0, 1.15, 0.08) and half extents (0.6, 0.85, 0.52): the player's box that the port used for every character. `chars/pedestrian` has no record, so that entity gets no box and no flag 0x200 (the gate 0x21a2d4 then drops it).
+
+### The player's near list
+
+- Per update (inside the frame function, 0x2e5330..0x2e5418) the player's list is rebuilt: 0x237f30 over the box with the centre at the player's node position (translation of 0x250810) and half extents *0x377538 (5.0) on all axes, the descriptor words include 4, exclude 0, kinds -1 / 0, owner +0xc 0 / 0, owner +0x10 include 0x200 and exclude 3, no excluded owner, mode 0, at most 100 entries, into the list 0x593284 with the count *0x377534. The level start builds it once the same way (0x2f6af4..0x2f6b54, with owner +0xc exclude 0x10).
+- Include mask 4 takes the entries of masks 4 and 6: characters and dynamic props, not static level (1) or vehicle boxes (17). Mode 0 does no per-entry box test, so the list holds every such entry of the grid cells the box touches. 0x237f30 also drops an entry whose flag byte +5 has bit 0 or 1 set (bit 1 is the mark it sets on every entry it adds) and an owner whose node word has bit 5 set. 0x23d4c0 hands this list to 0x219c08 for the player when the range is at most 5.0; for other entities (or a longer range) it gathers its own list with mode 1, owner +0xc exclude 0x210 and the searcher excluded.
+- The attack never reaches beyond 3.5 (grab range 3.0, melee range 2.2 x 1.5 = 3.3, plus the target's half width), so an entry in the list's cells but outside the box cannot be picked.
+
+### Not read further
+
+- ctrl+0x240 is the height the grab test compares (named so for the player in [rendering-shadows.md](rendering-shadows.md)). The controller code that writes it is at 0x30a330 (clears the block at +0x23c..+0x248) and 0x30ba10 (adds a delta to +0x240); the port keeps the node height.
+- The engaged table: 0x28265c walks the six pointers at 0x58deb0 and refuses the target when an entity other than the target has it as ctrl+0x140 with ctrl+0x6e equal to the pool word 0x132 (0x2827e4). Who fills the table is not read here; [combat-characters.md §2026-11-01T15:23:21](combat-characters.md#ts-20261101-152321) names it for the takedown.
+
+### Port
+
+- `src/runtime/attack_facts.*`: `attackLineClear` (the nearest of the world's entries accepted by mask 5 / exclude 0x10 and the character boxes of the candidates; ties go to the target), `markAttackNearList` (sets `listed`; the search skips the others, so indices stay stable), `characterEntityBox` (the class record and `BoundCollision`). `PlayerAttackTables::lineOfSight` feeds `choosePlayerAttack`; `PlayerAttackTables::engagedOn` is the hook for the engaged table. Glue: `src/runtime/game_attack_facts_glue.cpp` (installs the sight with the level's collision world), `game_attack_characters_glue.cpp` (box and owner flag from the class), `src/game_attack.cpp` (one call to mark the near list).
+- Tests: `attack-facts` (hand-calculated walls, character boxes, masks, near list, the blocked grab), `attack-facts-real-data` (the class boxes of lvl_01, and the line from the recorded position of Chase to goon A of the fight state).
+
+Unknowns:
+- The `MeshCollision` branch of 0x23aff8 (at 0x23b1c4), which takes the box from the model and replaces the class's `CollisionBound` box: not modelled (stand-in PLAYER-S15); which classes use it is not read.
+- The tie rule of 0x27cab4 (equal distances), the meaning of the owner +0xc exclusion 0x1800 of the ray, composite owners (flag 0x800) and which other entities (pedestrians, drivers) the grid holds besides the level characters.
+- The writers of the engaged table, of ctrl+0x240 and the start value of ctrl+0xda; the height test of flag 0x40 (0x22e1cc), the kinds 0x43 / 0xcc (0x22103c), the state-dependent ability changes of 0x1d4dfc and the library acosf 0x2584c8.
+- Whether the node-bit-5 drop of the gather is the hidden node of 0x23de70.
+
+<a id="ts-20261102-155034"></a>
+
+## 2026-11-02T15:50:34+01:00 — A Y tap while two goons lie knocked down and Chase is idle: a plain punch in the air (Azahar RPC, 20261102-mission14-servant, idle job 1)
+
+Measures the open point of [§2026-11-01T16:02:02](#ts-20261101-160202) (PLAYER-26). Recorded from a save state of the mission 1-4 fight a moment after Chase knocked a goon down; New 3DS, OpenGL, RPC, dt 1/30; two loads agree on every trap line and every sampled state of u1 to u8. Y held for one update at u1, no stick.
+
+- Start: Chase idle (state 1) at (578.704, 27.621, 967.358), facing ctrl+8 = ctrl+0xa = 13556, ctrl+0x140 = 0. Goon B lies in state 309 (clip 308) 2.70 m ahead (about 5 degrees off his facing), goon A lies in state 309 (clip 306) 6.63 m away, a third bad guy stands in state 80 at 19.9 m. Both lying goons have entity +0xc = 0x00220004, ctrl+0xda 0 and ctrl+0x140 = Chase.
+- Result: no fight move. In u1 0x214f40(player, ctrl, 0) runs from lr 0x1fe50c (the plain punch); 0x1d3980, 0x19bfc0, 0x25d8e4 and 0x231d20 are never called. Chase is in state 163 at u2, walks forward 0.945 m over u3 to u15 and is back in state 1 at u16 (14 updates, as combo_1).
+- The search 0x219c08 in u1 runs 0x21a2d4 15 times with flags 9; 3 return 1: goon B (2.70 m), goon A (6.63 m) and a kind-119 prop. At u5 (the hit window) 0x21a2d4 runs 15 times with flags 0xb and every call returns 0: no target, no message 0, 62 or 46 reaches a goon in u1 to u26. Neither lying goon changes state in 24 updates.
+- Reading with the port's rules (not measured): state 309 is 0x135, which the refusal 0x23d610 lists, so the grab target is cleared and the punch has no target; flags 0xb drop characters of both sides for the strike. The port's `choosePlayerAttack` does the same; no test pins this yet.
+- Side data (no input, stepped, first load, +-1 update between loads): goon B, held in the throw until u29, lands in state 309 at u30, lies 120 updates, gets up in state 313 (clip 309) at u151 to u181 and is idle (state 1) at u182; goon A lies in 309 until u99, gets up in 313 at u100 to u126 and is idle at u127. Chase dies (state 11) at u236 at one heart if left alone, because a goon attacks.

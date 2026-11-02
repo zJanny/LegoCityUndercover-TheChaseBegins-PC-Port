@@ -7,7 +7,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | Feature | Status | Top open items |
 |---|---|---|
 | [player-movement](player-movement.md) | IN_PROGRESS | PLAYER-1 slide landing stun rule; PLAYER-2 slide exit; PLAYER-3 slide probe and timeout |
-| [player-movement-attack](player-movement-attack.md) | IN_PROGRESS | PLAYER-26 oracle check against goons; PLAYER-28 fight move motion; PLAYER-27 line of sight (punch on props, fight move on goons ported) |
+| [player-movement-attack](player-movement-attack.md) | IN_PROGRESS | PLAYER-26 oracle check against goons; PLAYER-28 fight move motion; PLAYER-30..32 engaged table and unread character facts (punch on props, fight move on goons, line of sight and near list ported) |
 | [player-traversal](player-traversal.md) | IN_PROGRESS | TRAV-66 other users of the B press list; TRAV-34 pole A mount; TRAV-19 brick side jumps; TRAV-2 climb wall (bricks and fence vault ported) |
 | [player-traversal-zipline](player-traversal-zipline.md) | IN_PROGRESS | TRAV-9 tightrope; TRAV-55 solid poles; TRAV-8 use press measured; TRAV-63 handcuffs on the rope (zipline ported) |
 | [player-traversal-pole](player-traversal-pole.md) | IN_PROGRESS | TRAV-11 entry from the air; TRAV-13 walk-in touch; TRAV-15 sounds (pole ported) |

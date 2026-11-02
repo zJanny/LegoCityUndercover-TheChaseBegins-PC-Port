@@ -188,7 +188,7 @@ std::optional<std::size_t> findAttackTarget(const AttackSearch& search, const At
     float bestScore = FLT_MAX;
     for (std::size_t i = 0; i < candidates.size(); ++i) {
         const AttackCandidate& candidate = candidates[i];
-        if (!candidate.collision) continue;
+        if (!candidate.collision || !candidate.listed) continue;
         if (!attackCandidatePasses(candidate.entity, attackerEntity, search.flags)) continue;
         const AttackBody& body = candidate.body;
         std::array<float, 3> to = transformPoint(body.node, body.centre);
@@ -226,7 +226,8 @@ PlayerAttackChoice choosePlayerAttack(const AttackBody& attacker, const AttackEn
     const std::optional<std::size_t> grab = findAttackTarget({kGrabSearchRange, kGrabSearchAngle, kAttackSearchFlags, true}, player, attacker, direction, candidates);
     if (grab) {
         const AttackEntity& target = candidates[*grab].entity;
-        const bool fight = isAttackCharacter(target) && fightTargetPasses(target, player, tables.fightMoveAbilities, true);
+        const bool clearLine = !isAttackCharacter(target) || !tables.lineOfSight || tables.lineOfSight(attacker, candidates, *grab);
+        const bool fight = isAttackCharacter(target) && fightTargetPasses(target, player, tables.fightMoveAbilities, clearLine);
         if (fight || (target.word & kEntityWordBoss)) {
             if (!grabStateAllows(target.character.state)) return choice;
             const bool struggle = hasAbility(target.character.abilities, 0x32) || (target.word & kEntityWordBoss) || hasAbility(target.character.abilities, 0x35);
