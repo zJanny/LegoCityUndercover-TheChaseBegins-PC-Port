@@ -206,9 +206,9 @@ int main() {
         debrisClassColoursWin();
         spawnDebrisNative();
     } catch (const std::exception& error) {
-        std::cerr << "mission14-natives-test: " << error.what() << '\n';
+        std::cerr << "bullet-time-vehicle-debris-natives-test: " << error.what() << '\n';
         return 1;
     }
-    std::cout << "mission14-natives-test: ok\n";
+    std::cout << "bullet-time-vehicle-debris-natives-test: ok\n";
     return 0;
 }

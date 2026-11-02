@@ -3,22 +3,7 @@
 #include "runtime/ai.hpp"
 #include "runtime/player_vertical.hpp"
 
-#include <optional>
-#include <string>
-
 namespace chase::runtime {
-
-// Reports where a scripted AI move of the player (AIMove, AISuperJump) starts and ends, for the comparison with the original's
-// per-update traces of the end of mission 1-3 (docs/re/pushables.md).
-class AiMoveWatch {
-public:
-    std::optional<std::string> observe(bool moving, const float position[3], unsigned update);
-
-private:
-    bool moving_ = false;
-    static constexpr unsigned kSettleUpdates = 60;
-    unsigned startUpdate_ = 0, endUpdate_ = 0;
-};
 
 // The player's own jump and fall during an AISuperJump flight (locomotion state 73, docs/re/pushables.md): the jump_run clip scaled to the
 // climb of the set-up 0x213300 lifts the node, and when the flight ends the jump becomes a fall that the ordinary vertical update lands.

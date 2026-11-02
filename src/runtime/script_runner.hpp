@@ -253,18 +253,18 @@ public:
         loadGeneratorNatives(classOf);
         loadMission14Natives(classOf);
     }
-    // BulletTime, VehicleSetAI, VehicleSetChased and SpawnDebris2Colour (game_mission14_natives_glue.cpp).
+    // BulletTime, VehicleSetAI, VehicleSetChased and SpawnDebris2Colour (script_runner_bullet_time_vehicle_debris_natives.cpp).
     void loadMission14Natives(const assets::ClassLookup& classOf) { classOf_ = classOf; }
     const BulletTimeSystem& bulletTime() const { return bulletTime_; }
     BulletTimeSystem& bulletTime() { return bulletTime_; }
     const VehicleAiNatives& vehicleAi() const { return vehicleAi_; }
     std::vector<ScriptDebrisRequest> takeDebrisRequests();
-    // The rocking props (SetPropRocking) and the platform records (WaitForPlatform) of the level (game_generator_natives_glue.cpp).
+    // The rocking props (SetPropRocking) and the platform records (WaitForPlatform) of the level (script_runner_generator_natives.cpp).
     void loadGeneratorNatives(const assets::ClassLookup& classOf);
     const PropRockingSet& propRocking() const { return propRocking_; }
     PlatformSet& platforms() { return platforms_; }
     const PlatformSet& platforms() const { return platforms_; }
-    // PlayParticlesGO starts since the last call, in order (script_particles.hpp, game_mission_end_1_3_glue.cpp); the host starts the emitters.
+    // PlayParticlesGO starts since the last call, in order (script_particles.hpp, script_runner_particle_natives.cpp); the host starts the emitters.
     std::vector<ScriptParticleRequest> takeParticleRequests();
     // AwardViewer 0x1b23e4 since the last call: the host opens the award viewer (award_viewer.cpp).
     bool takeAwardViewerRequest();
@@ -315,7 +315,7 @@ private:
     void setPropRockingNative(const assets::ScriptCall& call);
     Result waitForPlatformNative(const assets::ScriptCall& call);
     void platformMessage(const std::string& lowerInstance, std::uint8_t message);
-    // SetPlatformSpeed, SetPlatformOrigin, SetPlatformTarget and MovePlatform (platform_riding.hpp, game_platform_glue.cpp).
+    // SetPlatformSpeed, SetPlatformOrigin, SetPlatformTarget and MovePlatform (platform_riding.hpp, script_runner_platform_natives.cpp).
     void platformNative(const assets::ScriptCall& call);
     void platformAttachment(AnimationNativeKind kind, const std::vector<std::string>& args);
     void playParticlesGoNative(const assets::ScriptCall& call);

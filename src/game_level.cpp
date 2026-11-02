@@ -484,7 +484,7 @@ void LevelSession::draw(int width, int height) {
     for (std::size_t i = 0; i < waypointObjects.size(); ++i)
         shownWaypoints[i] = objectives.waypointActive(game_doors::lowerCase(waypointObjects[i].instance)) && roomShown(runtime::roomNumber(waypointObjects[i].room));
     propParts.apply(scene, buildits, placedObjects, placedSceneIndex, shownPlaced, shownWaypoints, badgeFades);
-    logDrawnFixes();
+    logDrawnPositions();
     effects.apply(scene);
     fallApart.apply(scene);
     nearCameraFades.apply(scene);

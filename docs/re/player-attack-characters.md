@@ -10,6 +10,7 @@ Subtopic of [player-attack.md](player-attack.md): which characters the player's 
 - Measured (20261102-mission14-servant): a tap with two goons lying knocked down (state 309) and Chase idle is a plain punch in the air: the search gate passes the lying goons, no fight move starts and no message 0 or 62 goes to them. [§2026-11-02T15:50:34](#ts-20261102-155034)
 - Port: `src/runtime/attack_targets.*`, `choosePlayerAttack` in `src/runtime/player_attack.*`, glue `src/runtime/game_attack_characters_glue.cpp`. [§2026-11-01T15:19:31](#ts-20261101-151931)
 - The line of sight 0x219990 is the ray 0x21ab20 between the box centres with the query words include 5 / exclude 0x10, clear when the nearest entry is the target's; a character's box is its class's `CollisionBound` (the player's box (0, 1.15, 0.08) / (0.6, 0.85, 0.52) in every level character class that has the record); the player's near list is the mask 4 / 6 entries in a box of half 5.0 around his node. Port: `src/runtime/attack_facts.*`, glue `src/runtime/game_attack_facts_glue.cpp`. [§2026-11-02T15:32:44](#ts-20261102-153244)
+- Renamed files: src/runtime/game_attack_characters_glue.cpp -> src/runtime/game_attack_characters.cpp, src/runtime/game_attack_facts_glue.cpp -> src/runtime/game_attack_facts.cpp.
 
 <a id="ts-20261101-151931"></a>
 

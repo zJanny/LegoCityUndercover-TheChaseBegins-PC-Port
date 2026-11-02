@@ -16,6 +16,7 @@ Subtopics: [script-natives-animation-player.md](script-natives-animation-player.
 - LoadAnimation blocks until its load ends; the load time is open (SCRIPT-345). [scripts-runtime.md §2026-10-20T09:22](scripts-runtime.md#ts-20261020-092238)
 - Open: state requests 80 / 81, class message 253, the loaded set of an entity (0x21e8b4), 0x22716c, named child bones of AttachToBone (SCRIPT-404).
 - Player1 script clips (state 0x50, root motion, state change order, the first pose): [script-natives-animation-player.md](script-natives-animation-player.md).
+- Renamed files: src/runtime/game_attach_bone_glue.cpp -> src/runtime/game_attach_bone.cpp.
 
 <a id="ts-20261014-213649"></a>
 

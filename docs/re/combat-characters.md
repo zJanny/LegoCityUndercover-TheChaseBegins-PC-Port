@@ -17,6 +17,7 @@ What a level character does with message 0 (the hit): the hit receiver 0x1b8570,
 - Port: `src/runtime/character_takedown.*`, glue `src/runtime/game_character_takedown_glue.cpp`. [§2026-11-02T15:37:50](#ts-20261102-153750)
 - The popups 600 / 700 of a fight are 10 x the running sum of the stud counts (sheet 2 byte +11) of the throws, requested by 0x1b9878 for the HUD object 0x5197c8 at the strike of each throw, next to the stud drop 0x21e2e4. [§2026-11-02T16:13:53](#ts-20261102-161353)
 - Open: the arrestable lie of about 124 updates against 120 by the timer, the owner and reset of the popup sum, the counter takedown and the arrest itself, the pair motion, the AI pursuit, the KNOCK BACK states, the countdown of the hit list 0x593178.
+- Renamed files: src/runtime/game_character_hit_glue.cpp -> src/runtime/game_character_hit.cpp, src/runtime/game_character_takedown_glue.cpp -> src/runtime/game_character_takedown.cpp.
 
 <a id="ts-20261101-152321"></a>
 

@@ -41,11 +41,11 @@ const char* const kScripts[] = {
 
 int main(int argc, char** argv) {
     if (argc != 3) {
-        std::cerr << "usage: mission14-census-real-test FIB NAMES\n";
+        std::cerr << "usage: script-census-real-test FIB NAMES\n";
         return 2;
     }
     if (!std::filesystem::exists(argv[1]) || !std::filesystem::exists(argv[2])) {
-        std::cout << "mission14-census-real-test: data not available, skipped\n";
+        std::cout << "script-census-real-test: data not available, skipped\n";
         return 77;
     }
     try {
@@ -99,9 +99,9 @@ int main(int argc, char** argv) {
             if (startsWith(character.placement.instance, "1-4_")) ++characters;
         require(characters == 22, "characters named 1-4_* placed: " + std::to_string(characters));
     } catch (const std::exception& error) {
-        std::cerr << "mission14-census-real-test: " << error.what() << '\n';
+        std::cerr << "script-census-real-test: " << error.what() << '\n';
         return 1;
     }
-    std::cout << "mission14-census-real-test: ok\n";
+    std::cout << "script-census-real-test: ok\n";
     return 0;
 }

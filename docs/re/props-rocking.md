@@ -20,6 +20,7 @@ Subtopics: [props-rocking-platforms.md](props-rocking-platforms.md), [props-rock
 - In `chase-game` the generator scene runs on the real path from the pull switch to the end of `1-3_Generator_Script` (QuickSave); the crane platform and the girder descend ([props-rocking-platforms.md](props-rocking-platforms.md)). The script does not end mission 1-3: the end is `1-3_Start_Rescue_Lawnmower_man`, behind the ledge platform (SCRIPT-372), the push cart and the crane build-it [§2026-10-26T13:39:27](#ts-20261026-133927); the push cart and the crane build-it now work in the port ([pushables.md §2026-10-26T23:04:40](pushables.md#ts-20261026-230440), [buildit.md §2026-10-26T23:06:15](buildit.md#ts-20261026-230615)).
 - The oracle's call-by-call trace of the whole generator script (the script runs 658 updates from its start, 59 after the press; control returns at u413 of the press; the port agrees within one update): [§2026-10-26T15:16:58](#ts-20261026-151658).
 - Open: the parts of the platform class listed in [props-rocking-platforms.md](props-rocking-platforms.md), the rate and start value of the clock 0x241098 (SCRIPT-384), placed objects as attached children of a rocking prop (SCRIPT-383).
+- Renamed files: src/runtime/game_rocking_follow_glue.cpp -> src/runtime/game_attached_characters.cpp, src/runtime/game_generator_natives_glue.cpp -> src/runtime/script_runner_generator_natives.cpp, src/runtime/game_mission_end_1_3_glue.cpp -> src/runtime/script_runner_particle_natives.cpp.
 
 <a id="ts-20261025-162944"></a>
 

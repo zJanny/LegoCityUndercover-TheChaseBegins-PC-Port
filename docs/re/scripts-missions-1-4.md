@@ -13,6 +13,7 @@ What the scripts of mission 1-4 ("Gone in 60 Minutes", chapter 1, Combat Mechani
 - Fire sites of the character events in the executable: CharacterArrestable from the function at 0x28cbf8 (call at 0x28d3a4 after a query of CharacterAvoidArrest at 0x28d354); CharacterArrested from the functions at 0x21ddb8, 0x25ebe8 and 0x28bb14; VehicleChaseEnded from the function around 0x1cb544; PursuitEnded queried at 0x2ab8dc. Located, not read. [§2026-11-01T15:04:22](#ts-20261101-150422)
 
 Subtopics: [scripts-missions-1-4-spawners.md](scripts-missions-1-4-spawners.md)
+- Renamed files: src/runtime/game_mission14_natives_glue.cpp -> src/runtime/script_runner_bullet_time_vehicle_debris_natives.cpp, tests/mission14_natives_test.cpp and CTest mission14-natives -> tests/bullet_time_vehicle_debris_natives_test.cpp and bullet-time-vehicle-debris-natives, tests/mission14_census_real_test.cpp and CTest mission-1-4-census-real-data -> tests/script_census_real_test.cpp and script-census-real-data.
 
 <a id="ts-20261101-150422"></a>
 

@@ -6,6 +6,7 @@ The AI spawner class (kind 14, `props/prop_aispawner`) that holds and releases t
 
 - The mission is a chain of AI spawners: each spawner holds its characters (disabled, word +0xc bit 4) from the post-link until it is triggered, releases them one by one and, once every slot has spawned and (with `WaitForDead`) every character has bit 4 again (defeated or arrested), fires the object named by its `TriggerObject` parameter. All eight spawners of the mission have `StartActive` 0, `StartSpawned` 0 and `SpawnFromSpawner` 0. The class (create, post-link, handler, update, state change) is read and ported for all 109 spawners of the eight levels; the spawned character's StartState and the view test are not. [§2026-11-02T15:30:18](#ts-20261102-153018)
 - `1-4_Spawner_01` (goons 01, 02) and `1-4_Pursuit_Booster_Spawner` are triggered by nothing in the data or the executable; their characters stay held for the whole level. [§2026-11-02T15:30:18](#ts-20261102-153018)
+- Renamed files: src/runtime/game_ai_spawner_glue.cpp -> src/runtime/game_ai_spawner.cpp.
 
 <a id="ts-20261102-153018"></a>
 

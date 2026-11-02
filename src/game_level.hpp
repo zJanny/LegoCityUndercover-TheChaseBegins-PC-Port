@@ -65,7 +65,8 @@
 #include "runtime/brick_grab.hpp"
 #include "runtime/pole.hpp"
 #include "runtime/pushable.hpp"
-#include "runtime/mission13_end.hpp"
+#include "runtime/ai_move_watch.hpp"
+#include "runtime/ai_super_jump_vertical.hpp"
 #include "runtime/ladder.hpp"
 #include "runtime/fence_vault.hpp"
 #include "runtime/acrobat_pole.hpp"
@@ -230,7 +231,7 @@ private:
     game_player::PlayerAnimation fenceVaultMovePlayer(float dt);
     void loadPushables(chase::assets::FuseArchive& archive);
     void updatePushables(const std::function<void(const chase::runtime::SoundCall&)>& emit);
-    void logDrawnFixes();
+    void logDrawnPositions();
     void landReleasedFlights(float dt);
     void loadAttack(chase::assets::FuseArchive& archive, const std::vector<chase::assets::ObjectCollision>& placed);
     void loadAttackCharacters(chase::assets::FuseArchive& archive);
@@ -257,11 +258,11 @@ private:
     void updatePropRocking();
     // The placed props and lever zones the moving platform nodes carry, right after the scripts so the characters meet the moved collision
     // (game_platform_nodes.cpp); attached level characters follow their
-    // parent's node in game_rocking_follow_glue.cpp.
+    // parent's node in game_attached_characters.cpp.
     void carryPlatformProps();
     void attachPlacedChildren();
     void followPlacedChildren();
-    // The player's ground entity (game_platform_riding_glue.cpp): its move goes into the next movement, and the movement's ground contact sets it.
+    // The player's ground entity (game_platform_riding.cpp): its move goes into the next movement, and the movement's ground contact sets it.
     void rideGroundEntity();
     void linkGroundEntity();
     bool objectNodePosition(const std::string& instance, float out[3]) const;
@@ -304,7 +305,7 @@ private:
     void propDestroyedEffects(const chase::runtime::SmashedProp& prop);
     void propDestroyMessage(const std::string& lowerInstance);
     bool characterDeathMessage(const std::string& lowerInstance);
-    // Message 0 to a level character and its hit states (runtime/character_hit.hpp; glue src/runtime/game_character_hit_glue.cpp).
+    // Message 0 to a level character and its hit states (runtime/character_hit.hpp; glue src/runtime/game_character_hit.cpp).
     struct CharacterHitEntry {
         chase::runtime::CharacterHitTarget target;
         chase::runtime::CharacterHitStates states;
@@ -312,7 +313,7 @@ private:
     std::map<std::string, CharacterHitEntry> characterHits;
     void characterHit(const std::string& lowerInstance, const chase::runtime::CharacterHitMessage& hit);
     void updateCharacterHits();
-    // The takedown of a level character and the aggro (runtime/character_takedown.hpp; glue src/runtime/game_character_takedown_glue.cpp).
+    // The takedown of a level character and the aggro (runtime/character_takedown.hpp; glue src/runtime/game_character_takedown.cpp).
     struct CharacterTakedownEntry {
         chase::runtime::TakedownCharacter character;
         chase::runtime::CharacterTakedownStates states;
@@ -328,7 +329,7 @@ private:
     std::optional<std::uint8_t> characterTakedownTargetMode(const std::string& lowerInstance) const;
     bool enabledObjectTrigger(const std::string& lowerEvent, const std::string& lowerInstance) const;
     void characterAggro(const std::string& lowerInstance, const chase::runtime::CharacterHitSender& sender);
-    // The AI spawners, kind 14 (runtime/ai_spawner.hpp; glue src/runtime/game_ai_spawner_glue.cpp).
+    // The AI spawners, kind 14 (runtime/ai_spawner.hpp; glue src/runtime/game_ai_spawner.cpp).
     chase::runtime::AiSpawnerSet aiSpawners;
     void withAiSpawnerWorld(const std::function<void(chase::runtime::AiSpawnerWorld&)>& use);
     void loadAiSpawners();

@@ -12,6 +12,7 @@ The pushable objects (kind 71, `leprops/leprop_pushable`) with the four push han
 - Against the oracle (fixed step): the cart's moves, arrival and rest position equal the port's rule from the measured start (72 moves of 0.06), message 9 acts one update later, the end sequence's timing equals the port's, and the player jumps and falls during the bridge jump. [§2026-10-28T01:21:46+01:00](#ts-20261028-012146)
 - The cart is drawn at its pushed position: the build-it no longer rewrites the final prop's transform outside its rise (SCRIPT-402). [§2026-11-01T15:37:27+01:00](#ts-20261101-153727)
 - The cart's 18 moves ahead of its placement in the state in front of the cart came from a push before that state (SCRIPT-393): the build-it record keeps the placement height. [§2026-11-01T15:58:44+01:00](#ts-20261101-155844)
+- Renamed files: src/runtime/game_push_cart_glue.cpp -> src/runtime/game_pushables.cpp, src/runtime/mission13_end.{hpp,cpp} -> src/runtime/ai_move_watch.{hpp,cpp} (AiMoveWatch) and src/runtime/ai_super_jump_vertical.{hpp,cpp} (AiSuperJumpVertical), src/runtime/game_mission13_fixes_glue.cpp -> src/runtime/game_released_flights.cpp and src/runtime/game_drawn_positions_log.cpp (logDrawnFixes is now logDrawnPositions), CTest mission13-end -> ai-move-watch.
 
 <a id="ts-20261026-230440"></a>
 

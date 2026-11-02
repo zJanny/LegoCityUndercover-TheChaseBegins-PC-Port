@@ -8,6 +8,7 @@ Subtopic of [props-rocking.md](props-rocking.md): mission 1-3's attached placed 
 - The generator scene's camera eye agrees with the oracle within 0.004 and the path shots' direction within 0.001; the Track shot's look is off by 0.03. [§2026-10-28T00:56:05](#ts-20261028-005605)
 - The rocking clock's rate is 30 and its divisor 3000 (about 1 per stepped update); the port's 2 per update stays a stand-in (SCRIPT-S297). The generator scene's camera calls agree within one update. [§2026-10-28T00:40:30](#ts-20261028-004030)
 - The gardener on the rescue lawn mower is drawn on it while it moves: root motion of a prop is applied to its current node, not written from its placement (SCRIPT-401, SCRIPT-S319). [§2026-11-01T15:37:57+01:00](#ts-20261101-153757)
+- Renamed files: src/runtime/game_attach_children_glue.cpp -> src/runtime/game_attach_children.cpp.
 
 <a id="ts-20261028-000210"></a>
 

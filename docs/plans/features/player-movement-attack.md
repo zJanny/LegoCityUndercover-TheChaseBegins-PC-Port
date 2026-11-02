@@ -52,6 +52,6 @@ IN_PROGRESS, updated 2026-11-02T15:33:47+01:00. Runs in `chase-game`: the punch 
 
 ## 7. Code and tests
 
-- `src/runtime/player_attack.*`, `attack_targets.*`, `attack_facts.*`, `attack_sounds.*`; glue `src/game_attack.cpp`, `src/runtime/game_attack_characters_glue.cpp`, `src/runtime/game_attack_facts_glue.cpp`.
+- `src/runtime/player_attack.*`, `attack_targets.*`, `attack_facts.*`, `attack_sounds.*`; glue `src/game_attack.cpp`, `src/runtime/game_attack_characters.cpp`, `src/runtime/game_attack_facts.cpp`.
 - CTest: `player-attack`, `player-attack-real-data`, `attack-targets`, `attack-targets-real-data`, `attack-facts`, `attack-facts-real-data`, `game-script-attack-goon`, `attack-sounds`, `attack-sounds-real-data`, `game-script-attack-table`.
 - Scenarios: `tools/oracle/attack-*.txt`.

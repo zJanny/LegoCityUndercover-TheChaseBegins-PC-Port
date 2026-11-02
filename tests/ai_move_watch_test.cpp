@@ -1,4 +1,4 @@
-#include "runtime/mission13_end.hpp"
+#include "runtime/ai_move_watch.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -18,9 +18,9 @@ int main() {
         if (!settled || settled->find("60 updates after the end") == std::string::npos) throw std::runtime_error("settle line");
         if (watch.observe(false, at, 101)) throw std::runtime_error("the settle line comes once");
     } catch (const std::exception& error) {
-        std::cerr << "mission13-end-test: " << error.what() << '\n';
+        std::cerr << "ai-move-watch-test: " << error.what() << '\n';
         return 1;
     }
-    std::cout << "mission13-end-test: ok\n";
+    std::cout << "ai-move-watch-test: ok\n";
     return 0;
 }
