@@ -22,13 +22,15 @@ std::optional<std::array<float, 2>> frontBottomPoint(int windowWidth, int window
 bool opensMenu(const chase::frontend::Flow& flow);
 
 extern const char* const frontButtonLabel;
+extern const char* const frontButtonHint;
+extern const float frontButtonHintScale;
 
 struct ButtonPlace {
     float x, y, scale;
 };
 
 extern const ButtonPlace frontButtonPlace;
-chase::frontend::LayoutScene frontButtonScene(float highlightSeconds = 0);
+chase::frontend::LayoutScene frontButtonScene(chase::frontend::Resources& resources, float highlightSeconds = 0);
 Box frontButtonBox(chase::frontend::Resources& resources);
 float frontButtonSlide(chase::frontend::Resources& resources, float seconds);
 

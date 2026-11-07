@@ -20,7 +20,6 @@ None against the original (the menu is not part of it). In `chase-game` the slot
 
 ## 5. Open items
 
-- [ ] QOLSET-53 — The slot page opens the menu by a full-size, clearly labelled bar with a hint, covering part of the page (the slots do not move with QoL off), replacing the half-size bar. Approved 2026-10-30: full-size bar at x=49 y=184, 256x32 under the slots (`ListItem3`), first line "PC Settings", hint "Select or click" (QOLSET-100) in the smaller second line (HUD-96 is closed, `LayoutScene::scales`); before building measure the slot bar art height and the left edge of the "Select" label from a render. Covering the top ~6 px of the corner arts is approved (32 px bar kept). needs: QOLSET-49. blocks: QOLSET-100. evidence: [qol-settings.md §2026-10-29T19:34:22](../../design/qol-settings.md#ts-20261029-193422).
 
 ## 6. Findings summary
 
@@ -29,6 +28,7 @@ Spec: [qol-settings-drawing.md §2026-10-30T21:56:04](../../design/qol-settings-
 ## 7. Code and tests
 
 - The menu itself (controller, pages, painter, presenter): [qol-settings-ui](qol-settings-ui.md).
+- Checked by `qol-front-menu-real-data` against the real slot page (20261103-large-F): the bar draws rows 167..215 and columns 48..273; only its glow lies over the bottom of slot 2; the shortcut row and every pixel outside the art are unchanged; clicks inside the body open the menu, clicks above or below it go to the front end.
 - `src/qol/menu_stores.hpp`/`.cpp` (library `chase_qol`): `StoresPorts` (settings path, display modes, desktop size, window, controls and controls-changed callbacks, Game port factory), `MenuEffects` and `MenuStores` (copy of the active store for the pages, `open` makes the controls and Game ports once, `commit` of the effects of each event: `config/qol.cfg` and the active store, the window, the controls callback, the Game port's gains, Languages request and save on close); `WindowController::adopt`; test `qol-menu-stores` (no game data).
 - `src/qol/menu_window_sdl.hpp`/`.cpp` (library `chase_qol_window`, over SDL and `chase_render`): `FrontMenu` with the slot list button (`frontButtonScene`, `opensMenu`, `frontButtonBox`), the bottom-screen mapping of the front presenter (`frontBottomScreen`), the gametext language names, and the open menu through `UiMenuWindow`; hook forwards `frontMenuConsumes`, `frontMenuPresented`, `drawFrontMenuButton`. Test `qol-front-menu-real-data` (label `needs-game-data`).
 - `src/qol/slot_page_entry.hpp`/`.cpp` (library `chase_qol`): `SlotPageEntry`, the focus rules of the bar; `FrontMenu::steer` and `entryFocused` in `menu_window_sdl.*`; the port capability `FrontEnd::setSlotsUnselected` (no slot highlighted, default off); tests `qol-slot-page-entry` and `qol-slot-page-entry-real-data` (`needs-game-data`).

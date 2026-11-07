@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1086 open items and stand-ins, 196 linked to game usage, 890 with unknown reach.
+Items: 1085 open items and stand-ins, 196 linked to game usage, 889 with unknown reach.
 
 ## Top 50 overall
 
@@ -202,7 +202,7 @@ No linked items.
 
 ## Quality of life (`qol` plan)
 
-0 of 30 items linked.
+0 of 29 items linked.
 
 No linked items.
 
@@ -254,7 +254,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [qol-controls.md](features/qol-controls.md): QOLCTL-14
 - [qol-fullscreen.md](features/qol-fullscreen.md): QOLFS-1
 - [qol-minimap.md](features/qol-minimap.md): QOLMAP-7, QOLMAP-S1
-- [qol-settings-drawing.md](features/qol-settings-drawing.md): QOLSET-53, QOLSET-S4, QOLSET-S6
+- [qol-settings-drawing.md](features/qol-settings-drawing.md): QOLSET-S4, QOLSET-S6
 - [qol-settings-menu.md](features/qol-settings-menu.md): QOLSET-2 (+3), QOLSET-25 (+2), QOLSET-36, QOLSET-59, QOLSET-61
 - [qol-settings-tabs.md](features/qol-settings-tabs.md): QOLSET-3, QOLSET-4
 - [qol-view-distance.md](features/qol-view-distance.md): QOLVD-4, QOLVD-6, QOLVD-7, QOLVD-8

@@ -25,7 +25,10 @@ constexpr const char* slotBar = "ListItem3";
 constexpr const char* slideTemplate = "ListItem2";
 constexpr const char* slotPageElements[] = {"canvas2", "canvas3", "canvas4", "canvas5", "NoticePanelBg", "canvas", "ListItem1",
     "ListItem2", "Text_Header", "Text_SubInfo", "Text_Confirm"};
-constexpr const char* unusedBarFields[] = {"Text_SlotNum", "Text_Time", "Text_Percent", "Text_Location"};
+constexpr const char* unusedBarFields[] = {"Text_SlotNum", "Text_Percent", "Text_Location"};
+constexpr const char* hintField = "Text_Time";
+constexpr const char* barRow = "Button";
+constexpr const char* barBody = "Button_ALL";
 
 }
 
@@ -47,9 +50,11 @@ std::optional<std::array<float, 2>> frontBottomPoint(int windowWidth, int window
 }
 
 const char* const frontButtonLabel = "PC Settings";
-const ButtonPlace frontButtonPlace{121, 194, 0.5f};
+const char* const frontButtonHint = "Select or click";
+const float frontButtonHintScale = 0.75f;
+const ButtonPlace frontButtonPlace{81, 179, 1.0f};
 
-fe::LayoutScene frontButtonScene(float highlightSeconds) {
+fe::LayoutScene frontButtonScene(fe::Resources& resources, float highlightSeconds) {
     fe::LayoutScene scene;
     for (const char* element : slotPageElements) scene.hidden.insert(element);
     for (const char* field : unusedBarFields) scene.hidden.insert(std::string(slotBar) + "/" + field);
@@ -61,6 +66,16 @@ fe::LayoutScene frontButtonScene(float highlightSeconds) {
     label.text = frontButtonLabel;
     label.align = fe::Align::Left;
     scene.text[std::string(slotBar) + "/Text_NoData"] = label;
+    const std::string hintPath = std::string(slotBar) + "/" + hintField;
+    const auto hintBox = fe::layoutElementBox(resources, slotPageLayout, hintPath);
+    if (!hintBox) throw std::runtime_error("settings menu: the slot page bar " + std::string(slotBar) + " has no " + hintField);
+    fe::TextSlot hint = label;
+    hint.text = frontButtonHint;
+    scene.text[hintPath] = hint;
+    scene.scales[hintPath] = {frontButtonHintScale, frontButtonHintScale};
+    const auto row = fe::layoutElementBox(resources, slotPageLayout, std::string(slotBar) + "/" + barRow);
+    if (!row) throw std::runtime_error("settings menu: the slot page bar " + std::string(slotBar) + " has no " + barRow);
+    scene.positions[hintPath] = {(*hintBox)[0] - (*row)[0] - (*hintBox)[2] * (1 - frontButtonHintScale) / 2, (*hintBox)[1] - (*row)[1]};
     return scene;
 }
 
@@ -75,7 +90,7 @@ float frontButtonSlide(fe::Resources& resources, float seconds) {
 Box frontButtonBox(fe::Resources& resources) {
     fe::Canvas drawn(fe::kBottomWidth, fe::kScreenHeight);
     drawn.clearTransparent();
-    fe::drawLayout(drawn, resources, slotPageLayout, frontButtonScene(), frontButtonPlace.x, frontButtonPlace.y, frontButtonPlace.scale);
+    fe::drawLayout(drawn, resources, slotPageLayout, frontButtonScene(resources), frontButtonPlace.x, frontButtonPlace.y, frontButtonPlace.scale);
     int left = drawn.width(), top = drawn.height(), right = -1, bottom = -1;
     for (int y = 0; y < drawn.height(); ++y)
         for (int x = 0; x < drawn.width(); ++x) {
@@ -86,7 +101,14 @@ Box frontButtonBox(fe::Resources& resources) {
             bottom = std::max(bottom, y);
         }
     if (right < 0) throw std::runtime_error(std::string("settings menu: the slot page bar ") + slotBar + " draws nothing");
-    return {float(left), float(top), float(right - left + 1), float(bottom - top + 1)};
+    const auto body = fe::layoutElementBox(resources, slotPageLayout, std::string(slotBar) + "/" + barBody);
+    const auto origin = fe::layoutElementBox(resources, slotPageLayout, slotBar);
+    if (!body || !origin) throw std::runtime_error(std::string("settings menu: the slot page bar ") + slotBar + " has no " + barBody);
+    const float scale = frontButtonPlace.scale;
+    const float bodyLeft = frontButtonPlace.x + scale * ((*body)[0] - (*origin)[0]), bodyTop = frontButtonPlace.y + scale * ((*body)[1] - (*origin)[1]);
+    const float x0 = std::max(float(left), bodyLeft), y0 = std::max(float(top), bodyTop);
+    const float x1 = std::min(float(right + 1), bodyLeft + scale * (*body)[2]), y1 = std::min(float(bottom + 1), bodyTop + scale * (*body)[3]);
+    return {x0, y0, x1 - x0, y1 - y0};
 }
 
 bool opensMenu(const fe::Flow& flow) {
@@ -169,7 +191,7 @@ bool FrontMenu::present(int width, int height) {
 void FrontMenu::drawButton(fe::Canvas& bottom, const fe::Flow& flow) {
     if (!opensMenu(flow)) return;
     const float slide = frontButtonSlide(resources_, flow.screenSeconds());
-    fe::drawLayout(bottom, resources_, slotPageLayout, frontButtonScene(entry_.focused() ? std::min(entry_.seconds(), kHighlightSeconds) : 0.0f), frontButtonPlace.x + slide, frontButtonPlace.y, frontButtonPlace.scale);
+    fe::drawLayout(bottom, resources_, slotPageLayout, frontButtonScene(resources_, entry_.focused() ? std::min(entry_.seconds(), kHighlightSeconds) : 0.0f), frontButtonPlace.x + slide, frontButtonPlace.y, frontButtonPlace.scale);
 }
 
 }

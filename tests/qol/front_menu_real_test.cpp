@@ -1,18 +1,22 @@
-// The "PC Settings" button of the save slot page and the menu it opens, pinned to qol-settings.md §2026-10-29T18:06:35 (SlotSelect page
-// only; a bottom-screen button clicked with the mouse only; the front end stops while the menu is open; the menu covers the whole window;
-// the unused third list bar ListItem3 of the slot page at half size, centred under slot 2, covering nothing, sliding in with slot 2's
-// timing; the click area follows the bar, so it is the box of the bar's drawn pixels). Original behaviour first: on the other front-end
-// screens nothing of it runs or draws. Values (20261029-qolhook-B, 2026-10-29, chase-layoutdump --tracks of
-// sprites/blend/savegameflow/page_selectslot.bxaml and panel_slotlistitem.bxaml): ListItem2's TransitionOn x track is -280 until 0.3 s
-// and 0 from 0.6 s. The place {121, 194, scale 0.5} puts the drawn bar (x 104-217, y 188-212, the pixels with alpha above 0, also
-// measured by the code reviewer on the slot page after 1.2 s) under slot 2 (drawn to y 187, centre x 160.5) and right of the Delete
-// shortcut (drawn to x 84). The window 960x600 is the size of the test window in the build's config/qol.cfg. Written by
-// 20261029-qolhook-B, 2026-10-29. Needs the extracted RomFS; exits with 77 without it.
+// The "PC Settings" bar of the save slot page and the menu it opens, pinned to qol-settings.md §2026-10-29T19:34:22 (SlotSelect page only;
+// a bottom-screen bar clicked with the mouse; the front end stops while the menu is open; the menu covers the whole window; the unused
+// third list bar ListItem3 of the slot page at its native size, 226 px wide and 49 px tall with its glow, ListItem3 at x 81 y 179 (the user, 2026-11-07, "Move up to y=179") so the bar
+// body (Button_ALL, 256x32) starts at x 49 y 179 under slot 2, first line "PC Settings", second line "Select or click" at scale 0.75 with
+// the left edge of the layout's Text_Time kept; sliding in with slot 2's timing; the click area is the bar body inside the drawn art).
+// Original behaviour first: on the other front-end screens nothing of it runs or draws.
+// Values (20261103-large-F, 2026-11-07, chase-layoutdump of sprites/blend/savegameflow/page_selectslot.bxaml and panel_slotlistitem.bxaml,
+// and a render of the slot page bar alone): ListItem2's TransitionOn x track is -280 until 0.3 s and 0 from 0.6 s; ListItem3 at (81, 184)
+// draws art rows 172..220 (rows 167..215 at y 179) (49 rows, alpha above 0) and columns 48..273 (226 columns); the user chose to keep the art at its native size
+// (2026-11-07). Slot 2 is drawn to y 187. The shortcut row (Delete and Select) starts at y 213 (A picture x 280..302) and the Select label
+// at x 230..277, y 216..232. The window 960x600 is the size of the test window in the build's config/qol.cfg. Needs the extracted RomFS;
+// exits with 77 without it.
 #include "qol/menu_window_sdl.hpp"
 
 #include "frontend/frontend.hpp"
 #include "frontend/pages.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cmath>
 #include <filesystem>
 #include <iostream>
@@ -118,19 +122,45 @@ void slotPage(fe::Resources& resources) {
     menu.drawButton(bottom, flow);
     const qol::Box box = qol::frontButtonBox(resources);
     const qol::ButtonPlace place = qol::frontButtonPlace;
-    require(box.x == 104 && box.y == 188 && box.width == 114 && box.height == 25,
-        "the click area is the bar as drawn at its place: x 104-217, y 188-212");
+    require(box.x == 49 && box.y == 179 && box.width == 225 && box.height == 32,
+        "the click area is the 256x32 bar body clipped to the 226 px art: x 49-273 (225 wide), y 179-210");
     const int left = int(box.x), top = int(box.y), right = int(std::ceil(box.x + box.width)), bottomEdge = int(std::ceil(box.y + box.height));
     require(changedPixels(bottom, before, left, top, right, bottomEdge) > 0, "the third list bar is drawn at its place");
     fe::Canvas expected(fe::kBottomWidth, fe::kScreenHeight);
     expected.clear(0, 0, 0);
-    fe::drawLayout(expected, resources, "sprites/blend/savegameflow/page_selectslot.bxaml", qol::frontButtonScene(),
+    fe::drawLayout(expected, resources, "sprites/blend/savegameflow/page_selectslot.bxaml", qol::frontButtonScene(resources),
         place.x + qol::frontButtonSlide(resources, flow.screenSeconds()), place.y, place.scale);
     require(sameCanvas(bottom, expected), "the button is the slot page layout's third list bar");
-    const fe::LayoutScene scene = qol::frontButtonScene();
+    const fe::LayoutScene scene = qol::frontButtonScene(resources);
     require(scene.text.at("ListItem3/Text_NoData").text == "PC Settings", "labelled PC Settings");
+    require(scene.text.at("ListItem3/Text_Time").text == "Select or click" && scene.scales.at("ListItem3/Text_Time")[0] == 0.75f &&
+            scene.scales.at("ListItem3/Text_Time")[1] == 0.75f,
+        "the second line is the hint Select or click at scale 0.75");
+    require(!scene.hidden.count("ListItem3/Text_Time") && scene.hidden.count("ListItem3/Text_Percent"), "only the hint field is added to the label");
     require(!scene.hidden.count("ListItem3") && scene.hidden.count("ListItem1") && scene.hidden.count("ListItem2"),
         "only the third bar is drawn, the slots stay the page's own");
+    {
+        fe::LayoutScene noHint = qol::frontButtonScene(resources), noLabel = noHint;
+        noHint.hidden.insert("ListItem3/Text_Time");
+        noLabel.hidden.insert("ListItem3/Text_NoData");
+        fe::Canvas full(fe::kBottomWidth, fe::kScreenHeight), withoutHint(fe::kBottomWidth, fe::kScreenHeight), withoutLabel(fe::kBottomWidth, fe::kScreenHeight);
+        for (fe::Canvas* canvas : {&full, &withoutHint, &withoutLabel}) canvas->clear(0, 0, 0);
+        const char* layoutPath = "sprites/blend/savegameflow/page_selectslot.bxaml";
+        fe::drawLayout(full, resources, layoutPath, scene, place.x, place.y, place.scale);
+        fe::drawLayout(withoutHint, resources, layoutPath, noHint, place.x, place.y, place.scale);
+        fe::drawLayout(withoutLabel, resources, layoutPath, noLabel, place.x, place.y, place.scale);
+        const auto extent = [&](const fe::Canvas& a, const fe::Canvas& b) {
+            std::array<int, 4> r{fe::kBottomWidth, fe::kScreenHeight, -1, -1};
+            for (int y = 0; y < fe::kScreenHeight; ++y)
+                for (int x = 0; x < fe::kBottomWidth; ++x)
+                    if (changedPixels(a, b, x, y, x + 1, y + 1)) r = {std::min(r[0], x), std::min(r[1], y), std::max(r[2], x), std::max(r[3], y)};
+            return r;
+        };
+        const auto hint = extent(full, withoutHint), label = extent(full, withoutLabel);
+        require(hint[2] >= 0 && label[2] >= 0, "both text lines are drawn");
+        require(hint[1] > label[3] - 2 && hint[3] - hint[1] < label[3] - label[1], "the hint is the smaller second line below the label");
+        require(std::abs(hint[0] - label[0]) <= 1, "the hint keeps the left edge of the label");
+    }
 
     fe::FlowConfig used;
     used.slots = {fe::SlotSummary{true, "1:23", "4%", 0}, fe::SlotSummary{}};
@@ -153,8 +183,11 @@ void slotPage(fe::Resources& resources) {
             ++shortcutPixels;
             covered += changedPixels(page, plain, x, y, x + 1, y + 1);
         }
-    require(shortcutPixels > 0 && covered == 0, "every pixel of the Delete and Select shortcuts is drawn unchanged");
-    require(changedPixels(page, plain, 0, 0, fe::kBottomWidth, 188) == 0, "the Select Slot bar and both slots are drawn unchanged");
+    require(shortcutPixels > 0 && covered == 0,
+        "every pixel of the Delete and Select shortcuts is drawn unchanged (the art ends at y 215)");
+    require(changedPixels(page, plain, 0, 0, fe::kBottomWidth, 167) == 0 && changedPixels(page, plain, 0, 216, fe::kBottomWidth, fe::kScreenHeight) == 0 &&
+            changedPixels(page, plain, 0, 167, 48, 216) == 0 && changedPixels(page, plain, 274, 167, fe::kBottomWidth, 216) == 0,
+        "nothing outside the bar's drawn art (x 48-273, y 167-215) changes: the Select Slot bar and the slot rows above are unchanged");
 
     const float cx = box.x + box.width / 2, cy = box.y + box.height / 2;
     require(!menu.consume(mouse(SDL_MOUSEBUTTONDOWN, SDL_BUTTON_LEFT, 100, 224), width, height, flow) && !menu.isOpen() && !menu.menu(),
@@ -164,13 +197,15 @@ void slotPage(fe::Resources& resources) {
     require(!menu.consume(mouse(SDL_MOUSEBUTTONDOWN, SDL_BUTTON_RIGHT, cx, cy), width, height, flow) && !menu.isOpen(),
         "the right button does not open the menu");
     require(!menu.consume(key(SDL_KEYDOWN, SDLK_RETURN), width, height, flow) && !menu.isOpen(), "no key opens the menu");
-    require(!menu.consume(mouse(SDL_MOUSEBUTTONDOWN, SDL_BUTTON_LEFT, 160, 186), width, height, flow) && !menu.isOpen(),
-        "a click on slot 2's last drawn rows goes to the front end");
-    const float edges[][2] = {{106, 200}, {215, 200}, {160, 190}, {160, 211}};
+    require(!menu.consume(mouse(SDL_MOUSEBUTTONDOWN, SDL_BUTTON_LEFT, 160, 178), width, height, flow) && !menu.isOpen(),
+        "a click above the bar body (slot 2's rows) goes to the front end");
+    require(!menu.consume(mouse(SDL_MOUSEBUTTONDOWN, SDL_BUTTON_LEFT, 160, 211), width, height, flow) && !menu.isOpen(),
+        "a click below the bar body (its glow) goes to the front end");
+    const float edges[][2] = {{50, 200}, {272, 200}, {160, 179.5f}, {160, 210}};
     for (const auto& edge : edges) {
         qol::FrontMenu probe(resources);
         require(probe.consume(mouse(SDL_MOUSEBUTTONDOWN, SDL_BUTTON_LEFT, edge[0], edge[1]), width, height, flow) && probe.isOpen(),
-            "a click near the drawn edge of the bar at " + std::to_string(int(edge[0])) + "," + std::to_string(int(edge[1])) +
+            "a click near the edge of the bar body at " + std::to_string(int(edge[0])) + "," + std::to_string(int(edge[1])) +
                 " opens the menu");
     }
     require(menu.consume(mouse(SDL_MOUSEBUTTONDOWN, SDL_BUTTON_LEFT, cx, cy), width, height, flow) && menu.isOpen(),
