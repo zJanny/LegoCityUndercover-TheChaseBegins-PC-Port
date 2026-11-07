@@ -22,10 +22,8 @@ constexpr std::uint16_t kAiSleepLocomotionLimit = 1;   // 0x2a992c: a locomotion
 constexpr float kAiSleepClipBlend = 0.1f;              // literal 0x2a9ba8, s0 of 0x2102b0
 constexpr float kAiSleepClipSpeed = 1.0f;              // literal 0x2a9ba4, s1 of 0x2102b0
 
-// STAND-IN SCRIPT-S329: the port plays no clip on AI characters, so a sleep or wake clip counts as ended in the next update; ctrl+0xd4 (its writer
-// is not read) is taken as clear.
+// STAND-IN SCRIPT-S329: the port plays no clip on AI characters, so a sleep or wake clip counts as ended in the next update.
 constexpr bool kAiClipEndedStandIn = true;
-constexpr bool kAiWaitObjectStandIn = false;
 
 // The parameters 0x2a9874 and 0x2bba40 read by name.
 struct AiIdleReturnParams {

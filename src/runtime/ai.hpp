@@ -80,6 +80,7 @@ struct AiMoveOrder {
     // reset when the follower cannot continue, the order then walks straight (SCRIPT-S31).
     std::shared_ptr<NavPathRecord> nav;
     std::size_t navWorld = 0;
+    bool blocked = false;  // AI state 14: the path request failed, the follower answers 1
     // Stand-in SCRIPT-S100: height of the character above the base of the grid it walks in, taken at the first step.
     std::optional<float> navHeightOffset;
 };
@@ -190,8 +191,18 @@ public:
     void startMillAbout(const std::string& lowerCaseName) { requestMillAbout(at(lowerCaseName)); }
     // 0x21102c for a character that holds a side slot: AI state 2 with ctrl+0xc4 = `target` (goon_conduct.hpp).
     void startCombat(const std::string& lowerCaseName, const std::string& target);
-    // The requests of AI states 15 (0x2a9874) and 14 (0x2c5cac) of the idle conduct; the character stands (state 14 is not ported, SCRIPT-432).
-    void startConductState(const std::string& lowerCaseName, AiState state) { at(lowerCaseName).state = state; }
+    // The requests of AI states 15 (0x2a9874) and 14 (0x2c5cac) of the idle conduct; a state other than 14 ends the walk of AI state 14.
+    void startConductState(const std::string& lowerCaseName, AiState state) {
+        AiCharacter& character = at(lowerCaseName);
+        character.state = state;
+        if (state != AiState::Patrol) character.move.reset();
+    }
+    // The path follower of AI state 14 (goon_conduct.hpp): `startPatrolWalk` is the end of the enter 0x2a11a0 (the path request from `from` to
+    // `destination`; false when the finder cannot get there), `followPatrolWalk` is 0x1faf04 with its application 0x1fae48 for one update and
+    // returns the code (low byte: 0 arrived, 1 and 2 blocked, 3 and more moving). STAND-IN SCRIPT-S31: without nav grids or outside them the
+    // character walks straight, arriving within the speed of one step.
+    bool startPatrolWalk(const std::string& lowerCaseName, const std::array<float, 3>& from, const std::array<float, 3>& destination, bool walk);
+    int followPatrolWalk(const std::string& lowerCaseName, bool walk, float dt);
 
     // Position of a character that something else moves (the player node, PositionObject).
     void setPosition(const std::string& lowerCaseName, const float position[3]);
@@ -218,6 +229,7 @@ private:
     bool advanceReleasedFlight(AiCharacter& target, float dt);
     void advanceFaceTarget(const std::string& name, AiCharacter& target);
     void advanceNavMove(const std::string& name, AiCharacter& target, float dt);
+    void stepTowards(AiCharacter& target, AiMoveOrder& order, const std::array<float, 3>& goal, float dt);
     bool startNavMove(const std::string& name, AiCharacter& target, const std::array<float, 3>& from, const std::array<float, 3>& to,
                       bool noAvoid);
     void requestIdle(AiCharacter& character);

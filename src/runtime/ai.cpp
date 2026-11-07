@@ -317,15 +317,57 @@ void AiCore::advanceNavMove(const std::string& name, AiCharacter& target, float 
         return;
     }
     if (result.code != 4 && result.code != 5) return;
-    const float dx = result.target[0] - position[0], dz = result.target[2] - position[2];
+    stepTowards(target, order, result.target, dt);
+}
+
+void AiCore::stepTowards(AiCharacter& target, AiMoveOrder& order, const std::array<float, 3>& goal, float dt) {
+    std::array<float, 3>& position = *target.position;
+    const float dx = goal[0] - position[0], dz = goal[2] - position[2];
     const float distance = std::sqrt(dx * dx + dz * dz);
-    target.heading = headingToward(position, result.target);
-    if (!order.navHeightOffset) order.navHeightOffset = position[1] - result.target[1];
-    position[1] = result.target[1] + *order.navHeightOffset;
+    target.heading = headingToward(position, goal);
+    if (order.nav) {
+        if (!order.navHeightOffset) order.navHeightOffset = position[1] - goal[1];
+        position[1] = goal[1] + *order.navHeightOffset;
+    }
     if (distance <= 0.0f) return;
     const float step = std::min(distance, (order.run ? kAiRunSpeed : kAiWalkSpeed) * dt);
     position[0] += dx / distance * step;
     position[2] += dz / distance * step;
+}
+
+bool AiCore::startPatrolWalk(const std::string& name, const std::array<float, 3>& from, const std::array<float, 3>& destination, bool walk) {
+    AiCharacter& target = at(name);
+    target.position = from;
+    AiMoveOrder order;
+    order.waypoints = {destination};
+    order.run = !walk;
+    target.move = std::move(order);
+    target.state = AiState::Patrol;
+    if (!navigation_) return true;
+    if (startNavMove(name, target, from, destination, false)) return true;
+    target.move->blocked = true;
+    return false;
+}
+
+int AiCore::followPatrolWalk(const std::string& name, bool walk, float dt) {
+    AiCharacter& target = at(name);
+    if (!target.move || !target.position || target.move->blocked) return 1;
+    AiMoveOrder& order = *target.move;
+    order.run = !walk;
+    if (!order.nav) {
+        const std::array<float, 3> goal = order.waypoints.front();
+        const float dx = goal[0] - (*target.position)[0], dz = goal[2] - (*target.position)[2];
+        if (dx * dx + dz * dz <= 0.0f) return 0;
+        moved_.push_back(name);
+        stepTowards(target, order, goal, dt);
+        return 4;
+    }
+    const NavFollowResult result = navFollow((*navigation_)[order.navWorld], *order.nav, target.position->data());
+    if (result.code == 4 || result.code == 5) {
+        moved_.push_back(name);
+        stepTowards(target, order, result.target, dt);
+    }
+    return result.code;
 }
 
 namespace {

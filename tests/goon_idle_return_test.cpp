@@ -159,7 +159,7 @@ void returnToSpawn() {
     conduct.entities()[1].position = {40.0f, 0.0f, 0.0f};
     conduct.update(kNoBound);
     events = conduct.takeEvents();
-    require(events.size() == 1 && events[0].kind == AiConductEventKind::Sighted && events[0].combat && conduct.entities()[0].aiState == kAiCombatState &&
+    require(events.size() == 2 && events[0].kind == AiConductEventKind::PlayerCaught && events[1].kind == AiConductEventKind::Sighted && events[1].combat && conduct.entities()[0].aiState == kAiCombatState &&
                 conduct.entities()[0].target == "player1" && !conduct.entities()[0].engaged,
             "the watch 0x1f5c3c: a target in sight starts the fight with ctrl+0xd8 bit 5 set by the watch, no slot taken");
 

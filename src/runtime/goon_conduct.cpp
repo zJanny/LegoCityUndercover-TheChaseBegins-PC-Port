@@ -46,9 +46,9 @@ std::string stringParam(const assets::LevelObject& object, const assets::Level& 
     return std::string(block.begin(), std::find(block.begin(), block.end(), std::uint8_t(0)));
 }
 
-bool referenceParam(const assets::LevelObject& object, const assets::Level& cls, const char* name) {
+std::uint32_t referenceParam(const assets::LevelObject& object, const assets::Level& cls, const char* name) {
     const assets::LevelParam* param = effectiveParam(object, cls, assets::nameHash(name));
-    return param && assets::objectReferenceHash(*param) != 0;
+    return param ? assets::objectReferenceHash(*param) : 0;
 }
 
 std::uint32_t bitsOf(float value) {
@@ -79,7 +79,9 @@ AiConductParams aiConductParamsOf(const assets::LevelObject& object, const asset
     params.runSpeed = floatParam(object, cls, "AIRunSpeed", kAiRunSpeedDefault) * kAiRunSpeedScale;
     params.returnToSpawnPoint = intParam(object, cls, "ReturnToSpawnPoint", 1) != 0;
     params.millAbout = intParam(object, cls, "AIMillAbout", 0) != 0 || kAiConductGlobalMillAboutStandIn;
-    params.patrolPath = referenceParam(object, cls, "AIPatrolPath");
+    params.patrolPathHash = referenceParam(object, cls, "AIPatrolPath");
+    params.patrolPath = params.patrolPathHash != 0;
+    params.dontRun = (intParam(object, cls, "AIDontRun", 0) & 1) != 0;
     params.patrolAlertOnLos = (intParam(object, cls, "AIPatrolAlertOnLOS", 0) & 1) != 0;
     params.idleReturn.sleepAnim = stringParam(object, cls, "AISleepAnim");
     params.idleReturn.sleepAnimWake = stringParam(object, cls, "AISleepAnimWake");
@@ -155,7 +157,8 @@ void AiConduct::release(AiConductEntity& self) {
 }
 
 bool AiConduct::sees(const AiConductEntity& viewer, const AiConductEntity& target, float limit, float second, const AiConductBoundTest& inside,
-                     float* distance) const {
+                     float* distance, const float* angle) const {
+    if (angle && !(viewer.present && target.present && aiAngleTest(viewer.position, viewer.forward, target.position, *angle))) return false;
     switch (target.params.targetMode) {
     case 0:
     case 4: break;
@@ -183,7 +186,9 @@ bool AiConduct::sees(const AiConductEntity& viewer, const AiConductEntity& targe
     return true;
 }
 
-const AiConductEntity* AiConduct::findTarget(const AiConductEntity& self, float limit, float second, const AiConductBoundTest& inside) {
+const AiConductEntity* AiConduct::findTarget(const AiConductEntity& self, float limit, float second, const AiConductBoundTest& inside, bool angleFlag) {
+    const float watchAngle = aiWatchAngle(kAiWatchAngleDegrees);
+    const float* angle = angleFlag ? &watchAngle : nullptr;
     if (limit < 0.0f) limit = float(self.params.viewDistance);
     if (second < 0.0f) second = self.params.meleeFireDistance;
     if (self.aggroCounter != 0)
@@ -192,7 +197,7 @@ const AiConductEntity* AiConduct::findTarget(const AiConductEntity& self, float 
     if (kAiConductBossSearchStandIn && self.params.boss) {
         if (!thePlayer || !thePlayer->present) return nullptr;
         if (self.rangeBound && inside && !inside(*self.rangeBound, thePlayer->position)) return nullptr;
-        return sees(self, *thePlayer, limit, second, inside) ? thePlayer : nullptr;
+        return sees(self, *thePlayer, limit, second, inside, nullptr, angle) ? thePlayer : nullptr;
     }
     const AiConductEntity* playerSlot = !self.params.ignorePlayer && thePlayer && thePlayer->present ? thePlayer : nullptr;
     table_->setPlayerSlot(playerSlot ? playerSlot->name : std::string());
@@ -220,16 +225,16 @@ const AiConductEntity* AiConduct::findTarget(const AiConductEntity& self, float 
             if (member == &self) mine = int(i);
         }
     }
-    if (playerIndex >= 0 && thePlayer->present && sees(self, *thePlayer, limit, second, inside)) return thePlayer;
+    if (playerIndex >= 0 && thePlayer->present && sees(self, *thePlayer, limit, second, inside, nullptr, angle)) return thePlayer;
     if (mine >= 0 && claims[std::size_t(mine)] <= 1)
-        return sees(self, *candidates[std::size_t(mine)], limit, second, inside) ? candidates[std::size_t(mine)] : nullptr;
+        return sees(self, *candidates[std::size_t(mine)], limit, second, inside, nullptr, angle) ? candidates[std::size_t(mine)] : nullptr;
 
     std::vector<float> distances(count, 0.0f);
     for (std::size_t i = 0; i < count; ++i) {
         const AiConductEntity* candidate = candidates[i];
         if (!candidate || !candidate->present) continue;
         float measured = 0.0f;
-        distances[i] = sees(self, *candidate, limit, second, inside, &measured) ? measured : FLT_MAX;
+        distances[i] = sees(self, *candidate, limit, second, inside, &measured, angle) ? measured : FLT_MAX;
         if (claims[i] == 0 && !(distances[i] > limit)) return candidate;
     }
     for (std::size_t least = 1; least < count && total != 0; ++least)
@@ -312,7 +317,7 @@ void AiConduct::thinkIdle(AiConductEntity& self, const AiConductBoundTest& insid
         release(self);
         return;
     }
-    if (aiReturnRequested(self.waitObject, self.params.returnToSpawnPoint, self.position, self.spawn)) requestReturn(self);
+    if (aiReturnRequested(self.patrolObject != 0, self.params.returnToSpawnPoint, self.position, self.spawn)) requestReturn(self);
 }
 
 void AiConduct::requestReturn(AiConductEntity& self) {
@@ -326,39 +331,134 @@ void AiConduct::requestReturn(AiConductEntity& self) {
 
 void AiConduct::enterReturn(AiConductEntity& self) {
     release(self);
-    self.countdown = aiReturnCountdown(self.waitObject, self.params.idleReturn);
+    self.countdown = aiReturnCountdown(self.patrolObject != 0, self.params.idleReturn);
 }
 
 void AiConduct::thinkReturn(AiConductEntity& self, const AiConductBoundTest& inside) {
-    if (aiReturnWaitStep(self.waitObject, self.params.returnToSpawnPoint, self.countdown)) {
-        self.aiState = kAiReturnedState;
-        AiConductEvent event;
-        event.kind = AiConductEventKind::Returned;
-        event.character = self.name;
-        events_.push_back(event);
-    }
-    const AiConductEntity* target = findTarget(self, float(self.params.viewDistance), -1.0f, inside);
+    if (aiReturnWaitStep(self.patrolObject != 0, self.params.returnToSpawnPoint, self.countdown)) requestPatrol(self);
+    watch(self, inside);
+}
+
+void AiConduct::watch(AiConductEntity& self, const AiConductBoundTest& inside) {
+    const AiConductEntity* target = findTarget(self, float(self.params.viewDistance), -1.0f, inside, self.params.patrolAlertOnLos);
     if (!target) return;
+    AiConductEvent caught;
+    caught.kind = AiConductEventKind::PlayerCaught;
+    caught.character = self.name;
+    caught.target = self.target;
+    events_.push_back(caught);
     const float dx = target->position[0] - self.position[0], dy = target->position[1] - self.position[1], dz = target->position[2] - self.position[2];
     sighted(self, *target, std::sqrt(dx * dx + dy * dy + dz * dz), true);
 }
 
+void AiConduct::requestPatrol(AiConductEntity& self) {
+    self.aiState = kAiReturnedState;
+    AiConductEvent event;
+    event.kind = AiConductEventKind::Returned;
+    event.character = self.name;
+    events_.push_back(event);
+    enterPatrol(self);
+}
+
+void AiConduct::enterPatrol(AiConductEntity& self) {
+    AiPatrolEnterInput input;
+    input.patrolObject = self.patrolObject;
+    input.pathParameter = self.params.patrolPathHash;
+    input.returnToSpawnPoint = self.params.returnToSpawnPoint;
+    input.dontRun = self.params.dontRun;
+    input.walk = self.walk;
+    const AiPatrolEnterStep step = aiPatrolEnter(input);
+    self.patrolObject = step.patrolObject;
+    self.walk = step.walk;
+    if (!self.engaged) engage(self);
+    std::optional<std::array<float, 3>> destination;
+    if (step.source == AiPatrolSource::PatrolObject) {
+        if (const std::optional<AiPatrolNode> node = patrolNodes_ ? patrolNodes_(step.patrolObject) : std::nullopt) destination = node->position;
+    } else if (step.source == AiPatrolSource::SpawnPoint) {
+        destination = self.spawn;
+    }
+    if (!destination) return;
+    AiConductEvent event;
+    event.kind = AiConductEventKind::PatrolWalk;
+    event.character = self.name;
+    event.source = step.source;
+    event.patrolling = step.patrolling;
+    events_.push_back(event);
+    if (walker_.start && !walker_.start(self, *destination)) {
+        AiConductEvent failed;
+        failed.kind = AiConductEventKind::CantGetThere;
+        failed.character = self.name;
+        events_.push_back(failed);
+    }
+}
+
+void AiConduct::thinkPatrol(AiConductEntity& self, const AiConductBoundTest& inside) {
+    const int code = walker_.follow ? walker_.follow(self) : 1;
+    switch (aiFollowOutcome(code)) {
+    case AiFollowOutcome::Arrived: {
+        std::uint32_t next = 0;
+        if (self.patrolObject != 0 && patrolNodes_)
+            if (const std::optional<AiPatrolNode> node = patrolNodes_(self.patrolObject)) next = node->next;
+        const AiPatrolArrival arrival = aiPatrolArrival(self.patrolObject, self.params.returnToSpawnPoint, next);
+        AiConductEvent event;
+        event.kind = AiConductEventKind::WalkEnded;
+        event.character = self.name;
+        event.toWait = !arrival.idle;
+        events_.push_back(event);
+        if (arrival.idle) {
+            self.aiState = 0;
+            release(self);
+            AiConductEvent idle;
+            idle.kind = AiConductEventKind::Idle;
+            idle.character = self.name;
+            events_.push_back(idle);
+            return;
+        }
+        self.patrolObject = arrival.patrolObject;
+        requestReturn(self);
+        return;
+    }
+    case AiFollowOutcome::Blocked:
+        if (!aiPatrolBlockedStep(self.countdown, random_.next())) return;
+        if (const AiConductEntity* target = findTarget(self, float(self.params.viewDistance), -1.0f, inside)) {
+            const float dx = target->position[0] - self.position[0], dy = target->position[1] - self.position[1], dz = target->position[2] - self.position[2];
+            sighted(self, *target, std::sqrt(dx * dx + dy * dy + dz * dz));
+            return;
+        }
+        self.aiState = 0;
+        self.target.clear();
+        release(self);
+        {
+            AiConductEvent idle;
+            idle.kind = AiConductEventKind::Idle;
+            idle.character = self.name;
+            events_.push_back(idle);
+        }
+        return;
+    case AiFollowOutcome::Moving: watch(self, inside); return;
+    }
+}
+
 void AiConduct::update(const AiConductBoundTest& inside) {
-    for (AiConductEntity& entity : entities_) entity.engaged = !entity.player && table_->engaged(entity.name);
+    for (AiConductEntity& entity : entities_) {
+        entity.engaged = !entity.player && table_->engaged(entity.name);
+        if (!entity.player && entity.present && !entity.spawn) entity.spawn = entity.position;
+    }
     for (std::size_t i = 0; i < entities_.size(); ++i) {
         AiConductEntity& entity = entities_[i];
         if (entity.player || lastState_[i] == entity.aiState) continue;
         if (entity.aiState == 0 || entity.aiState == kAiNoState) release(entity);
         if (entity.aiState == kAiReturnToSpawnState) enterReturn(entity);
+        if (entity.aiState == kAiReturnedState) enterPatrol(entity);
         lastState_[i] = entity.aiState;
     }
     for (std::size_t i = 0; i < entities_.size(); ++i) {
         AiConductEntity& entity = entities_[i];
         if (entity.player || !entity.present) continue;
-        if (!entity.spawn) entity.spawn = entity.position;
         if (!entity.thinks) continue;
         if (entity.aiState == 0) thinkIdle(entity, inside);
         else if (entity.aiState == kAiReturnToSpawnState) thinkReturn(entity, inside);
+        else if (entity.aiState == kAiReturnedState) thinkPatrol(entity, inside);
         else continue;
         lastState_[i] = entity.aiState;
     }

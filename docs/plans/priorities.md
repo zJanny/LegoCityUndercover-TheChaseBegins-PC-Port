@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1097 open items and stand-ins, 197 linked to game usage, 900 with unknown reach.
+Items: 1101 open items and stand-ins, 197 linked to game usage, 904 with unknown reach.
 
 ## Top 50 overall
 
@@ -76,7 +76,7 @@ Items: 1097 open items and stand-ins, 197 linked to game usage, 900 with unknown
 | 40 | [SCRIPT-377](features/script-system-platforms.md?display=source#L28) | 0 | 183 | 8 | 2 | - | `leprops/leprop_platform`, `props/prop_platform` | The rest of the platform class: `orient` and type 7 rotations of platforms without a path, the shape curves ... |
 | 41 | [SCRIPT-388](features/script-system-platforms.md?display=source#L31) | 0 | 183 | 8 | 1 | - | `leprops/leprop_platform`, `props/prop_platform` | The platform's sweep in its entity move (the push of characters beside a sideways move with message 45 ... |
 | 42 | [SCRIPT-S18](features/script-system-natives-state.md?display=source#L18) | 175 | 0 | 7 | 0 | 2 stand-in | `resetobject`, `skiptofinalstate` | The six flag natives and ResetObject / SkipToFinalState store their value or message by instance name without ... |
-| 43 | [SCRIPT-427](features/script-system-missions-1-4-conduct.md?display=source#L24) | 152 | 0 | 5 | 0 | 1 implemented | `subobjectiveenemyenable` | The arrows over the goons the user saw: SubObjectiveEnemyEnable is a no-op in the original and the arrow list ... |
+| 43 | [SCRIPT-427](features/script-system-missions-1-4-conduct.md?display=source#L27) | 152 | 0 | 5 | 0 | 1 implemented | `subobjectiveenemyenable` | The arrows over the goons the user saw: SubObjectiveEnemyEnable is a no-op in the original and the arrow list ... |
 | 44 | [TRANS-5](features/level-transitions.md?display=source#L33) | 127 | 25 | 7 | 0 | 5 stand-in, 4 none, 1 implemented | `charsetallowvehicleentry`, `playcredits`, `playscriptonstartup`, `positionplayer` +7 | The 31 scripts of the shipped levels that call SceneChange, CharSetAllowVehicleEntry or ... |
 | 45 | [SCRIPT-73](features/script-system-hud-natives.md?display=source#L33) | 148 | 0 | 6 | 1 | 5 stand-in | `disableicon`, `enableminimapwipe`, `enablescanner`, `overridescannable` +1 | Map and scanner natives (EnableMinimapWipe 0x187f28, EnableScanner, OverrideScannable, PanMapToObject, map ... |
 | 46 | [CAMERA-S51](features/camera.md?display=source#L26) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
@@ -137,7 +137,7 @@ Items: 1097 open items and stand-ins, 197 linked to game usage, 900 with unknown
 
 ## Scripts and missions
 
-129 of 273 items linked.
+129 of 277 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -269,7 +269,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-missions-1-3-end.md](features/script-system-missions-1-3-end.md): SCRIPT-391, SCRIPT-400, SCRIPT-408, SCRIPT-409, SCRIPT-S303, SCRIPT-S304, SCRIPT-S311, SCRIPT-S319
 - [script-system-missions-1-3-generator.md](features/script-system-missions-1-3-generator.md): SCRIPT-364 (+1)
 - [script-system-missions-1-3.md](features/script-system-missions-1-3.md): SCRIPT-368 (+2), SCRIPT-399, SCRIPT-S291, SCRIPT-S298, SCRIPT-S315, SCRIPT-S316
-- [script-system-missions-1-4-conduct.md](features/script-system-missions-1-4-conduct.md): SCRIPT-428 (+2), SCRIPT-432 (+1), SCRIPT-433 (+1), SCRIPT-S326, SCRIPT-S329, SCRIPT-S330
+- [script-system-missions-1-4-conduct.md](features/script-system-missions-1-4-conduct.md): SCRIPT-441 (+3), SCRIPT-428 (+2), SCRIPT-433 (+1), SCRIPT-442, SCRIPT-S326, SCRIPT-S329, SCRIPT-S330, SCRIPT-S333, SCRIPT-S334, SCRIPT-S335
 - [script-system-missions-1-4-fight.md](features/script-system-missions-1-4-fight.md): SCRIPT-423 (+1), SCRIPT-S320, SCRIPT-S321, SCRIPT-S322, SCRIPT-S324
 - [script-system-missions-1-4-roof.md](features/script-system-missions-1-4-roof.md): SCRIPT-430 (+1), SCRIPT-439 (+1), SCRIPT-S328, SCRIPT-S332
 - [script-system-missions-1-4.md](features/script-system-missions-1-4.md): SCRIPT-415

@@ -6,7 +6,9 @@
 // side slot (ctrl+0xd8 bit 5). Every AI character runs the same rule; the parameters come from the AI set-up 0x2bc934 and the AI start
 // 0x1c6e84. No SDL dependency.
 #include "assets/assets.hpp"
+#include "runtime/ai_patrol_walk.hpp"
 #include "runtime/fall_arrest_engaged.hpp"
+#include "runtime/game_random.hpp"
 #include "runtime/goon_idle_return.hpp"
 
 #include <array>
@@ -50,6 +52,8 @@ struct AiConductParams {
     bool returnToSpawnPoint = true;                           // `ReturnToSpawnPoint`, ctrl+0xdc bit 5 (0x1c6e84)
     bool millAbout = false;                                   // `AIMillAbout`, ctrl+0x315 bit 7 (0x1c6e84)
     bool patrolPath = false;                                  // `AIPatrolPath` names an object: 0x1c6e84 requests AI state 14 instead of 0
+    std::uint32_t patrolPathHash = 0;                         // the name hash of that object (0x24242c at 0x2a11cc)
+    bool dontRun = false;                                     // `AIDontRun`, ctrl+0xdb bit 4: the walk back is a walk
     bool patrolAlertOnLos = false;                            // `AIPatrolAlertOnLOS`, ctrl+0xdb bit 5: the angle flag of the watch 0x1f5c3c
     AiIdleReturnParams idleReturn;                            // the sleep clips and `Wait_Time` (goon_idle_return.hpp)
     bool badGuy = false;                                      // `AIBadGuy`, entity +0xc bit 2
@@ -67,6 +71,7 @@ struct AiConductEntity {
     std::optional<std::size_t> rangeBound;  // index of params.rangeBound in Level::bounds (0x23e798 finds none: no bound)
 
     std::array<float, 3> position{};        // node translation (node +0x30)
+    std::array<float, 3> forward{0.0f, 0.0f, 1.0f};  // node +0x20, the row the angle test 0x15c1b0 reads
     std::optional<std::array<float, 3>> spawn;  // ctrl+0xac..0xb4, the spawn point
     bool present = true;                    // a node (+0x3c), entity +0x10 bit 0 and +0xc bit 4 clear
     bool hidden = false;                    // 0x23de70: no node or its hidden flags
@@ -82,10 +87,13 @@ struct AiConductEntity {
     bool cantGetThere = false;              // ctrl+0xd9 bit 2, set by 0x1f6c58 when the path search fails
     std::uint8_t seenBits = 0;              // ctrl+0xdc bits 3..4
     bool clipEnded = kAiClipEndedStandIn;   // 0x22f560 of the current clip answers 6
-    bool waitObject = kAiWaitObjectStandIn; // ctrl+0xd4
+    std::uint32_t patrolObject = 0;         // ctrl+0xd4: the name hash of the patrol node the character walks to, written by AI state 14
+    bool walk = false;                      // ctrl+0xd9 bit 5: the walk of AI state 14 is a walk, not a run
 };
 
-enum class AiConductEventKind : std::uint8_t { Engaged, Released, Sighted, MillAbout, SleepClip, ReturnToSpawn, Returned };
+enum class AiConductEventKind : std::uint8_t {
+    Engaged, Released, Sighted, MillAbout, SleepClip, ReturnToSpawn, Returned, PatrolWalk, CantGetThere, WalkEnded, Idle, PlayerCaught
+};
 struct AiConductEvent {
     AiConductEventKind kind = AiConductEventKind::Engaged;
     std::string character;
@@ -96,7 +104,24 @@ struct AiConductEvent {
     bool combat = false;    // Sighted: the character holds a slot and AI state 2 was requested
     std::string clip;       // SleepClip: the clip name 0x2102b0 plays
     bool loop = false;      // SleepClip: the sleep clip (r2 = 1), not the wake clip
+    AiPatrolSource source = AiPatrolSource::None;  // PatrolWalk: where the walk of AI state 14 leads
+    bool patrolling = false;  // PatrolWalk: the character walks a patrol, not back to its spawn point
+    bool toWait = false;      // WalkEnded: AI state 15 follows, else the character is idle
 };
+
+// The path follower of AI state 14 on the host's side: `start` is 0x215988 and the request 0x1f9834(…, 1) of the enter (false: no path, the
+// log "I can't get there"), `follow` is 0x1faf04 and its application 0x1fae48 (the low byte of the code: 0 arrived, 1 and 2 blocked, else
+// moving).
+struct AiConductWalker {
+    std::function<bool(const AiConductEntity&, const std::array<float, 3>& destination)> start;
+    std::function<int(const AiConductEntity&)> follow;
+};
+// A patrol node as the host knows it: its position and the object `next_Node` names (0 none).
+struct AiPatrolNode {
+    std::array<float, 3> position{};
+    std::uint32_t next = 0;
+};
+using AiPatrolNodeLookup = std::function<std::optional<AiPatrolNode>(std::uint32_t hash)>;
 
 // 0x22f650(point, bound, 0) of the host: the bound's switch +0xa and its shape around the centre.
 using AiConductBoundTest = std::function<bool(std::size_t bound, const std::array<float, 3>& point)>;
@@ -120,15 +145,23 @@ public:
     void release(AiConductEntity& self);
     // 0x1f6958(viewer, target, out, limit, second, 0): a negative limit takes AIViewDistance, a negative second the melee or fire distance; a viewer
     // with ctrl+0xdb bit 1 sees a target within the second distance and below 45 degrees whatever its bound.
+    // `angle` (radians) is the pointer 0x1f6958 takes as its fourth argument: the angle test 0x15c1b0 must pass first.
     bool sees(const AiConductEntity& viewer, const AiConductEntity& target, float limit, float second, const AiConductBoundTest& inside,
-              float* distance = nullptr) const;
-    // 0x1f8d5c(self, position, 0, limit, second, 45.0): the entity to attack, or null.
-    const AiConductEntity* findTarget(const AiConductEntity& self, float limit, float second, const AiConductBoundTest& inside);
+              float* distance = nullptr, const float* angle = nullptr) const;
+    // 0x1f8d5c(self, position, angle flag, limit, second, 45.0): the entity to attack, or null.
+    const AiConductEntity* findTarget(const AiConductEntity& self, float limit, float second, const AiConductBoundTest& inside, bool angleFlag = false);
     // 0x2a9874 for one entity in state 0.
     void thinkIdle(AiConductEntity& self, const AiConductBoundTest& inside);
     // The request of AI state 15 at 0x2a9d40 with its enter 0x2bba40, and the decision 0x2c5cac of state 15.
     void requestReturn(AiConductEntity& self);
     void thinkReturn(AiConductEntity& self, const AiConductBoundTest& inside);
+    // The request of AI state 14 at 0x2c5cf8 with its enter 0x2a11a0, and the decision 0x2b68e8 of state 14.
+    void requestPatrol(AiConductEntity& self);
+    void thinkPatrol(AiConductEntity& self, const AiConductBoundTest& inside);
+    // The watch 0x1f5c3c of states 14 and 15: a target in sight raises PlayerCaught and starts the fight without a slot.
+    void watch(AiConductEntity& self, const AiConductBoundTest& inside);
+    void setWalker(AiConductWalker walker) { walker_ = std::move(walker); }
+    void setPatrolNodes(AiPatrolNodeLookup lookup) { patrolNodes_ = std::move(lookup); }
     // 0x21102c(self, target); `held` when the caller set ctrl+0xd8 bit 5 itself (the watch 0x1f5c3c), so the engage does nothing.
     void sighted(AiConductEntity& self, const AiConductEntity& target, float distance, bool held = false);
     // The clock 0x241098 the decision of state 0 tests.
@@ -143,12 +176,16 @@ private:
     const AiConductEntity* player() const;
     const AiConductEntity* validTarget(const AiConductEntity& self) const;
     void enterReturn(AiConductEntity& self);
+    void enterPatrol(AiConductEntity& self);
 
     std::vector<AiConductEntity> entities_;
     std::vector<std::uint8_t> lastState_;
     EngagedTable* table_ = nullptr;
     std::vector<AiConductEvent> events_;
     std::uint32_t clock_ = 1;
+    AiConductWalker walker_;
+    AiPatrolNodeLookup patrolNodes_;
+    GameRandom random_{kAiPatrolRetrySeedStandIn};
 };
 
 // STAND-IN SCRIPT-S326: the spawn point is the position of the first update the character is present (the original stores its node position at

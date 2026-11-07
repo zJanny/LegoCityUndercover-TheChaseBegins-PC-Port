@@ -357,7 +357,7 @@ private:
     chase::runtime::AiConduct aiConduct;
     std::set<std::string> aiConductUnslottedSightings;
     void loadAiConduct();
-    void updateAiConduct();
+    void updateAiConduct(float dt);
     // The particle objects, kind 1, and the FallArrest bounds (runtime/particle_object.hpp, runtime/fall_arrest_bounds.hpp; glue
     // src/runtime/game_particle_objects.cpp), and the BulletTime system's step on the real clock (src/game_level_natives.cpp).
     chase::runtime::ParticleObjects particleObjects;

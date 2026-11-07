@@ -1,6 +1,7 @@
 #include "game_level.hpp"
 
 #include "runtime/director_hold.hpp"
+#include "runtime/level_start.hpp"
 #include "runtime/prop_rocking.hpp"
 
 #include <iostream>
@@ -47,15 +48,37 @@ void LevelSession::loadAiConduct() {
     player.player = true;
     entities.push_back(player);
     aiConduct.reset(engagedTable, std::move(entities));
+    // STAND-IN SCRIPT-S334: a patrol node is the placed object the reference names, at the position of its node (0x22faf8 gives the objects of
+    // type 11 another position, not read); `next_Node` is read from the object and its class.
+    aiConduct.setPatrolNodes([this](std::uint32_t hash) -> std::optional<runtime::AiPatrolNode> {
+        for (const chase::assets::LevelObject& object : level.objects) {
+            if (chase::assets::nameHash(object.instance) != hash) continue;
+            runtime::AiPatrolNode node;
+            float where[3];
+            if (!objectNodePosition(game_doors::lowerCase(object.instance), where)) return std::nullopt;
+            node.position = {where[0], where[1], where[2]};
+            if (const chase::assets::Level* cls = classOf(object.className))
+                if (const chase::assets::LevelParam* next = runtime::effectiveParam(object, *cls, chase::assets::nameHash("next_Node")))
+                    node.next = chase::assets::objectReferenceHash(*next);
+            return node;
+        }
+        return std::nullopt;
+    });
     aiConductUnslottedSightings.clear();
     std::cout << "ai conduct: " << aiConduct.entities().size() - 1 << " characters, " << bounded << " with AIRangeBound\n";
 }
 
 // STAND-IN SCRIPT-S326: a character is present while it is enabled, not destroyed and its room is shown, and hidden (0x23de70) when it is not
 // present; the player's target mode ctrl+0xda, its flags +0x316 and the locomotion state 82 test of 0x21102c are taken as clear.
-void LevelSession::updateAiConduct() {
+void LevelSession::updateAiConduct(float dt) {
     if (!levelCharacters || !player) return;
     runtime::AiCore& ai = levelScripts.ai();
+    runtime::AiConductWalker walker;
+    walker.start = [&ai](const runtime::AiConductEntity& entity, const std::array<float, 3>& destination) {
+        return ai.startPatrolWalk(entity.name, entity.position, destination, entity.walk);
+    };
+    walker.follow = [&ai, dt](const runtime::AiConductEntity& entity) { return ai.followPatrolWalk(entity.name, entity.walk, dt); };
+    aiConduct.setWalker(std::move(walker));
     const runtime::DirectorCamera& director = levelScripts.director();
     std::map<std::string, const chase::assets::CharacterObject*> characters;
     for (const auto& [name, object] : levelCharacters->characters()) characters.emplace(name, object);
@@ -71,7 +94,10 @@ void LevelSession::updateAiConduct() {
         entity.present = world && !destroyed && !objectState.isDisabled(entity.name) &&
                          (!character || roomShown(runtime::roomNumber(character->placement.room)));
         entity.hidden = !entity.present;
-        if (world) entity.position = {(*world)[12], (*world)[13], (*world)[14]};
+        if (world) {
+            entity.position = {(*world)[12], (*world)[13], (*world)[14]};
+            entity.forward = {(*world)[8], (*world)[9], (*world)[10]};
+        }
         entity.thinks = !destroyed && runtime::characterControl(director.holdsControl(), false, true, director.objectActiveDuringDirector(entity.name)) ==
                                           runtime::CharacterControl::Ai;
         if (const runtime::AiCharacter* state = ai.character(entity.name)) {
@@ -120,7 +146,24 @@ void LevelSession::updateAiConduct() {
             break;
         case runtime::AiConductEventKind::Returned:
             ai.startConductState(event.character, runtime::AiState::Patrol);
-            std::cout << "AI state 14 (not ported)";
+            std::cout << "AI state 14 (walk back)";
+            break;
+        case runtime::AiConductEventKind::PatrolWalk:
+            std::cout << "walks to " << (event.source == runtime::AiPatrolSource::PatrolObject ? "its patrol node" : "its spawn point");
+            break;
+        case runtime::AiConductEventKind::CantGetThere:
+            std::cout << "can't get there";
+            break;
+        case runtime::AiConductEventKind::WalkEnded:
+            std::cout << "walk ended, " << (event.toWait ? "AI state 15 (wait)" : "idle");
+            break;
+        case runtime::AiConductEventKind::Idle:
+            ai.startIdle(event.character);
+            std::cout << "AI state 0";
+            break;
+        case runtime::AiConductEventKind::PlayerCaught:
+            levelScripts.fireObjectEvent("playercaught", event.character);
+            std::cout << "PlayerCaught";
             break;
         }
         std::cout << " at update " << updatesForLog << '\n';
