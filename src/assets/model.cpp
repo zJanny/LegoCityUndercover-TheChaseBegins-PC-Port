@@ -197,15 +197,21 @@ void readCollision(Reader& r, std::uint32_t count, std::vector<CollisionItem>& o
     Bytes items = r.next();
     requireSize(items, std::size_t(count) * 0x2c, "collision items");
     std::vector<std::string> names(count);
+    std::vector<Bytes> colourBlocks(count), flagBlocks(count);
     for (std::uint32_t i = 0; i < count; ++i) {
         names[i] = cString(r.next());
-        for (int k = 0; k < 4; ++k) r.skip();
+        colourBlocks[i] = r.next();
+        flagBlocks[i] = r.next();
+        r.skip();
+        r.skip();
     }
     for (std::uint32_t i = 0; i < count; ++i) {
         const std::size_t base = std::size_t(i) * 0x2c;
         const std::uint32_t nodeCount = readU32(items, base + 0x10), triangleCount = readU32(items, base + 0x14);
         CollisionItem item;
         item.name = names[i];
+        item.colourBlock = std::move(colourBlocks[i]);
+        item.flagBlock = std::move(flagBlocks[i]);
         Bytes nodeBytes, triangleBytes;
         for (std::uint32_t n = 0; n < nodeCount; n += 0x400) {
             Bytes chunk = r.next();

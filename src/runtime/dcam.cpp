@@ -1,4 +1,5 @@
 #include "runtime/dcam.hpp"
+#include "assets/path_name_hash.hpp"
 #include "runtime/camera_rig.hpp"
 #include <algorithm>
 #include <cctype>
@@ -48,7 +49,7 @@ void sampleDirectorPath(const assets::LevelPath& path, float position, float out
 }
 
 const assets::LevelPath* findLevelPath(const assets::Level& level, const std::string& name) {
-    const std::uint32_t hash = assets::nameHash(name);
+    const std::uint32_t hash = assets::pathNameHash(name);
     for (const assets::LevelPath& path : level.paths)
         if (path.nameHash == hash) return &path;
     return nullptr;

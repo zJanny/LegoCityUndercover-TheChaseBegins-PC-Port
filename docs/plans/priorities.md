@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1088 open items and stand-ins, 197 linked to game usage, 891 with unknown reach.
+Items: 1090 open items and stand-ins, 197 linked to game usage, 893 with unknown reach.
 
 ## Top 50 overall
 
@@ -41,7 +41,7 @@ Items: 1088 open items and stand-ins, 197 linked to game usage, 891 with unknown
 | 5 | [SCRIPT-S325](features/script-system-missions-1-4-roof.md?display=source#L22) | 1019 | 281 | 8 | 0 | 1 implemented | `triggerobject`, `particles` | The class `particles` is ported only for TriggerObject's messages and the one-shot timer: the endless ... |
 | 6 | [SCRIPT-285](features/script-system-missions.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
 | 7 | [SCRIPT-365](features/script-system-missions-reference.md?display=source#L30) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The other switch kinds (100 energy switches, 125, 138 fires, 139 switchfloor, 141, 185 ability props and ... |
-| 8 | [SCRIPT-389](features/script-system-platforms.md?display=source#L31) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The ledge lift starts one update later than in the oracle (the update between the switch's state 3 and the ... |
+| 8 | [SCRIPT-389](features/script-system-platforms.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The ledge lift starts one update later than in the oracle (the update between the switch's state 3 and the ... |
 | 9 | [SCRIPT-4](features/script-system.md?display=source#L38) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
 | 10 | [SCRIPT-420](features/script-system-missions-1-4-fight.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The spawns of `1-4_Spawner_05` against the oracle: the updates from the arrival's TriggerObject to goons 03 ... |
 | 11 | [SCRIPT-S220](features/script-system-missions-reference.md?display=source#L18) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Closed 2026-10-25: the reference list holds the records of every registering kind ... |
@@ -74,7 +74,7 @@ Items: 1088 open items and stand-ins, 197 linked to game usage, 891 with unknown
 | 38 | [SCRIPT-S20](features/script-system-natives-state.md?display=source#L19) | 248 | 0 | 7 | 0 | 10 stand-in | `addstuds`, `disablesuperbuiltitsave`, `enablestudsbygroup`, `enablesuperbricks` +6 | Nine batch 27 natives (UnlockAbility, LockAbility, UnlockScanner, SetParachuteDeployHeight ... |
 | 39 | [SCRIPT-351](features/script-system-natives-animation.md?display=source#L38) | 236 | 0 | 8 | 1 | 1 stand-in | `loadanimation` | What decides the load time of LoadAnimation (0x23e6e4 request, load record state byte +8 = 2 in 0x17e588) ... |
 | 40 | [SCRIPT-377](features/script-system-platforms.md?display=source#L28) | 0 | 183 | 8 | 2 | - | `leprops/leprop_platform`, `props/prop_platform` | The rest of the platform class: `orient` and type 7 rotations of platforms without a path, the shape curves ... |
-| 41 | [SCRIPT-388](features/script-system-platforms.md?display=source#L30) | 0 | 183 | 8 | 1 | - | `leprops/leprop_platform`, `props/prop_platform` | The platform's sweep in its entity move (the push of characters beside a sideways move with message 45 ... |
+| 41 | [SCRIPT-388](features/script-system-platforms.md?display=source#L31) | 0 | 183 | 8 | 1 | - | `leprops/leprop_platform`, `props/prop_platform` | The platform's sweep in its entity move (the push of characters beside a sideways move with message 45 ... |
 | 42 | [SCRIPT-S18](features/script-system-natives-state.md?display=source#L18) | 175 | 0 | 7 | 0 | 2 stand-in | `resetobject`, `skiptofinalstate` | The six flag natives and ResetObject / SkipToFinalState store their value or message by instance name without ... |
 | 43 | [SCRIPT-427](features/script-system-missions-1-4-fight.md?display=source#L28) | 152 | 0 | 5 | 0 | 1 implemented | `subobjectiveenemyenable` | The arrows over the goons the user saw: SubObjectiveEnemyEnable is a no-op in the original and the arrow list ... |
 | 44 | [TRANS-5](features/level-transitions.md?display=source#L33) | 127 | 25 | 7 | 0 | 5 stand-in, 4 none, 1 implemented | `charsetallowvehicleentry`, `playcredits`, `playscriptonstartup`, `positionplayer` +7 | The 31 scripts of the shipped levels that call SceneChange, CharSetAllowVehicleEntry or ... |
@@ -137,7 +137,7 @@ Items: 1088 open items and stand-ins, 197 linked to game usage, 891 with unknown
 
 ## Scripts and missions
 
-128 of 265 items linked.
+128 of 266 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -145,7 +145,7 @@ Items: 1088 open items and stand-ins, 197 linked to game usage, 891 with unknown
 | 2 | [SCRIPT-S325](features/script-system-missions-1-4-roof.md?display=source#L22) | 1019 | 281 | 8 | 0 | 1 implemented | `triggerobject`, `particles` | The class `particles` is ported only for TriggerObject's messages and the one-shot timer: the endless ... |
 | 3 | [SCRIPT-285](features/script-system-missions.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
 | 4 | [SCRIPT-365](features/script-system-missions-reference.md?display=source#L30) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The other switch kinds (100 energy switches, 125, 138 fires, 139 switchfloor, 141, 185 ability props and ... |
-| 5 | [SCRIPT-389](features/script-system-platforms.md?display=source#L31) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The ledge lift starts one update later than in the oracle (the update between the switch's state 3 and the ... |
+| 5 | [SCRIPT-389](features/script-system-platforms.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The ledge lift starts one update later than in the oracle (the update between the switch's state 3 and the ... |
 | 6 | [SCRIPT-4](features/script-system.md?display=source#L38) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
 | 7 | [SCRIPT-420](features/script-system-missions-1-4-fight.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The spawns of `1-4_Spawner_05` against the oracle: the updates from the arrival's TriggerObject to goons 03 ... |
 | 8 | [SCRIPT-S220](features/script-system-missions-reference.md?display=source#L18) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Closed 2026-10-25: the reference list holds the records of every registering kind ... |
@@ -154,12 +154,12 @@ Items: 1088 open items and stand-ins, 197 linked to game usage, 891 with unknown
 
 ## World and levels
 
-8 of 90 items linked.
+8 of 91 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
 | 1 | [TRANS-5](features/level-transitions.md?display=source#L33) | 127 | 25 | 7 | 0 | 5 stand-in, 4 none, 1 implemented | `charsetallowvehicleentry`, `playcredits`, `playscriptonstartup`, `positionplayer` +7 | The 31 scripts of the shipped levels that call SceneChange, CharSetAllowVehicleEntry or ... |
-| 2 | [TRAFFIC-20](features/pedestrians-traffic-cars-movement.md?display=source#L65) | 0 | 90 | 3 | 0 | - | `props/prop_trafficlight` | The look of the traffic lights: the parts green, yellow and red of `props/prop_trafficlight`, the part ... |
+| 2 | [TRAFFIC-20](features/pedestrians-traffic-cars-movement.md?display=source#L67) | 0 | 90 | 3 | 0 | - | `props/prop_trafficlight` | The look of the traffic lights: the parts green, yellow and red of `props/prop_trafficlight`, the part ... |
 | 3 | [WSTREAM-6](features/world-streaming.md?display=source#L36) | 49 | 15 | 6 | 0 | 1 none, 1 implemented | `roomstreamingwait`, `streamroomin`, `roomstreamingcontrol` | The `RoomStreamingControl/Destination` classes and the `RoomStreamingWait` native as scripted preloads ... |
 | 4 | [PED-5](features/pedestrians-traffic-pedestrians.md?display=source#L58) | 0 | 58 | 6 | 0 | - | `chars/pedestrian` | The pedestrian's message slot 0x19efbc is read only at its start: which messages request the dodge (3, 4) and ... |
 | 5 | [TRANS-S2](features/level-transitions.md?display=source#L24) | 25 | 25 | 7 | 0 | 1 implemented | `scenechange`, `scenechange` | `SceneChange <bound>` is qualified with the calling level's world level instance name (data fit, every ... |
@@ -210,7 +210,7 @@ No linked items.
 
 No script native or object class is linked to these items (`+N` is Unblocks). Add `uses:` to an item when its fix changes the game.
 
-Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [TRAFFIC-22](features/pedestrians-traffic-cars-movement.md?display=source#L67) (+27), [VEH-6](features/vehicles-physics.md?display=source#L30) (+27), [TRAFFIC-23](features/pedestrians-traffic-cars-movement.md?display=source#L63) (+26), [TRAFFIC-27](features/pedestrians-traffic-cars-driver.md?display=source#L30) (+26), [TRAFFIC-9](features/pedestrians-traffic-cars-driver.md?display=source#L31) (+26), [TRAFFIC-2](features/pedestrians-traffic-cars-driver.md?display=source#L29) (+25), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+17), [SCRIPT-44](features/script-system-natives.md?display=source#L31) (+16)
+Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [TRAFFIC-23](features/pedestrians-traffic-cars-movement.md?display=source#L65) (+28), [TRAFFIC-27](features/pedestrians-traffic-cars-driver.md?display=source#L30) (+28), [TRAFFIC-9](features/pedestrians-traffic-cars-driver.md?display=source#L31) (+28), [TRAFFIC-2](features/pedestrians-traffic-cars-driver.md?display=source#L29) (+27), [VEH-6](features/vehicles-physics.md?display=source#L30) (+27), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+17), [SCRIPT-44](features/script-system-natives.md?display=source#L31) (+16), [SCRIPT-101](features/script-system-ai-navigation.md?display=source#L37) (+15)
 
 - [abilities-detective.md](features/abilities-detective.md): DETECT-19 (+3), DETECT-13 (+2), DETECT-1 (+1), DETECT-15 (+1), DETECT-4 (+1), DETECT-6 (+1), DETECT-S11 (+1), DETECT-S7 (+1), DETECT-S8 (+1), DETECT-10, DETECT-11, DETECT-12, DETECT-18, DETECT-3, DETECT-5, DETECT-9, DETECT-S1, DETECT-S2, DETECT-S4, DETECT-S5, DETECT-S6, DETECT-S9
 - [abilities-scanner.md](features/abilities-scanner.md): SCAN-10 (+1), SCAN-16 (+1), SCAN-17 (+1), SCAN-S10 (+1), AUDIO-S33, SCAN-13, SCAN-15, SCAN-19, SCAN-3, SCAN-6, SCAN-S1, SCAN-S11, SCAN-S12, SCAN-S13, SCAN-S14, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S9
@@ -236,8 +236,8 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [level-transitions.md](features/level-transitions.md): TRANS-3 (+4), TRANS-13 (+2), TRANS-15 (+2), TRANS-8 (+2), TRANS-10 (+1), TRANS-12 (+1), TRANS-14 (+1), TRANS-16 (+1), TRANS-S1, TRANS-S3, TRANS-S4, TRANS-S5, TRANS-S6
 - [movies-cutscenes.md](features/movies-cutscenes.md): MOVIE-22 (+1), MOVIE-24 (+1), MOVIE-36 (+1), MOVIE-37 (+1), MOVIE-S33 (+1), MOVIE-1, MOVIE-12, MOVIE-20, MOVIE-21, MOVIE-3, MOVIE-35, MOVIE-4, MOVIE-40, MOVIE-41, MOVIE-S10, MOVIE-S11, MOVIE-S2, MOVIE-S21, MOVIE-S3, MOVIE-S30, MOVIE-S31, MOVIE-S32, MOVIE-S34, MOVIE-S36
 - [particles.md](features/particles.md): PART-4 (+1), PART-6 (+1), PART-5, PART-7, PART-S1, PART-S2, PART-S3, PART-S4
-- [pedestrians-traffic-cars-driver.md](features/pedestrians-traffic-cars-driver.md): TRAFFIC-27 (+26), TRAFFIC-9 (+26), TRAFFIC-2 (+25), TRAFFIC-11 (+1), TRAFFIC-S5, TRAFFIC-S7
-- [pedestrians-traffic-cars-movement.md](features/pedestrians-traffic-cars-movement.md): TRAFFIC-22 (+27), TRAFFIC-23 (+26), TRAFFIC-21 (+1), TRAFFIC-24 (+1), TRAFFIC-S11, TRAFFIC-S13, TRAFFIC-S16, TRAFFIC-S17
+- [pedestrians-traffic-cars-driver.md](features/pedestrians-traffic-cars-driver.md): TRAFFIC-27 (+28), TRAFFIC-9 (+28), TRAFFIC-2 (+27), TRAFFIC-11 (+1), TRAFFIC-S5, TRAFFIC-S7
+- [pedestrians-traffic-cars-movement.md](features/pedestrians-traffic-cars-movement.md): TRAFFIC-23 (+28), TRAFFIC-24 (+1), TRAFFIC-29 (+1), TRAFFIC-30 (+1), TRAFFIC-S11, TRAFFIC-S13, TRAFFIC-S17, TRAFFIC-S23, TRAFFIC-S24
 - [pedestrians-traffic-cars.md](features/pedestrians-traffic-cars.md): TRAFFIC-12 (+2), TRAFFIC-14 (+1), TRAFFIC-3 (+1), TRAFFIC-S1, TRAFFIC-S2, TRAFFIC-S3, TRAFFIC-S4, TRAFFIC-S8
 - [pedestrians-traffic-pedestrians-fade.md](features/pedestrians-traffic-pedestrians-fade.md): PED-22 (+1), PED-21, PED-S11, PED-S12
 - [pedestrians-traffic-pedestrians-vehicles.md](features/pedestrians-traffic-pedestrians-vehicles.md): PED-18 (+1), PED-19 (+1), PED-S10, PED-S9
@@ -279,7 +279,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-natives-state.md](features/script-system-natives-state.md): SCRIPT-335 (+1), SCRIPT-56 (+1), SCRIPT-64 (+1), SCRIPT-S97
 - [script-system-natives-world.md](features/script-system-natives-world.md): SCRIPT-279 (+1)
 - [script-system-natives.md](features/script-system-natives.md): SCRIPT-43 (+18), SCRIPT-44 (+16), SCRIPT-45 (+14), SCRIPT-7 (+12), SCRIPT-13 (+1), SCRIPT-150 (+1)
-- [script-system-platforms.md](features/script-system-platforms.md): SCRIPT-385, SCRIPT-S301, SCRIPT-S302, SCRIPT-S307, SCRIPT-S310
+- [script-system-platforms.md](features/script-system-platforms.md): SCRIPT-385, SCRIPT-440, SCRIPT-S301, SCRIPT-S302, SCRIPT-S307, SCRIPT-S310
 - [script-system-triggers.md](features/script-system-triggers.md): SCRIPT-76 (+11), SCRIPT-51 (+3), SCRIPT-77 (+1), SCRIPT-78 (+1), SCRIPT-S15, SCRIPT-S28, SCRIPT-S30, SCRIPT-S8
 - [script-system-use-markers.md](features/script-system-use-markers.md): SCRIPT-356 (+2), SCRIPT-357 (+1), SCRIPT-355, SCRIPT-S247, SCRIPT-S248, SCRIPT-S249, SCRIPT-S286, SCRIPT-S287, SCRIPT-S288
 - [script-system.md](features/script-system.md): SCRIPT-1 (+10), SCRIPT-53 (+2), SCRIPT-2, SCRIPT-3, SCRIPT-5, SCRIPT-54, SCRIPT-55, SCRIPT-9, SCRIPT-S1, SCRIPT-S14, SCRIPT-S16, SCRIPT-S275, SCRIPT-S3, SCRIPT-S5, SCRIPT-S6, SCRIPT-S7

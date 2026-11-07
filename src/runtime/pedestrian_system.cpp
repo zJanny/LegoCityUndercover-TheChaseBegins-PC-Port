@@ -1,4 +1,5 @@
 #include "runtime/pedestrian_system.hpp"
+#include "assets/path_name_hash.hpp"
 
 #include "runtime/level_start.hpp"
 #include "runtime/scene_start.hpp"
@@ -42,7 +43,7 @@ std::string pedestrianPathName(std::size_t number) {
 std::size_t pedestrianPathCount(const std::vector<const assets::Level*>& loadedLevels) {
     std::size_t count = 0;
     for (std::size_t number = 1; number <= kPedestrianPathNames; ++number) {
-        const std::uint32_t hash = assets::nameHash(pedestrianPathName(number));
+        const std::uint32_t hash = assets::pathNameHash(pedestrianPathName(number));
         for (const assets::Level* level : loadedLevels) {
             bool found = false;
             for (const assets::LevelPath& path : level->paths) found = found || path.nameHash == hash;

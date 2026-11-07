@@ -173,6 +173,8 @@ struct CollisionItem {
     std::vector<float> vertices;                // x, y, z triples
     std::vector<CollisionTriangle> triangles;
     std::vector<CollisionNode> nodes;           // nodes[0] is the root
+    std::vector<std::uint8_t> colourBlock;      // loader 0x114640 block 2 of the item: item +4 points to it when it is not empty
+    std::vector<std::uint8_t> flagBlock;        // block 3: item +4 points to it when block 2 is empty, its first word is item +8
     std::optional<FloorGraph> floor;
 };
 // Box record of the collision section (0x5c bytes at model+0x1c section +4, count at +0): a name, a float3 at +4,

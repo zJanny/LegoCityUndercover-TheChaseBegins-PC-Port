@@ -1,4 +1,5 @@
 #include "runtime/traffic_junction_fill.hpp"
+#include "assets/path_name_hash.hpp"
 
 #include <cmath>
 #include <cstdio>
@@ -107,7 +108,7 @@ struct LevelIndex {
     const std::vector<const assets::Level*>& levels;
 
     const assets::LevelPath* path(const std::string& name) const {
-        const std::uint32_t hash = assets::nameHash(name);
+        const std::uint32_t hash = assets::pathNameHash(name);
         for (const assets::Level* level : levels)
             for (const assets::LevelPath& path : level->paths)
                 if (path.nameHash == hash) return &path;

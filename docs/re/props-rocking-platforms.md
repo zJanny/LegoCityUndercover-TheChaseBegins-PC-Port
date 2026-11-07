@@ -8,6 +8,7 @@ The platform class (ObjectType 64): its record, trigger messages, travel and nod
 - AttachObject puts the child's node under the parent's and sends message 43 (the platform's list R+0x60); the startup attaches the girder to the crane platform and the girder guy, the crow and the rope to the girder, so they go down with it. The port carries the moves and turns of platform nodes (SCRIPT-S302). [§2026-10-26T22:54:42](#ts-20261026-225442), [§2026-10-28T00:06:31](#ts-20261028-000631)
 - Path platforms: the node takes the spline position at count x the shaped value (at the arc length fraction 0x22a4c0 with `ConstantSpeed`) and the squad 0x270c60 of the path's two quaternion tables (or, without them, the `orient` turn along the tangent); ported in `platform_path.*`, with a rigid carry that turns the attached objects. The lawn mowers of mission 1-3 go round their paths, the gardener in his seat; not yet compared with the oracle. [§2026-10-28T00:06:31](#ts-20261028-000631)
 - Riding: a ground contact on a platform stores it and its translation (0x20b78c, ctrl+0x174 / +0x178), and the mover adds the platform's move since then to the movement when 0 < squared move < 25 (0x2b01e4), rising without a probe; the platform's own move 0x23d6c4 only pushes or squashes others when it moves sideways or down. Platforms register collision like kind 67 (0x19a3e4). SetPlatformSpeed, SetPlatformOrigin, SetPlatformTarget, MovePlatform and ResetObject's message 8 are ported; in the port the player rides `1-3_Ledge_Platform` from y 17.463 to 30.318 (the save state near the top: 30.318). The oracle trace of the lift agrees on the ride (the player rises with the node in the same update) and the moves; the port's lift starts one update late. On an `orient` platform the character keeps its place and heading in the platform's frame (y from the probe only). Not ported: the sweep of 0x23d6c4, other ground kinds (SCRIPT-S310). [§2026-10-28T00:09:40](#ts-20261028-000940), oracle [§2026-10-28T00:44:32](#ts-20261028-004432), `orient` [§2026-10-28T00:59:56](#ts-20261028-005956)
+- The path of a platform is looked up by the part of its name after the last `.`; the port hashes the whole name (SCRIPT-440). [§2026-11-07T16:59:02](#ts-20261107-165902)
 - Renamed files: src/runtime/game_platform_glue.cpp -> src/runtime/script_runner_platform_natives.cpp, src/runtime/game_platform_riding_glue.cpp -> src/runtime/game_platform_riding.cpp.
 
 <a id="ts-20261026-225442"></a>
@@ -121,3 +122,12 @@ Method: REA (Ghidra 12.1.2) on `artifacts/game/game.arm.elf` (20261027-mission13
 
 Unknowns:
 - The ride on `1-3_Push_Platform` and the lawn mowers has no test in `chase-game` and no oracle trace.
+
+<a id="ts-20261107-165902"></a>
+
+## 2026-11-07T16:59:02+01:00 — The platform's path is looked up by the part of the name after the last dot (code reviewer of 20261107-traffic-D)
+
+The platform's post-link finds its `Platform_Path` through 0x22a3b0, which calls the path name lookup 0x23895c: the hash 0x24da28 is taken of the part of the name after the last `.`, or of the whole name when there is none (details of 0x23895c: [traffic-ground-cast.md §2026-11-07T12:11:38](traffic-ground-cast.md#ts-20261107-121138)). The port hashes the whole lowered name in `platform_node_move.cpp`; `assets::pathNameHash` does the original's lookup. Not tested yet which platforms of the shipped levels change (SCRIPT-440).
+
+Unknowns:
+- Whether any shipped `Platform_Path` name contains a `.`.
