@@ -2,7 +2,7 @@
 
 The traffic manager 0x527410 spawns and removes the level's `Traffic%02u` vehicles. The AI driver input 0x26d934 steers the spawned cars. The pedestrian manager 0x51b33c is in [pedestrians.md](pedestrians.md); the manager swap is corrected in [pedestrians.md §2026-10-20T11:17:42](pedestrians.md#ts-20261020-111742). The earlier entry [script-natives-audio.md §2026-10-15T15:10:38](script-natives-audio.md#ts-20261015-151038) gave the two manager addresses the wrong way round. Feature file: [pedestrians-traffic-cars.md](../plans/features/pedestrians-traffic-cars.md).
 
-Subtopics: [traffic-ai-driver.md](traffic-ai-driver.md)
+Subtopics: [traffic-ai-driver.md](traffic-ai-driver.md), [traffic-junction.md](traffic-junction.md)
 
 ## Current state
 

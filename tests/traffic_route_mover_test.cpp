@@ -316,11 +316,11 @@ void stopTestRules() {
     TrafficJunctionRecord& junction = world.junctions[0];
     junction.lightPairs = {{TrafficLight{{100}}, std::nullopt}, {std::nullopt, TrafficLight{{999, 100}}}};
     junction.passPair = 0;
-    junction.passOpen = true;
+    junction.lightPhase = 2;
     require(trafficStopAtLights(driver, world), "0x2ca5f0: a light of pair 1 controls the route while +0x300 is 0");
     junction.lightPairs[1][1]->routes = {999};
     require(!trafficStopAtLights(driver, world), "the passing pair lets the car go");
-    junction.passOpen = false;
+    junction.lightPhase = 0;
     require(trafficStopAtLights(driver, world), "0x2ca5fc: byte +0x308 = 0 stops the passing pair too");
 
     driver.route = 301;

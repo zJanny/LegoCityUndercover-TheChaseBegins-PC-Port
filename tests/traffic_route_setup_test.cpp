@@ -55,11 +55,19 @@ assets::LevelObject junctionObject(const std::string& instance, float x, float z
     return object;
 }
 
+assets::LevelPath road(const std::string& name, float x) {
+    assets::LevelPath path;
+    path.nameHash = assets::nameHash(name);
+    path.points = {{x, 0.0f, -10.0f}, {x, 0.0f, 10.0f}};
+    return path;
+}
+
 assets::Level syntheticLevel() {
     assets::Level level;
+    for (const char* name : {"RoadA", "RoadB", "RoadC", "RoadD", "RoadFar", "Ignored"}) level.paths.push_back(road(name, float(level.paths.size()) * 4.0f));
     level.objects.push_back(junctionObject("J1", 10.0f, 20.0f,
                                            {textParameter("OutputPath02", "RoadC"), textParameter("InputPath01", "RoadA"), textParameter("InputPath03", "RoadB"),
-                                            textParameter("OutputPath01", "RoadA")}));
+                                            textParameter("OutputPath01", "RoadA"), textParameter("InputPath04", ""), textParameter("OutputPath05", "Missing")}));
     assets::LevelObject other;
     other.className = "props/not_a_junction";
     other.instance = "X";
@@ -76,9 +84,10 @@ void junctions() {
     require(list.size() == 3, "only the props/traffic_junction objects are junctions, in object order");
     require(list[0].position == TrafficRouteVec3({10.0f, 0.0f, 20.0f}), "position from initialposition");
     require(list[0].inputs == std::vector<std::uint32_t>({assets::nameHash("RoadA"), assets::nameHash("RoadB")}),
-            "inputs in slot order InputPath01..08, empty slots skipped (0x1ca5a4)");
-    require(list[0].outputs == std::vector<std::uint32_t>({assets::nameHash("RoadA"), assets::nameHash("RoadC")}), "outputs in slot order OutputPath01..08");
-    require(list[0].lanes.empty() && list[0].conflicts.empty() && list[0].listedLanes.empty(), "STAND-IN TRAFFIC-S9: no lanes");
+            "inputs in slot order InputPath01..08, empty slots and an empty name skipped (0x1ca5a4, 0x22a3b0 returns 0)");
+    require(list[0].outputs == std::vector<std::uint32_t>({assets::nameHash("RoadA"), assets::nameHash("RoadC")}),
+            "outputs in slot order OutputPath01..08, a name without a level path skipped");
+    require(list[0].lanes.size() == 2 && list[0].listedLanes.empty(), "the lanes of 0x1ca5a4 (side 2 A to A, side 1 B to C; traffic-junction-fill), no car queued");
 
     assets::Level broken;
     assets::LevelObject object;
@@ -148,15 +157,17 @@ int shipped(const std::string& fib, const std::string& csv) {
         return 77;
     }
     // Reference: 20261025-traffic-A, 2026-10-25 (docs/re/traffic-ai-driver.md, test traffic-route-real-data): junction objects, route list and
-    // distinct pregen point paths per shipped traffic level; reproduced through setUpTrafficRoutes by 20261102-traffic-A.
+    // distinct pregen point paths per shipped traffic level; reproduced through setUpTrafficRoutes by 20261102-traffic-A. The route counts are
+    // those of 20261103-large-A, 2026-11-03: a junction path name without a level path (empty, or "0" in three junctions) is skipped as 0x22a3b0
+    // returns 0, so every route is a pregen point path.
     const ShippedLevel levels[] = {
-        {"lvl_01_cherrytreehills", "levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl", 16, 58, 57, 649},
-        {"lvl_03_auburn", "levels/levels/lvl_03_auburn/lvl_03_auburn_main.blvl", 7, 31, 30, 469},
-        {"lvl_04_fortmeadows", "levels/levels/lvl_04_fortmeadows/lvl_04_fortmeadows_main.blvl", 2, 3, 2, 231},
-        {"lvl_05_bluebellwood", "levels/levels/lvl_05_bluebellwood/lvl_05_bluebellwood_main.blvl", 4, 5, 4, 187},
+        {"lvl_01_cherrytreehills", "levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl", 16, 57, 57, 649},
+        {"lvl_03_auburn", "levels/levels/lvl_03_auburn/lvl_03_auburn_main.blvl", 7, 30, 30, 469},
+        {"lvl_04_fortmeadows", "levels/levels/lvl_04_fortmeadows/lvl_04_fortmeadows_main.blvl", 2, 2, 2, 231},
+        {"lvl_05_bluebellwood", "levels/levels/lvl_05_bluebellwood/lvl_05_bluebellwood_main.blvl", 4, 4, 4, 187},
         {"lvl_06_apolloisland", "levels/levels/lvl_06_apolloisland/lvl_06_apolloisland_main.blvl", 4, 4, 4, 158},
-        {"lvl_07_downtown", "levels/levels/lvl_07_downtown/lvl_07_downtown_main.blvl", 14, 40, 38, 727},
-        {"lvl_test_playground_traffic", "levels/levels/lvl_test_playground_traffic.blvl", 4, 14, 13, 123},
+        {"lvl_07_downtown", "levels/levels/lvl_07_downtown/lvl_07_downtown_main.blvl", 14, 38, 38, 727},
+        {"lvl_test_playground_traffic", "levels/levels/lvl_test_playground_traffic.blvl", 4, 13, 13, 123},
     };
     assets::FuseArchive archive(fib);
     archive.loadNames(csv);

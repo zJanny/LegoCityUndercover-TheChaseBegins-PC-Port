@@ -1,12 +1,12 @@
 # Traffic: the junction routes and the AI driver
 
-Subtopic of [traffic.md](traffic.md): the junction routes (route list, EnableTrafficPath, path follower, route type function, junction test) and the AI driver (record, input provider 0x26d934, state change 0x1cb148, post step 0x1bc79c, kinematic traffic cars). Feature file: [pedestrians-traffic-cars.md](../plans/features/pedestrians-traffic-cars.md).
+Subtopic of [traffic.md](traffic.md); the junction class itself is in [traffic-junction.md](traffic-junction.md). This file: the junction routes (route list, EnableTrafficPath, path follower, route type function, junction test) and the AI driver (record, input provider 0x26d934, state change 0x1cb148, post step 0x1bc79c, kinematic traffic cars). Feature file: [pedestrians-traffic-cars.md](../plans/features/pedestrians-traffic-cars.md).
 
 ## Current state
 
 - The AI driver 0x26d934 switches on driver +0x78 (states 2 to 8). States 2 and 3 run the obstacle stop rule. State 5 steers 8 m ahead along the route. State 8 steers back to driver +0x18 and puts the car back on the route when it faces away. States 4, 6 and 7 give no input. [traffic.md §2026-10-20T11:18:14](traffic.md#ts-20261020-111814), [§2026-10-25T12:26:09](#ts-20261025-122609)
 - The routes are the input and output paths of the `props/traffic_junction` objects within 9000 of the origin (0x2df574). EnableTrafficPath (0x2dece4) sets or clears a route's bit, or, before the routes are loaded, queues a disable in the pending list +0xb9c, which the room set-up replays. 0x2dfc84 pairs each route with the junctions it enters and leaves; 0x20ff40 gives the driver's junction. [§2026-10-25T12:19:38](#ts-20261025-121938)
-- The port wires the routes into the traffic system: the junction objects of the level, the route list with the manager's bit set, a pregen point's route as its index in the list (no spawn without a junction within 9000), the pending replay and the native EnableTrafficPath (disables before the scene enter are queued). Junction lanes are not read. [§2026-11-02T23:46:29](#ts-20261102-234629)
+- The port wires the routes into the traffic system: the junction objects of the level, the route list with the manager's bit set, a pregen point's route as its index in the list (no spawn without a junction within 9000), the pending replay and the native EnableTrafficPath (disables before the scene enter are queued). [§2026-11-02T23:46:29](#ts-20261102-234629) Junction path names without a level path are skipped, and the junction lanes, conflict pairs and lights are filled from the level: [traffic-junction.md](traffic-junction.md).
 - The path follower 0x2bf2ec takes, from the pregen cell under a point 8 units ahead of the car, the nearest point on an enabled route whose direction is less than 60 degrees off the car's forward axis, and returns its route, position and path parameter (point +0x20 and driver +0x64 are the parameter, not a speed). The route type function (table 0x3581d4) then samples the route there; all shipped routes are open type 0 paths (0x1c17c0). [§2026-10-25T12:19:38](#ts-20261025-121938)
 - The junction test 0x2cdde4 stops a car on a junction lane while a lane paired with it in the junction's conflict list is listed at +0x284. [§2026-10-25T12:19:38](#ts-20261025-121938)
 - Driver +0x78 is written only by the spawn (0) and by the state change 0x1cb148. Each update the vehicle update runs 0x1cb148, which copies the request +0x79 into +0x78. After a spawn this gives 0 → 1 → 2, one update per step (code and servant). State 3 (junction, next route +8) follows from 2 at the route end. State 4 follows a contact, 7 destroys the car, and 6 leads to 7 after the car has stood for 90 updates. [§2026-10-25T12:26:09](#ts-20261025-122609)
@@ -214,6 +214,8 @@ Unknowns:
 <a id="ts-20261102-234629"></a>
 
 ## 2026-11-02T23:46:29+01:00 — The routes wired into the traffic system: junction list, route index of a point, EnableTrafficPath (llvm-objdump re-read of 0x27bc30 and 0x2a7004, no REA session, no emulator)
+
+Corrected by [traffic-junction.md §2026-11-03T08:53:43](traffic-junction.md#ts-20261103-085343): junction path names without a level path (empty or `0`) are skipped, so the shipped route counts are 57, 30, 2, 4, 4, 38 and 13 and `chase-game` prints 57 routes in lvl_01; the junction layouts now carry lanes and conflict pairs (TRAFFIC-S9 removed).
 
 [Corrects traffic-ai-driver.md §2026-10-25T12:19:38](#ts-20261025-121938): the routes are no longer "not wired"; the manager's route bits are the `TrafficRouteTable` bit set. [Corrects traffic.md §2026-10-25T12:35:43](traffic.md#ts-20261025-123543): the port numbers the points' paths by the route list, not by first use.
 

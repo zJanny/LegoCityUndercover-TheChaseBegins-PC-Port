@@ -47,14 +47,15 @@ struct TrafficJunctionLaneEnds {
 
 // One props/traffic_junction record (+0x7c of the object) as the four functions read it. `layout` holds the paths and lanes
 // (traffic_route.hpp); its listedLanes are the lane words (+0x284) of the queue, `queuedCars` the car words (+0x280) of the same entries.
-// The set-up 0x1ca5a4 and the light update 0x1d8924 that write the other fields are not read (TRAFFIC-4): the caller fills them.
+// The set-up 0x1ca5a4 and the light update 0x1d8924 that write the other fields are in traffic_junction_fill.hpp.
 struct TrafficJunctionRecord {
     TrafficJunction layout;
     std::vector<std::vector<std::size_t>> choices;                     // per input i: count byte +0x418 + i, output indices +0x310 + 32 i
     std::vector<TrafficJunctionLaneEnds> laneEnds;                     // per lane of layout.lanes
     std::vector<std::array<std::optional<TrafficLight>, 2>> lightPairs;  // the light pointers at +0x2c0 (0 = none), count +0x304
     std::uint32_t passPair = 0;                                        // +0x300: the pair whose lights let cars pass
-    bool passOpen = false;                                             // byte +0x308: 0 stops the cars of every pair
+    std::uint8_t lightPhase = 0;                                       // byte +0x308: 0 red (stops the cars of every pair), 1 yellow, 2 green
+    float lightTimer = 0.0f;                                           // +0x30c: seconds left in the phase
     std::vector<std::uint32_t> queuedCars;                             // word +0x280 of each queue entry, count +0x424
 };
 

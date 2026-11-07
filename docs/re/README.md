@@ -122,6 +122,7 @@ Read this index, then open only the file you need.
 | [vehicles-prop-smash.md](vehicles-prop-smash.md) | Which props a vehicle contact destroys: mesh-kind grid entries, the reaction of each prop class to message 0, bricks released, timing against the oracle. |
 | [traffic.md](traffic.md) | The traffic manager 0x527410 (spawn, removal, countdown, fade bounds, SetTrafficMaxVehicles), its wiring in `chase-game`, the spawn placement, the cars' node and driver values, the LOD table and the removal radius |
 | [traffic-ai-driver.md](traffic-ai-driver.md) | The junction routes (route list, EnableTrafficPath, path follower, junction test) and the AI driver (record, input provider 0x26d934, state change 0x1cb148, post step 0x1bc79c, kinematic traffic cars) |
+| [traffic-junction.md](traffic-junction.md) | The junction class `props/traffic_junction` (set-up 0x1ca5a4: ends, sides, choice table, Hermite lanes, conflict pairs, light pairs), the traffic lights `props/prop_trafficlight` and the light cycle 0x1d8924 |
 | [player-falling-jumping.md](player-falling-jumping.md) | Falling, landing stun, jumping, step-off slide, slope slow-down, state table |
 | [player-attack.md](player-attack.md) | Attack on foot: Y tap, combat action states 0xa3 / 0xa4, combo, target search, hit test, messages 62 and 0 to the target |
 | [player-attack-characters.md](player-attack-characters.md) | Characters as attack targets: entity gate, sides and target modes, weights, the grab test, the fight move a Y tap starts on a goon (code and oracle) |

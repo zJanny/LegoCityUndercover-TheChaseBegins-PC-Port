@@ -127,7 +127,7 @@ bool trafficStopAtLights(const AiDriverRecord& driver, const TrafficJunctionWorl
     for (std::size_t pair = 0; pair < junction->lightPairs.size(); ++pair) {
         for (const std::optional<TrafficLight>& light : junction->lightPairs[pair]) {
             if (!light || !trafficLightControls(*light, inputRoute)) continue;
-            if (junction->passPair != pair || !junction->passOpen) return true;
+            if (junction->passPair != pair || junction->lightPhase == 0) return true;
         }
     }
     return false;

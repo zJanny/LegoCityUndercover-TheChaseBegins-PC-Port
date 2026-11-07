@@ -14,8 +14,9 @@ namespace chase::runtime {
 
 constexpr std::size_t kTrafficJunctionPathSlots = 8;
 
-// The junctions of the levels in object order: initialposition, InputPath01..08 and OutputPath01..08 (name hashes of the named paths, empty
-// slots skipped). STAND-IN TRAFFIC-S9: the lane data of 0x1ca5a4 (lanes, conflicts, listed lanes) stays empty, so no junction ever stops a car.
+// The junctions of the levels in object order: the layouts of trafficJunctionFills (traffic_junction_fill.hpp): initialposition,
+// InputPath01..08 and OutputPath01..08 (name hashes of the named level paths; empty slots and names without a level path skipped, as
+// 0x22a3b0 returns 0), the lanes and conflict pairs of 0x1ca5a4. The listed lanes stay empty (the queue fills them).
 // Throws for a junction without a 12-byte initialposition.
 std::vector<TrafficJunction> trafficJunctions(const std::vector<const assets::Level*>& levels);
 

@@ -2532,13 +2532,15 @@ if(TARGET chase-game)
   # TRAFFIC-1: the traffic manager in the port's run from the level start (`chase-game ... --no-start-cutscenes --script "0 0 300"`): the room set-up
   # spawns cars at pregen points around the player (prefill band 0 .. 76), the cars stand still, and one leaves per update after its grace counter ran
   # out beyond the removal radius 50. The update numbers and points are the port's own run (stand-in rules TRAFFIC-S1, TRAFFIC-S7).
+  # 57 routes: the level paths the junctions name, names without a path skipped as 0x22a3b0 returns 0 (docs/re/traffic-junction.md, 20261103-large-A,
+  # 2026-11-03); the spawn and remove lines of this run are the same as with the 58 routes before (20261103-large-A, 2026-11-07).
   add_test(NAME game-traffic COMMAND chase-game
     --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
     --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
     --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
     --script "0 0 300")
   set_tests_properties(game-traffic PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
-    PASS_REGULAR_EXPRESSION "traffic: 10 cars, limit 10, 649 spawn points, 58 routes, 648 floor cells, spawn data loaded\n.*traffic car Traffic05: spawned at point 419 \\(902.337 18.5559 1061.92\\), fade 255 at update 0\n.*traffic car Traffic09: removed at update 67")
+    PASS_REGULAR_EXPRESSION "traffic: 10 cars, limit 10, 649 spawn points, 57 routes, 648 floor cells, spawn data loaded\n.*traffic car Traffic05: spawned at point 419 \\(902.337 18.5559 1061.92\\), fade 255 at update 0\n.*traffic car Traffic09: removed at update 67")
   # SCRIPT-230: 1-4_RobberCaught calls EnableTrafficAndPedestrians(0) at its start (every live car leaves in one update) and SetTrafficMaxVehicles(10) later.
   add_test(NAME game-traffic-natives COMMAND chase-game
     --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
@@ -2548,14 +2550,14 @@ if(TARGET chase-game)
   set_tests_properties(game-traffic-natives PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
     PASS_REGULAR_EXPRESSION "traffic car Traffic01: removed at update 99\n.*traffic car Traffic08: removed at update 99\n.*traffic: limit 10 at update 402")
   # TRAFFIC-5: 3-7_MissionStart of lvl_03 calls EnableTrafficPath(RoadPath27..30, 0); the calls reach the traffic route table (before the room set-up
-  # they are queued and replayed by it).
+  # they are queued and replayed by it). 30 routes: the level paths the junctions name, as for game-traffic (20261103-large-A, 2026-11-07).
   add_test(NAME game-traffic-path COMMAND chase-game
     --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
     --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
     --level levels/levels/lvl_03_auburn/lvl_03_auburn_main.blvl --no-start-cutscenes
     --call-script 3-7_MissionStart --script "0 0 5")
   set_tests_properties(game-traffic-path PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
-    PASS_REGULAR_EXPRESSION "traffic: path roadpath27 disabled at update 0\n.*traffic: path roadpath28 disabled at update 0\n.*traffic: path roadpath29 disabled at update 0\n.*traffic: path roadpath30 disabled at update 0\n.*traffic: 25 cars, limit 10, 469 spawn points, 31 routes")
+    PASS_REGULAR_EXPRESSION "traffic: path roadpath27 disabled at update 0\n.*traffic: path roadpath28 disabled at update 0\n.*traffic: path roadpath29 disabled at update 0\n.*traffic: path roadpath30 disabled at update 0\n.*traffic: 25 cars, limit 10, 469 spawn points, 30 routes")
   set_property(TEST game-traffic game-traffic-natives game-traffic-path APPEND PROPERTY LABELS needs-game-data slow)
 endif()
 
@@ -2569,6 +2571,15 @@ add_executable(traffic-route-mover-test tests/traffic_route_mover_test.cpp)
 target_link_libraries(traffic-route-mover-test PRIVATE chase_runtime chase_assets)
 target_compile_options(traffic-route-mover-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME traffic-route-mover COMMAND traffic-route-mover-test)
+target_sources(chase_runtime PRIVATE src/runtime/traffic_junction_fill.cpp)
+add_executable(traffic-junction-fill-test tests/traffic_junction_fill_test.cpp)
+target_link_libraries(traffic-junction-fill-test PRIVATE chase_runtime chase_assets)
+target_compile_options(traffic-junction-fill-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME traffic-junction-fill COMMAND traffic-junction-fill-test)
+add_test(NAME traffic-junction-fill-real-data COMMAND traffic-junction-fill-test
+  "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+set_tests_properties(traffic-junction-fill-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)
+
 target_sources(chase_runtime PRIVATE src/runtime/traffic_leave_snap.cpp)
 add_executable(traffic-leave-snap-test tests/traffic_leave_snap_test.cpp)
 target_link_libraries(traffic-leave-snap-test PRIVATE chase_runtime)
