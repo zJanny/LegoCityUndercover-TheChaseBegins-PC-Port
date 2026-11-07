@@ -482,6 +482,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
                 if (game_doors::lowerCase(door.instance) == sent.instance) runtime::doorMessage(door.state, door.params, *doorMessage);
     }
     updateParticleObjects(dt);
+    updateFallArrest(emit);
     provisionalStudClockSeconds += double(dt);
     updateLevelCharacters(dt);
     followPlacedChildren();

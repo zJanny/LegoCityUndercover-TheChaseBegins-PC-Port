@@ -52,6 +52,10 @@ public:
     bool setVolume(std::uint32_t id, std::uint16_t owner, float volume);
     bool scaleFrequency(std::uint32_t id, std::uint16_t owner, float scale);
 
+    // 0x1cef9c(1) / 0x1cef9c(0) of BulletTime: every running voice is held, or continues.
+    void pauseVoices() { mixer_.pauseAll(); }
+    void resumeVoices() { mixer_.resumeAll(); }
+
     // Recomputes the gains of the running positional voices from the current listener (0x107fa0 runs every frame).
     void update();
 

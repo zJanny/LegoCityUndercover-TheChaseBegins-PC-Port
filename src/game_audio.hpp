@@ -92,6 +92,12 @@ public:
         else if (ownerFits && request.kind == Kind::SetVolume) sounds_->setVolume(request.id, owner, request.value);
         else if (ownerFits && request.kind == Kind::SetFrequency) sounds_->scaleFrequency(request.id, owner, request.value);
     }
+    void pauseVoices(bool pause) {
+        if (!device_) return;
+        std::lock_guard<std::mutex> guard(lock_);
+        if (pause) sounds_->pauseVoices();
+        else sounds_->resumeVoices();
+    }
     bool playing(std::uint32_t id, std::uint16_t owner) {
         if (!device_) return false;
         std::lock_guard<std::mutex> guard(lock_);

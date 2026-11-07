@@ -38,7 +38,9 @@ void bulletTimeBlendsTheTimeScale() {
     require(system.set(0.25f, 0.125f), "a scale below 1.0 starts a blend");
     require(system.active() && system.baseScale() == 1.0f && system.targetScale() == 0.25f && system.duration() == 0.125f, "+0x58 base, +0x5c scale, +0x64 duration");
     require(system.mode() == runtime::kBulletTimeSlowMode, "+0x68 is 255 for a scale below 1.0 with the flag clear (0x2393c8)");
-    require(system.sounds() == std::vector<runtime::BulletTimeSound>({{false, runtime::kBulletTimeSoundStart, 0.0f}}), "sound 97 at the owner (0x23ae84(0x61, owner))");
+    require(system.sounds() == std::vector<runtime::BulletTimeSound>({{false, 0, 0.0f, runtime::BulletTimeVoices::Pause}, {false, runtime::kBulletTimeSoundStart, 0.0f}}),
+            "every voice paused (0x1eecec(1) -> 0x1cef9c(1)), then sound 97 at the owner (0x23ae84(0x61, owner))");
+    require(!system.cameraShotRequested(), "the flag is clear: no camera shot (0x2393c4)");
     system.takeSounds();
     system.update(0.0625f, false);
     require(system.timeScale() == 0.625f, "halfway: 1.0 + 0.5 x (0.25 - 1.0) (0x2ec100..0x2ec114)");
@@ -52,8 +54,9 @@ void bulletTimeBlendsTheTimeScale() {
     require(system.set(1.0f, 0.0625f), "scale 1.0 while a blend holds 0.25 restarts the blend");
     require(system.baseScale() == 0.25f && system.targetScale() == 1.0f, "the base is the time scale at the call");
     const auto expected = std::vector<runtime::BulletTimeSound>(
-        {{true, runtime::kBulletTimeSoundStart, 0.0625f}, {true, runtime::kBulletTimeSoundLoop, 0.0625f}, {false, runtime::kBulletTimeSoundEnd, 0.0f}});
-    require(system.sounds() == expected, "restoring stops 97 and 98 with the duration as the fade, then plays 99 (0x239454..0x239488)");
+        {{true, runtime::kBulletTimeSoundStart, 0.0625f}, {true, runtime::kBulletTimeSoundLoop, 0.0625f},
+         {false, 0, 0.0f, runtime::BulletTimeVoices::Resume}, {false, runtime::kBulletTimeSoundEnd, 0.0f}});
+    require(system.sounds() == expected, "restoring stops 97 and 98 with the duration as the fade, resumes the voices (0x1cef9c(0)), then plays 99 (0x239454..0x239488)");
     system.takeSounds();
     system.update(0.03125f, true);
     require(system.timeScale() == 0.625f, "0.25 + 0.5 x 0.75");
@@ -72,9 +75,17 @@ void bulletTimeScriptCalls() {
     add(level, "s", {{"BulletTime", {"0.01", "0.1", "0"}}});
     add(level, "t", {{"BulletTime", {"1", "0.01", "0"}}});
     add(level, "short", {{"BulletTime", {"0.01", "0.1"}}});
+    add(level, "shot", {{"BulletTime", {"0.2", "0.5", "1"}}});
+    add(level, "negative", {{"BulletTime", {"0.2", "0.5", "-1"}}});
     PlacedObjectState state;
     ScriptRunner runner(level, state);
     require(runner.start("short") && !runner.bulletTime().active(), "a call with fewer than 3 arguments does nothing");
+    require(runner.start("negative") && runner.bulletTime().active() && !runner.bulletTime().cameraShotRequested(), "the flag is the third argument above 0 (0x1a2e0c..0x1a2e28)");
+    runner.bulletTime().stop();
+    require(runner.start("shot") && runner.bulletTime().cameraShotRequested(), "a third argument above 0 asks for the camera shot (0x2393d8..0x2393f0)");
+    runner.bulletTime().stop();
+    runner.bulletTime().clearCameraShotRequest();
+    runner.bulletTime().takeSounds();
     require(runner.start("s") && runner.bulletTime().active(), "BulletTime 0.01 0.1 0 of 1-4_SO_Phase2");
     require(runner.bulletTime().targetScale() == 0.01f && runner.bulletTime().duration() == 0.1f, "arguments 0 and 1");
     runner.update(0.1f);

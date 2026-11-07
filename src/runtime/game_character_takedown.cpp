@@ -78,6 +78,7 @@ void LevelSession::updateCharacterTakedowns(float dt) {
         if (entry.states.pending() == runtime::kTakedownMeleePutdown && entry.startedAt == updates) continue;
         auto hit = characterHits.find(name);
         if (hit == characterHits.end()) continue;
+        entry.character.autoArrestFlag = engagedTable.autoArrested(name);
         entry.character.destroyed = hit->second.target.destroyed || objectState.destroyed.count(name) != 0;
         entry.character.avoidArrestTrigger = enabledObjectTrigger("characteravoidarrest", name);
         const bool finished = levelCharacters->clipFinished(name).value_or(true);
@@ -130,6 +131,7 @@ void LevelSession::characterAggro(const std::string& lowerInstance, const runtim
     from.player = sender.player;
     from.name = sender.player ? "player" : "character";
     const runtime::AggroResult result = runtime::aggroOnHit(target, from);
+    if (result.pursuit) engagedTable.engage(lowerInstance, target.badGuy);
     if (!result.pursuit && !result.switchTarget && !result.counter) return;
     std::cout << "character " << lowerInstance << ": aggro on " << from.name << (result.pursuit ? " (pursuit call" : " (target switch")
               << ", not ported, COMBAT-9) at update " << updatesForLog << '\n';

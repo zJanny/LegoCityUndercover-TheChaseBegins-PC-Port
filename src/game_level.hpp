@@ -78,6 +78,7 @@
 #include "runtime/player_attack.hpp"
 #include "runtime/character_arrest.hpp"
 #include "runtime/character_takedown.hpp"
+#include "runtime/fall_arrest_engaged.hpp"
 #include "runtime/camera_lock_icon.hpp"
 #include "runtime/screen_shake.hpp"
 #include "runtime/camera_rig.hpp"
@@ -363,6 +364,9 @@ private:
     void loadParticleObjects();
     void deliverParticleObjectMessage(const chase::runtime::ScriptObjectMessage& sent);
     void updateParticleObjects(float dt);
+    // The allegiance lists and the FallArrest update (runtime/fall_arrest_engaged.hpp; glue src/runtime/game_fall_arrest.cpp).
+    chase::runtime::EngagedTable engagedTable;
+    void updateFallArrest(const std::function<void(const chase::runtime::SoundCall&)>& emit);
     void updateBulletTime(float realDt);
     void loadScriptDestroyProps(chase::assets::FuseArchive& archive);
     // STAND-IN VEH-S104: the line tests 0x21ab20 / 0x22b108 of a brick burst are the wheel ray of the collision world, vehicles skipped.
@@ -579,6 +583,7 @@ private:
         std::string name;
         int room = 0;
         chase::runtime::AttackEntity entity;
+        std::uint16_t fallArrestSound = 0;  // slot 20 of the sound row of the character's category
     };
     std::vector<AttackCharacter> attackCharacters;
     chase::runtime::PlayerAttackTables attackTables;

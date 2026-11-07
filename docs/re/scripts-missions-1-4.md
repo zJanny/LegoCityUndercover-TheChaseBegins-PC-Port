@@ -13,7 +13,7 @@ What the scripts of mission 1-4 ("Gone in 60 Minutes", chapter 1, Combat Mechani
 - FallArrestBoundSystem collects the bounds named FallArrest* and marks an engaged character in the air inside an enabled one as auto-arrested (the takedown then arrests it); collected in the port, no characters to test yet (SCRIPT-425). The ladder kick fires the particle objects `LadderKick` and `LadderLand`, ported with the class `particles`. [§2026-11-02T22:40:54](#ts-20261102-224054)
 - Fire sites of the character events in the executable: CharacterArrestable from the function at 0x28cbf8 (call at 0x28d3a4 after a query of CharacterAvoidArrest at 0x28d354); CharacterArrested from the functions at 0x21ddb8, 0x25ebe8 and 0x28bb14; VehicleChaseEnded from the function around 0x1cb544; PursuitEnded queried at 0x2ab8dc. Located, not read. [§2026-11-01T15:04:22](#ts-20261101-150422)
 
-Subtopics: [scripts-missions-1-4-spawners.md](scripts-missions-1-4-spawners.md)
+Subtopics: [scripts-missions-1-4-spawners.md](scripts-missions-1-4-spawners.md), [scripts-missions-1-4-roof.md](scripts-missions-1-4-roof.md)
 - Renamed files: src/runtime/game_mission14_natives_glue.cpp -> src/runtime/script_runner_bullet_time_vehicle_debris_natives.cpp, tests/mission14_natives_test.cpp and CTest mission14-natives -> tests/bullet_time_vehicle_debris_natives_test.cpp and bullet-time-vehicle-debris-natives, tests/mission14_census_real_test.cpp and CTest mission-1-4-census-real-data -> tests/script_census_real_test.cpp and script-census-real-data.
 
 <a id="ts-20261101-150422"></a>
@@ -116,6 +116,8 @@ Evidence: llvm-objdump (`--triple=armv6k --mattr=+vfp2`) of `artifacts/game/game
 
 ## 2026-11-02T15:54:42+01:00 — `1-4_ShowroomArrival` in the oracle: waypoint start, cutscene `1_4_a`, the player's placement and the two tips (Azahar RPC, servant 20261102-mission14-servant)
 
+Corrected by [scripts-missions-1-4-spawners.md §2026-11-07T10:36:43](scripts-missions-1-4-spawners.md#ts-20261107-103643): the cutscene lasts the file length, 16.7 s; the 17.3 s of the free run included clock waits, so the port is 1.3 s too long, not 0.75 s.
+
 Method: emulator servant 20261102-mission14-servant on 2026-11-02 (SCRIPT-416), recorded from a save state with Chase about 1 m from the mission 1-4 start waypoint `1-4_Waypoint_01` (602.943, 23.81, 961.818) before the arrival, New 3DS, OpenGL renderer, RPC free run with the stick held forward from the load. Four runs (two sampled runs, one with a screenshot every 0.1 s, one screenshot loop) agree within 0.05 s; the numbers are their ranges. Time base: the game clock 0x376b0c, 50.2 ticks per vblank = 3000 ticks per second (checked against the tip interval, 299 to 315 vblanks for 5.0 to 5.2 s). Relayed by the lead to agent 20261102-mission14-A, who recorded it.
 
 - **Waypoint start (t0).** The waypoint object (kind 203) and its marker (kind 228) change their flags (the waypoint off, +0x10 bit 0 set on the kind-203 entity) in the update where Chase first comes within 0.47 m (x/z) of the marker (0.62 m the update before, walking 0.157 m per update); `1-4_ShowroomArrival` starts in that update.
@@ -133,6 +135,8 @@ Method: emulator servant 20261102-mission14-servant on 2026-11-02 (SCRIPT-416), 
 <a id="ts-20261102-224054"></a>
 
 ## 2026-11-02T22:40:54+01:00 — Mission 1-4 roof scene: the ladder kick, FallArrestBoundSystem and what BulletTime slows (REA Ghidra 12.1.2 decompile, llvm-objdump of game.arm.elf; C++ level loader; no emulator)
+
+Corrected by [scripts-missions-1-4-roof.md §2026-11-03T08:42:13](scripts-missions-1-4-roof.md#ts-20261103-084213): the table 0x58deb0 is the allegiance list of the bad guys that own a path record, not a list of engaged fighters; the stream pause 0x1cef9c pauses the sound voices.
 
 [Corrects scripts-missions-1-4.md §2026-11-02T15:04:48](#ts-20261102-150448): 97, 98 and 99 are sound ids played and stopped at the owner, not messages, and the value BulletTime blends is the time scale of the scheduler, not a scene float without a reader.
 

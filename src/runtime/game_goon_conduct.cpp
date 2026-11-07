@@ -45,7 +45,7 @@ void LevelSession::loadAiConduct() {
     player.name = kPlayerName;
     player.player = true;
     entities.push_back(player);
-    aiConduct.reset(std::move(entities));
+    aiConduct.reset(engagedTable, std::move(entities));
     aiConductUnslottedSightings.clear();
     std::cout << "ai conduct: " << aiConduct.entities().size() - 1 << " characters, " << bounded << " with AIRangeBound\n";
 }

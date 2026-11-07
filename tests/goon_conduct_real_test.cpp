@@ -106,6 +106,7 @@ int main(int argc, char** argv) {
                     std::fabs(bound.half[2] - 66.2311f) < 1e-3f,
                 "1-4_AIRange_01: a box around the showroom");
 
+        runtime::EngagedTable table;
         runtime::AiConduct conduct;
         std::vector<runtime::AiConductEntity> entities;
         for (const char* name : {"1-4_AI_Goon_03", "1-4_AI_Goon_06"}) {
@@ -121,7 +122,7 @@ int main(int argc, char** argv) {
         player.player = true;
         player.position = {600.0f, 27.5656f, 967.533f};
         entities.push_back(player);
-        conduct.reset(entities);
+        conduct.reset(table, entities);
         const runtime::AiConductBoundTest inside = [&](std::size_t index, const std::array<float, 3>& point) {
             return runtime::pointInFallArrestBound(level.bounds[index], level.bounds[index].enabled != 0, point);
         };

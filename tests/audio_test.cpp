@@ -38,6 +38,26 @@ int main() {
             require(near(out[0], 0.0f) && near(out[1], 0.25f), "changed gains");
         }
         {
+            // 0x1cef9c(1) holds the voices that run (state 1) until 0x1cef9c(0); a voice started in between plays (BulletTime, 20261103-large-D).
+            audio::Mixer mixer(8);
+            auto sound = std::make_shared<assets::Sound>();
+            sound->rate = 8;
+            sound->frames = 4;
+            sound->channels = {{8192, 16384, 24576, 8192}};
+            const int held = mixer.play(sound, 1.0f);
+            float out[4];
+            mixer.mix(out, 1);
+            mixer.pauseAll();
+            const int later = mixer.play(sound, 1.0f);
+            require(mixer.paused(held) && !mixer.paused(later), "pauseAll holds the voices that run now only");
+            mixer.mix(out, 2);
+            require(near(out[0], 0.25f) && near(out[2], 0.5f), "the held voice stays silent, the later one plays from its start");
+            mixer.stop(later);
+            mixer.resumeAll();
+            mixer.mix(out, 1);
+            require(!mixer.paused(held) && near(out[0], 0.5f), "resumeAll continues at the held frame");
+        }
+        {
             audio::Mixer mixer(8);
             auto sound = std::make_shared<assets::Sound>();
             sound->rate = 8;

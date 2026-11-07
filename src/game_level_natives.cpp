@@ -33,7 +33,17 @@ void LevelSession::applyScriptNatives() {
         std::cout << "debris burst at " << request.object << ": " << request.burst.count << " bricks at update " << updatesForLog << '\n';
     }
     const std::uint16_t bulletTimeOwner = levelScripts.soundNatives().ownerOf("player1");
+    if (levelScripts.bulletTime().cameraShotRequested()) {
+        std::cout << "bullet time camera shot not ported (SCRIPT-431) at update " << updatesForLog << '\n';
+        levelScripts.bulletTime().clearCameraShotRequest();
+    }
     for (const runtime::BulletTimeSound& sound : levelScripts.bulletTime().takeSounds()) {
+        if (sound.voices != runtime::BulletTimeVoices::None) {
+            const bool pause = sound.voices == runtime::BulletTimeVoices::Pause;
+            std::cout << "bullet time sound voices " << (pause ? "paused" : "resumed") << " at update " << updatesForLog << '\n';
+            if (shared.audio) shared.audio->pauseVoices(pause);
+            continue;
+        }
         if (sound.stop) {
             std::cout << "bullet time sound " << sound.id << " stopped over " << sound.fadeSeconds << " s at update " << updatesForLog << '\n';
             if (shared.audio) shared.audio->applySound({runtime::SoundRequest::Kind::Stop, sound.id, bulletTimeOwner, false, {}, sound.fadeSeconds});
@@ -52,7 +62,7 @@ void LevelSession::applyScriptNatives() {
 }
 
 // 0x2ec070 on the real clock, then the scale it blends becomes the scheduler's C+0x1c for the next step. STAND-IN SCRIPT-S323: the system steps at
-// the start of the level update (the original's order of the system updates is not read), and the stream pause 0x1cef9c is not applied.
+// the start of the level update (the original's order of the system updates is not read).
 void LevelSession::updateBulletTime(float realDt) {
     runtime::BulletTimeSystem& bulletTime = levelScripts.bulletTime();
     const std::uint16_t owner = levelScripts.soundNatives().ownerOf("player1");

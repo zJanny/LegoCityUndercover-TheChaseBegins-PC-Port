@@ -2,7 +2,7 @@
 
 namespace chase::runtime {
 
-bool BulletTimeSystem::set(float scale, float duration) {
+bool BulletTimeSystem::set(float scale, float duration, bool flag) {
     if (active_ ? (scale_ == 1.0f && scale == 1.0f) : scale == 1.0f) return false;
     const bool slowing = scale < 1.0f;
     base_ = timeScale_;
@@ -13,11 +13,14 @@ bool BulletTimeSystem::set(float scale, float duration) {
     reached_ = false;
     if (slowing) {
         mode_ = kBulletTimeSlowMode;
+        cameraShot_ = flag;
+        sounds_.push_back({false, 0, 0.0f, BulletTimeVoices::Pause});
         sounds_.push_back({false, kBulletTimeSoundStart, 0.0f});
         return true;
     }
     sounds_.push_back({true, kBulletTimeSoundStart, duration});
     sounds_.push_back({true, kBulletTimeSoundLoop, duration});
+    sounds_.push_back({false, 0, 0.0f, BulletTimeVoices::Resume});
     sounds_.push_back({false, kBulletTimeSoundEnd, 0.0f});
     return true;
 }

@@ -56,11 +56,24 @@ bool Mixer::playing(int voice) const {
     return std::any_of(voices_.begin(), voices_.end(), [&](const Voice& v) { return v.id == voice; });
 }
 
+void Mixer::pauseAll() {
+    for (Voice& v : voices_) v.paused = true;
+}
+
+void Mixer::resumeAll() {
+    for (Voice& v : voices_) v.paused = false;
+}
+
+bool Mixer::paused(int voice) const {
+    return std::any_of(voices_.begin(), voices_.end(), [&](const Voice& v) { return v.id == voice && v.paused; });
+}
+
 std::size_t Mixer::activeVoices() const { return voices_.size(); }
 
 void Mixer::mix(float* out, std::size_t frames) {
     std::fill(out, out + 2 * frames, 0.0f);
     for (auto& voice : voices_) {
+        if (voice.paused) continue;
         const auto& sound = *voice.sound;
         double end = sound.frames;
         for (std::size_t f = 0; f < frames; ++f) {

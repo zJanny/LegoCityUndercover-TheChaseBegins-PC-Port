@@ -6,6 +6,7 @@
 // side slot (ctrl+0xd8 bit 5). Every AI character runs the same rule; the parameters come from the AI set-up 0x2bc934 and the AI start
 // 0x1c6e84. No SDL dependency.
 #include "assets/assets.hpp"
+#include "runtime/fall_arrest_engaged.hpp"
 
 #include <array>
 #include <cstddef>
@@ -17,7 +18,7 @@
 
 namespace chase::runtime {
 
-constexpr std::size_t kAiSideSlots = 6;                       // the loops of 0x206d18 and 0x21decc stop at 6
+constexpr std::size_t kAiSideSlots = kEngagedListSlots;                       // the loops of 0x206d18 and 0x21decc stop at 6
 constexpr std::uint16_t kAiViewDistanceDefault = 18;          // 0x2451d0 default at 0x2bc974, stored as u16 at ctrl+0x7a
 constexpr float kAiMeleeFireDistanceDefault = 2.2f;           // literal 0x400ccccd at 0x2bcd28 (ctrl+0x80)
 constexpr float kAiFireDistanceDefault = 15.0f;               // literal 0x41700000 at 0x2bcd40 (ctrl+0x7c)
@@ -96,8 +97,9 @@ using AiConductBoundTest = std::function<bool(std::size_t bound, const std::arra
 
 class AiConduct {
 public:
-    // The level's AI characters and the player; slots and AI fields start clear.
-    void reset(std::vector<AiConductEntity> entities);
+    // The level's AI characters and the player; slots and AI fields start clear. `table` is the one owner of the side lists and must outlive the
+    // conduct; it is cleared.
+    void reset(EngagedTable& table, std::vector<AiConductEntity> entities);
     std::vector<AiConductEntity>& entities() { return entities_; }
     const std::vector<AiConductEntity>& entities() const { return entities_; }
     AiConductEntity* find(const std::string& name);
@@ -119,8 +121,8 @@ public:
     // 0x2a9874 for one entity in state 0.
     void thinkIdle(AiConductEntity& self, const AiConductBoundTest& inside);
 
-    const std::array<std::string, kAiSideSlots>& badSide() const { return bad_; }
-    const std::array<std::string, kAiSideSlots>& goodSide() const { return good_; }
+    const std::array<std::string, kAiSideSlots>& badSide() const { return table_->list(true); }
+    const std::array<std::string, kAiSideSlots>& goodSide() const { return table_->list(false); }
 
 private:
     AiConductEntity* entityNamed(const std::string& name);
@@ -131,7 +133,7 @@ private:
 
     std::vector<AiConductEntity> entities_;
     std::vector<std::uint8_t> lastState_;
-    std::array<std::string, kAiSideSlots> bad_{}, good_{};
+    EngagedTable* table_ = nullptr;
     std::vector<AiConductEvent> events_;
 };
 

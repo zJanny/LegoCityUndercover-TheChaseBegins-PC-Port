@@ -21,6 +21,10 @@ public:
     // Ramps the voice to silence over `seconds` of output and then ends it; a non-positive time stops it at once.
     void fadeOut(int voice, float seconds);
     bool playing(int voice) const;
+    // 0x1cef9c(1) / 0x1cef9c(0): every voice that runs now stops advancing (voice state 1) or continues (state 2); a voice started later is not held.
+    void pauseAll();
+    void resumeAll();
+    bool paused(int voice) const;
     std::size_t activeVoices() const;
     // Mixes `frames` stereo frames into `out` (2 * frames floats, overwritten, range about -1..1).
     void mix(float* out, std::size_t frames);
@@ -37,6 +41,7 @@ private:
         double fade = 1.0;
         double fadeStep = 0.0;
         bool ended = false;
+        bool paused = false;
     };
     int rate_;
     int nextId_ = 1;

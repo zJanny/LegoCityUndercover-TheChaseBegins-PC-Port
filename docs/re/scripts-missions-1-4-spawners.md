@@ -11,6 +11,7 @@ Subtopics: [scripts-missions-1-4-spawners-conduct.md](scripts-missions-1-4-spawn
 - The StartState table 0x58db48 has ten entries registered by 0x288e14 and 0x26a27c; the spawn word runs once the character came out. Entry 0 sends the character idle or runs an AIMove to its `Runto` target (ForceMove the avoid argument), entry 6 super-jumps it to the target (`SuperjumpHeight`, default 3); in mission 1-4 Spawners 06, 07 and 01 super-jump their goons to `1-4_AI_Goon_NN_GoTo`, the others send them idle. Entries 0, 3, 6 and 7 are ported; 1, 2, 4, 5, 8 and 9 are read in outline. [§2026-11-02T22:18:08](#ts-20261102-221808)
 - What an idle AI character does next (the decision of AI state 0, the side lists, the target search, the sight test with `AIViewDistance` and `AIRangeBound`, CharacterInvulnerable): [scripts-missions-1-4-spawners-conduct.md](scripts-missions-1-4-spawners-conduct.md).
 - Renamed files: src/runtime/game_ai_spawner_glue.cpp -> src/runtime/game_ai_spawner.cpp.
+- The original's `1-4_ShowroomArrival` cutscene lasts the length of its file, 16.7 s (about 502 updates at 1/30 s), with the cut times matching the port; the port runs about 1.3 s longer. [§2026-11-07T10:36:43](#ts-20261107-103643)
 
 <a id="ts-20261102-153018"></a>
 
@@ -103,3 +104,28 @@ Creates: 0x2cc73c allocates 44 bytes and stores the int parameter `ForceMove` (0
 - AI states 6, 7 and 8 (requested by entries 1 and 2), 0x1fbde4 (entry 8), locomotion states 112 and 398 and the entity floats +0x64 .. +0x74 of entries 4 and 5.
 - The caller rate of 0x26aa1c (once per update or less) and so how many searches without avoid run per update.
 - The readers of `AIRangeBound` (record +0x5c of 0x2bc934) and `AIViewDistance`; what the idle state 0 of a spawned goon does next (the pursuit is COMBAT-9).
+
+<a id="ts-20261107-103643"></a>
+
+## 2026-11-07T10:36:43+01:00 — `1-4_ShowroomArrival` against the oracle again: the cutscene lasts the file length, 16.7 s (Azahar RPC, stepped runs)
+
+[Corrects scripts-missions-1-4.md §2026-11-02T15:54:42](scripts-missions-1-4.md#ts-20261102-155442): the free-run length of 17.3 s included the script's own waits on the game clock, so the cutscene itself is shorter than that entry says and the port's excess is larger.
+
+Provenance: round 20261103-large, emulator servant, 2026-11-03, recorded from a save state in front of the trigger (Chase 1.3 m from the waypoint; missions 1-1 to 1-3 done, 1-4 not started); no worker RPC request, no entity or script of the port was changed. New 3DS, OpenGL renderer, RPC stepped updates with the stick held forward, memtrace of the player node, the player controller, the camera object, the game clock and the vblank counter. Run 1 used the game's own step of 0.07 s, run 2 (a later load of the same state) a fixed 0.033 s; both give the same simulated time.
+
+Values (update 1 = the first update after the load):
+- The waypoint's flags change in update 20 (entity +0x10 bit 0 set); control is taken in update 21 (player controller +0x6c goes 0x20002 to 0); the first camera cut is in update 23.
+- The cutscene runs updates 23 to 529: 507 updates of 0.033 s = 16.73 s (run 1: 239 updates of 0.07 s = 16.73 s).
+- The player node jumps to the cutscene's place (572.52, 27.57, 969.09) in update 338; at update 529 Chase stands at (577.484, 27.5656, 967.533), as in the earlier measurement.
+- Camera cuts after the first: +92 updates (3.04 s), +312 (10.30 s), +410 (13.53 s), end +507; a cut at about 6.3 s moved the eye less than the 3 m threshold. They match the free-run cuts at 3.08, 6.27, 10.33 and 13.52 s.
+- The cutscene audio `1_4_a` is 16.7 s (200400 samples at 12 kHz), 501 frames at 30 per second.
+
+So the original's cutscene lasts the file length, about 502 updates at 1/30 s. The port's 542 updates (18.07 s) are about 40 updates (1.3 s) longer; the cut times and the end agree, so the extra is not spread over the cuts: the port holds or waits about 1.3 s after the last frame of the file or before the script continues (fade, hold or a Wait). The port was not read to find which. The free-run 17.3 s was longer because the script's waits (about 0.93 s from the waypoint start to control, about 0.57 s of tail) run on the game clock, not on dt; in stepped runs the clock advances about 0.77 s per update, so they collapse into one update and stepped runs cannot measure clock-based waits.
+
+When the cutscene starts the game replaces the scheduler controller: the dt limits move to a new controller and reset to 0.03 and 0.07, so a stepped run must set dt again after about 22 updates.
+
+**Unknowns.**
+- Where the port's 1.3 s come from (not fixed in this round; SCRIPT-416).
+- The player stood still for 13 updates (6 to 18) after the first 5 steps and then walked again; the cause is unknown, so the update count for entering the waypoint is not measured.
+- The spawns of `1-4_Spawner_05` (SCRIPT-420) were not measured.
+

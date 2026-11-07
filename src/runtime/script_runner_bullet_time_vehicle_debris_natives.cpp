@@ -17,7 +17,7 @@ constexpr unsigned kBulletTimeArguments = 3;
 
 void ScriptRunner::bulletTimeNative(const assets::ScriptCall& call) {
     if (call.arguments.size() < kBulletTimeArguments) return;
-    bulletTime_.set(read(call.arguments[0]), read(call.arguments[1]));
+    bulletTime_.set(read(call.arguments[0]), read(call.arguments[1]), read(call.arguments[2]) > 0.0f);
 }
 
 void ScriptRunner::vehicleAiNative(const assets::ScriptCall& call, bool chased) {

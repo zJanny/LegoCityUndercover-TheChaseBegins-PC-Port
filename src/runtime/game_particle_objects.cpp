@@ -39,6 +39,7 @@ void LevelSession::loadParticleObjects() {
     }, world);
     particleObjectsStarted.clear();
     fallArrestBoundList = runtime::fallArrestBounds(level);
+    engagedTable = runtime::EngagedTable{};
     std::cout << "particle objects: " << particleObjects.objects().size() << ", fall arrest bounds: " << fallArrestBoundList.size() << '\n';
 }
 
@@ -48,8 +49,7 @@ void LevelSession::deliverParticleObjectMessage(const runtime::ScriptObjectMessa
     particleObjects.message(sent.instance, sent.message, world);
 }
 
-// STAND-IN SCRIPT-S325: the update runs with the level's other class updates after the script runner, an order the port chose. The engaged table
-// 0x58deb0 is not modelled, so the FallArrest update 0x307980 has no characters to test (SCRIPT-425).
+// STAND-IN SCRIPT-S325: the update runs with the level's other class updates after the script runner, an order the port chose.
 void LevelSession::updateParticleObjects(float dt) {
     SessionParticleWorld world(particles.system(), particles.random());
     particleObjects.update(dt, world);

@@ -189,7 +189,7 @@ if(EPOXY_FOUND)
   if(FFMPEG_FOUND)
     add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_level.cpp src/game_pause_menu.cpp src/game_award_viewer.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_pedestrians.cpp src/game_pedestrian_fade.cpp src/game_semi_trans.cpp src/game_pedestrian_rooms.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_shadows.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_ladder.cpp src/game_fence_vault.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp src/game_fast_travel.cpp src/game_key_pickup.cpp)
     target_sources(chase-game PRIVATE src/game_pedestrian_blocking.cpp src/game_traffic.cpp)
-    target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/runtime/game_character_hit.cpp src/runtime/game_character_takedown.cpp src/runtime/game_character_arrest.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
+    target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/runtime/game_character_hit.cpp src/runtime/game_character_takedown.cpp src/runtime/game_character_arrest.cpp src/runtime/game_fall_arrest.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
     target_sources(chase-game PRIVATE src/game_debris_pickup.cpp)
     target_sources(chase-game PRIVATE src/game_switch.cpp src/game_switch_use.cpp)
     target_sources(chase-game PRIVATE src/game_debris_super.cpp)
@@ -1970,7 +1970,7 @@ if(BUILD_TESTING)
       --start "602.9 23.8 975" --facing 180 --call-script 1-4_SO_Phase2
       --script "0 0 250")
     set_tests_properties(game-bullet-time-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
-      PASS_REGULAR_EXPRESSION "bullet time sound 97 at update [0-9]+\n.*time scale 0.0099[0-9]* at update [0-9]+\n.*bullet time sound 97 stopped over 0.01 s at update [0-9]+\nbullet time sound 98 stopped over 0.01 s at update [0-9]+\nbullet time sound 99 at update [0-9]+\n.*time scale 1 at update [0-9]+")
+      PASS_REGULAR_EXPRESSION "bullet time sound 97 at update [0-9]+\n.*time scale 0.0099[0-9]* at update [0-9]+\n.*bullet time sound 97 stopped over 0.01 s at update [0-9]+\nbullet time sound 98 stopped over 0.01 s at update [0-9]+\n.*bullet time sound 99 at update [0-9]+\n.*time scale 1 at update [0-9]+")
     add_test(NAME game-skylight-debris-1-4 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
@@ -2649,7 +2649,11 @@ if(TARGET chase-game)
   set_property(TEST game-goon-conduct-1-4 APPEND PROPERTY LABELS needs-game-data)
 endif()
 
-target_sources(chase_runtime PRIVATE src/runtime/particle_object.cpp src/runtime/fall_arrest_bounds.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/particle_object.cpp src/runtime/fall_arrest_bounds.cpp src/runtime/fall_arrest_engaged.cpp)
+add_executable(fall-arrest-engaged-test tests/fall_arrest_engaged_test.cpp)
+target_link_libraries(fall-arrest-engaged-test PRIVATE chase_runtime chase_assets)
+target_compile_options(fall-arrest-engaged-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME fall-arrest-engaged COMMAND fall-arrest-engaged-test)
 add_executable(particle-object-test tests/particle_object_test.cpp)
 target_link_libraries(particle-object-test PRIVATE chase_runtime chase_assets)
 target_compile_options(particle-object-test PRIVATE -Wall -Wextra -Wpedantic)

@@ -4,6 +4,7 @@ The decision of AI state 0 that every placed character runs: the two side lists 
 
 ## Current state
 
+- The side lists and the player slot are the port's shared `EngagedTable`, not a table of the conduct. [scripts-missions-1-4-roof.md §2026-11-07T11:38:35](scripts-missions-1-4-roof.md#ts-20261107-113835)
 - An idle AI character (state 0, decision 0x2a9874) searches a target (0x1f8d5c) among the engaged characters of the other side and the player, the player first; it sees one within `AIViewDistance` (3D distance) standing inside its `AIRangeBound` (0x1f6958), takes a slot of its side list (six per side, ctrl+0xd8 bit 5) and goes to AI state 2 (the fight, not read); without a target a shown character just takes a slot. Goons 03 and 06 see the player at `1-4_P1_GoTo`. Ported for every placed character. CharacterInvulnerable is the receiver's ctrl+0xd8 bit 6. [§2026-11-03T08:54:21](#ts-20261103-085421)
 - The search ends with none when the entity's own candidate (counted at most once) is not seen; the sight shortcut within the second distance is ctrl+0xdb bit 1 (0x21e798: ability 20 and the weapon's ability; a stand-in in the port), not `AIFriendly`; a friendly character takes a slot within 8 x ctrl+0x8c (`AIRunSpeed` x 0.23) of its spawn point. [§2026-11-07T11:11:03](#ts-20261107-111103)
 

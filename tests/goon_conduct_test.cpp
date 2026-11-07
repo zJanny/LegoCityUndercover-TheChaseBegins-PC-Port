@@ -43,11 +43,12 @@ std::size_t countKind(const std::vector<AiConductEvent>& events, AiConductEventK
 }
 
 void sideSlots() {
+    EngagedTable table;
     AiConduct conduct;
     std::vector<AiConductEntity> entities;
     for (int i = 0; i < 7; ++i) entities.push_back(goon("goon" + std::to_string(i), 1000.0f, 0.0f));
     entities.push_back(thePlayer(0.0f, 0.0f));
-    conduct.reset(entities);
+    conduct.reset(table, entities);
     for (int i = 0; i < 7; ++i) conduct.engage(conduct.entities()[std::size_t(i)]);
     for (int i = 0; i < 6; ++i) require(conduct.entities()[std::size_t(i)].engaged && conduct.badSide()[std::size_t(i)] == "goon" + std::to_string(i), "0x206d18 fills the six slots in order");
     require(!conduct.entities()[6].engaged, "a seventh bad guy finds no slot");
@@ -68,14 +69,15 @@ void sideSlots() {
     AiConductEntity good = goon("cop", 0.0f, 0.0f);
     good.params.badGuy = false;
     std::vector<AiConductEntity> two{good};
-    conduct.reset(two);
+    conduct.reset(table, two);
     conduct.engage(conduct.entities()[0]);
     require(conduct.goodSide()[0] == "cop" && conduct.badSide()[0].empty(), "a character without AIBadGuy goes to the list 0x58dec8");
 }
 
 void sight() {
+    EngagedTable table;
     AiConduct conduct;
-    conduct.reset({goon("goon", 0.0f, 0.0f), thePlayer(30.0f, 0.0f)});
+    conduct.reset(table, {goon("goon", 0.0f, 0.0f), thePlayer(30.0f, 0.0f)});
     const AiConductEntity& viewer = conduct.entities()[0];
     AiConductEntity& target = conduct.entities()[1];
     float distance = 0;
@@ -113,10 +115,11 @@ void sight() {
 }
 
 void targets() {
+    EngagedTable table;
     AiConduct conduct;
     AiConductEntity cop = goon("cop", 20.0f, 0.0f);
     cop.params.badGuy = false;
-    conduct.reset({goon("goon", 0.0f, 0.0f), cop, thePlayer(40.0f, 0.0f)});
+    conduct.reset(table, {goon("goon", 0.0f, 0.0f), cop, thePlayer(40.0f, 0.0f)});
     conduct.engage(conduct.entities()[1]);
     AiConductEntity& self = conduct.entities()[0];
     const AiConductEntity* found = conduct.findTarget(self, 50.0f, -1.0f, kNoBound);
@@ -137,7 +140,7 @@ void targets() {
     require(!conduct.findTarget(self, 50.0f, -1.0f, kNoBound), "nothing within the view distance");
     AiConductEntity second = goon("cop2", 30.0f, 0.0f);
     second.params.badGuy = false;
-    conduct.reset({goon("goon", 0.0f, 0.0f), goon("mate", 5.0f, 0.0f), cop, second, thePlayer(80.0f, 0.0f)});
+    conduct.reset(table, {goon("goon", 0.0f, 0.0f), goon("mate", 5.0f, 0.0f), cop, second, thePlayer(80.0f, 0.0f)});
     for (AiConductEntity& e : conduct.entities())
         if (!e.player) conduct.engage(e);
     conduct.entities()[1].target = "player1";
@@ -152,7 +155,7 @@ void targets() {
     claimed.aiState = 3;
     AiConductEntity self2 = goon("goon", 0.0f, 0.0f);
     self2.target = "cop2";
-    conduct.reset({self2, claimed, second, thePlayer(80.0f, 0.0f)});
+    conduct.reset(table, {self2, claimed, second, thePlayer(80.0f, 0.0f)});
     for (AiConductEntity& e : conduct.entities())
         if (!e.player) conduct.engage(e);
     require(!conduct.findTarget(conduct.entities()[0], 50.0f, -1.0f, kNoBound),
@@ -163,10 +166,11 @@ void targets() {
 }
 
 void idle() {
+    EngagedTable table;
     AiConduct conduct;
     AiConductEntity bounded = goon("goon", 0.0f, 0.0f);
     bounded.rangeBound = 0;
-    conduct.reset({bounded, thePlayer(30.0f, 0.0f)});
+    conduct.reset(table, {bounded, thePlayer(30.0f, 0.0f)});
     conduct.update(kBoundZero);
     std::vector<AiConductEvent> events = conduct.takeEvents();
     require(events.size() == 1 && events[0].kind == AiConductEventKind::Engaged && events[0].badSide && events[0].slot == 0,
@@ -185,7 +189,7 @@ void idle() {
     require(countKind(events, AiConductEventKind::Released) == 1 && countKind(events, AiConductEventKind::Sighted) == 1,
             "entering state 0 releases the slot (0x289650 -> 0x21decc), then the decision engages again on the sighting");
 
-    conduct.reset({goon("goon", 0.0f, 0.0f), thePlayer(10.0f, 0.0f)});
+    conduct.reset(table, {goon("goon", 0.0f, 0.0f), thePlayer(10.0f, 0.0f)});
     conduct.entities()[0].countdown = 2;
     conduct.update(kNoBound);
     require(conduct.entities()[0].countdown == 1 && conduct.entities()[0].aiState == 0, "ctrl+0x84 holds the search and counts down");
@@ -198,7 +202,7 @@ void idle() {
     conduct.update(kNoBound);
     require(conduct.entities()[0].aiState == 0, "0x21102c does nothing in locomotion state 82");
 
-    conduct.reset({goon("goon", 0.0f, 0.0f), thePlayer(100.0f, 0.0f)});
+    conduct.reset(table, {goon("goon", 0.0f, 0.0f), thePlayer(100.0f, 0.0f)});
     conduct.entities()[0].params.millAbout = true;
     conduct.update(kNoBound);
     events = conduct.takeEvents();
@@ -210,7 +214,7 @@ void idle() {
     friendly.params.badGuy = false;
     friendly.params.friendly = true;
     AiConductEntity foe = goon("goon", 5.0f, 0.0f);
-    conduct.reset({friendly, foe, thePlayer(100.0f, 0.0f)});
+    conduct.reset(table, {friendly, foe, thePlayer(100.0f, 0.0f)});
     conduct.engage(conduct.entities()[1]);
     conduct.takeEvents();
     conduct.update(kNoBound);
@@ -218,22 +222,22 @@ void idle() {
             "a friendly character sees but does not fight; at its spawn point it goes on to 0x2a9c60 and takes a slot");
     require(conduct.entities()[0].spawn && (*conduct.entities()[0].spawn)[0] == 0.0f, "the spawn point is its first position");
 
-    conduct.reset({friendly, foe, thePlayer(100.0f, 0.0f)});
+    conduct.reset(table, {friendly, foe, thePlayer(100.0f, 0.0f)});
     conduct.entities()[0].spawn = std::array<float, 3>{1.84f, 0.0f, 0.0f};
     conduct.update(kNoBound);
     require(conduct.entities()[0].engaged, "within 8 x ctrl+0x8c (8 x 0.23) of the spawn point the slot is taken");
-    conduct.reset({friendly, foe, thePlayer(100.0f, 0.0f)});
+    conduct.reset(table, {friendly, foe, thePlayer(100.0f, 0.0f)});
     conduct.entities()[0].spawn = std::array<float, 3>{1.9f, 0.0f, 0.0f};
     conduct.entities()[0].params.returnToSpawnPoint = false;
     conduct.update(kNoBound);
     require(!conduct.entities()[0].engaged, "farther without ReturnToSpawnPoint: the decision ends (0x2a9bf8)");
-    conduct.reset({friendly, foe, thePlayer(100.0f, 0.0f)});
+    conduct.reset(table, {friendly, foe, thePlayer(100.0f, 0.0f)});
     conduct.entities()[0].spawn = std::array<float, 3>{1.9f, 0.0f, 0.0f};
     conduct.entities()[0].hidden = true;
     conduct.update(kNoBound);
     require(conduct.entities()[0].engaged, "farther with ReturnToSpawnPoint: 0x2a9c0c engages even when hidden");
 
-    conduct.reset({goon("goon", 0.0f, 0.0f), thePlayer(100.0f, 0.0f)});
+    conduct.reset(table, {goon("goon", 0.0f, 0.0f), thePlayer(100.0f, 0.0f)});
     conduct.update(kNoBound);
     conduct.entities()[0].hidden = true;
     conduct.update(kNoBound);

@@ -92,11 +92,11 @@ std::uint8_t aiStartRequest(const AiConductParams& params) {
     return 0;
 }
 
-void AiConduct::reset(std::vector<AiConductEntity> entities) {
+void AiConduct::reset(EngagedTable& table, std::vector<AiConductEntity> entities) {
+    table_ = &table;
+    *table_ = EngagedTable{};
     entities_ = std::move(entities);
     lastState_.assign(entities_.size(), kAiNoStateYet);
-    bad_ = {};
-    good_ = {};
     events_.clear();
 }
 
@@ -125,43 +125,30 @@ const AiConductEntity* AiConduct::player() const {
 const AiConductEntity* AiConduct::validTarget(const AiConductEntity& self) const { return entityNamed(self.target); }
 
 void AiConduct::engage(AiConductEntity& self) {
-    if (self.engaged) return;
-    std::array<std::string, kAiSideSlots>& side = self.params.badGuy ? bad_ : good_;
-    std::size_t slot = kAiSideSlots;
-    for (std::size_t i = 0; i < kAiSideSlots && slot == kAiSideSlots; ++i)
-        if (side[i] == self.name) slot = i;
-    for (std::size_t i = 0; i < kAiSideSlots && slot == kAiSideSlots; ++i)
-        if (side[i].empty()) {
-            side[i] = self.name;
-            slot = i;
-        }
-    self.aggroCounter = 0;
-    if (slot == kAiSideSlots) return;
-    self.engaged = true;
+    const EngageResult result = table_->engage(self.name, self.params.badGuy);
+    if (result.counterCleared) self.aggroCounter = 0;
+    self.engaged = table_->engaged(self.name);
+    if (!result.joined) return;
+    const std::array<std::string, kAiSideSlots>& side = table_->list(self.params.badGuy);
     AiConductEvent event;
     event.kind = AiConductEventKind::Engaged;
     event.character = self.name;
     event.badSide = self.params.badGuy;
-    event.slot = slot;
+    event.slot = std::size_t(std::find(side.begin(), side.end(), self.name) - side.begin());
     events_.push_back(event);
 }
 
 void AiConduct::release(AiConductEntity& self) {
-    if (self.params.boss && self.aiState != kAiNoState) return;
-    if (!self.engaged) return;
-    std::array<std::string, kAiSideSlots>& side = self.params.badGuy ? bad_ : good_;
-    for (std::size_t i = 0; i < kAiSideSlots; ++i)
-        if (side[i] == self.name) {
-            side[i].clear();
-            AiConductEvent event;
-            event.kind = AiConductEventKind::Released;
-            event.character = self.name;
-            event.badSide = self.params.badGuy;
-            event.slot = i;
-            events_.push_back(event);
-            break;
-        }
+    const std::array<std::string, kAiSideSlots>& side = table_->list(self.params.badGuy);
+    const std::size_t slot = std::size_t(std::find(side.begin(), side.end(), self.name) - side.begin());
+    if (!table_->release(self.name, self.params.badGuy, self.params.boss, self.aiState == kAiNoState)) return;
     self.engaged = false;
+    AiConductEvent event;
+    event.kind = AiConductEventKind::Released;
+    event.character = self.name;
+    event.badSide = self.params.badGuy;
+    event.slot = slot;
+    events_.push_back(event);
 }
 
 bool AiConduct::sees(const AiConductEntity& viewer, const AiConductEntity& target, float limit, float second, const AiConductBoundTest& inside,
@@ -205,10 +192,11 @@ const AiConductEntity* AiConduct::findTarget(const AiConductEntity& self, float 
         return sees(self, *thePlayer, limit, second, inside) ? thePlayer : nullptr;
     }
     const AiConductEntity* playerSlot = !self.params.ignorePlayer && thePlayer && thePlayer->present ? thePlayer : nullptr;
+    table_->setPlayerSlot(playerSlot ? playerSlot->name : std::string());
     std::vector<const AiConductEntity*> good, bad;
-    for (const std::string& name : good_) good.push_back(entityNamed(name));
+    for (const std::string& name : table_->list(false)) good.push_back(entityNamed(name));
     good.push_back(playerSlot);
-    for (const std::string& name : bad_) bad.push_back(entityNamed(name));
+    for (const std::string& name : table_->list(true)) bad.push_back(entityNamed(name));
     const std::vector<const AiConductEntity*>& candidates = self.params.badGuy ? good : bad;
     const std::vector<const AiConductEntity*>& own = self.params.badGuy ? bad : good;
     const std::size_t count = candidates.size();
@@ -303,6 +291,7 @@ void AiConduct::thinkIdle(AiConductEntity& self, const AiConductBoundTest& insid
 }
 
 void AiConduct::update(const AiConductBoundTest& inside) {
+    for (AiConductEntity& entity : entities_) entity.engaged = !entity.player && table_->engaged(entity.name);
     for (std::size_t i = 0; i < entities_.size(); ++i) {
         AiConductEntity& entity = entities_[i];
         if (entity.player || lastState_[i] == entity.aiState) continue;

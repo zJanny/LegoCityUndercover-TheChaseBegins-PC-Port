@@ -57,6 +57,8 @@ void LevelSession::loadAttackCharacters(assets::FuseArchive& archive) {
     if (const assets::FuseEntry* entry = archive.find("tables/tablescharacters.bxls")) characters = assets::parseTable(archive.read(*entry));
     if (const assets::FuseEntry* entry = archive.find("tables/tablescombat.bxls")) attackTables.moves = runtime::fightMoves(assets::parseTable(archive.read(*entry)));
     attackTables.fightMoveAbilities = runtime::fightMoveAbilities(attackTables.moves);
+    assets::SoundTables soundTables;
+    if (const assets::FuseEntry* entry = archive.find("tables/tablessoundfx.bxls")) soundTables = assets::parseSoundTables(assets::parseTable(archive.read(*entry)));
     if (!characters.sheets.empty()) {
         const assets::TableSheet& sheet = characters.sheets[0];
         attackPlayer.character.abilities = rowAbilities(sheet, game_player::kPlayerCharacterId);
@@ -80,6 +82,9 @@ void LevelSession::loadAttackCharacters(assets::FuseArchive& archive) {
                 entry.entity.flags &= std::uint16_t(~runtime::kEntityFlagCollision);
             }
             entry.entity.character.abilities = rowAbilities(sheet, row);
+            if (row < sheet.rows)
+                if (const std::uint8_t category = assets::characterSoundCategory(characters, row); category < soundTables.characterSounds.size())
+                    entry.fallArrestSound = runtime::fallArrestSoundId(soundTables.characterSounds[category]);
             entry.entity.character.classFlag0 = (rowByte(sheet, row, kCharacterClassFlagsByte) & 1) != 0;
             attackCharacters.push_back(entry);
         }

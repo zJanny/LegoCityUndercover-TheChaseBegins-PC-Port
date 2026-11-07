@@ -86,6 +86,7 @@ Read this index, then open only the file you need.
 | [scripts-missions.md](scripts-missions.md) | Mission gap analysis: the natives and trigger events a whole mission needs, oracle trace of the start of mission 1-2 (waypoint class starts the script, call order and counts) |
 | [scripts-missions-1-4.md](scripts-missions-1-4.md) | Mission 1-4 (the car showroom): scripts, natives without handler, trigger events, the AI spawner chain, texts, the order of the first part |
 | [scripts-missions-1-4-spawners.md](scripts-missions-1-4-spawners.md) | Mission 1-4: the AI spawner class (kind 14), the spawners of the eight levels, the spawner chain of mission 1-4 and the two orphan spawners |
+| [scripts-missions-1-4-roof.md](scripts-missions-1-4-roof.md) | Mission 1-4 roof: the allegiance lists, the FallArrestBoundSystem in play, the voice pause and callers of BulletTime |
 | [scripts-missions-1-4-spawners-conduct.md](scripts-missions-1-4-spawners-conduct.md) | Mission 1-4: what an idle AI character does next (the decision of AI state 0, side slots, target search, sight test with `AIViewDistance` and `AIRangeBound`), CharacterInvulnerable |
 | [doors.md](doors.md) | Doors (type 42): record, update 0x1d16b8, state change, messages, easing, hinge and slide pose, timings measured in the oracle |
 | [switches.md](switches.md) | The switch base (loader 0x23e84c, state machine 0x21435c / 0x22c6d0, handler 0x23aac0, states 0 to 5), the lever class (kind 58: use zone, message 3, handler 0x17f6f4) and the mission 1-3 key switch |
