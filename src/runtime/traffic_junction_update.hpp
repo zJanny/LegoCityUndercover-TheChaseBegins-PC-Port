@@ -52,10 +52,10 @@ struct TrafficJunctionLightEvent {
 // room type and bit 0x04 are not read (TRAFFIC-31).
 std::vector<TrafficJunctionLightEvent> runTrafficJunctionUpdates(TrafficJunctionWorld& world, float dt);
 
-// The route type functions over the junctions' paths: evaluate is slot 0 of the route's type (sampleTrafficRoute), length the point count
-// (path hword +10), signal 0x20ff40 as the driver's signal id. They hold a reference to `junctions`, which must outlive them. A route
-// without a path throws std::out_of_range. They reach the driver as
-// the callbacks of STAND-IN TRAFFIC-S5; `ahead` (+8), `nearest` (+0xc) and the path follower `follow` are not set yet (TRAFFIC-23).
+// The route type functions over the junctions' paths: evaluate is slot 0 of the route's type (sampleTrafficRoute), ahead slot +8
+// (trafficRouteAhead), nearest slot +0xc (trafficRouteNearest), length the point count (path hword +10), signal 0x20ff40 as the driver's
+// signal id. They hold a reference to `junctions`, which must outlive them. A route without a path throws std::out_of_range. They reach
+// the driver as the callbacks of STAND-IN TRAFFIC-S5; the path follower `follow` is not set yet (TRAFFIC-2).
 AiRouteFunctions trafficRouteFunctions(const TrafficJunctions& junctions);
 
 }

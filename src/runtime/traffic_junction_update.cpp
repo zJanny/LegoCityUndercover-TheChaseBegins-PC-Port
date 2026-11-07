@@ -1,5 +1,7 @@
 #include "runtime/traffic_junction_update.hpp"
 
+#include "runtime/traffic_route_functions.hpp"
+
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -66,6 +68,12 @@ AiRouteFunctions trafficRouteFunctions(const TrafficJunctions& junctions) {
         const TrafficRouteSample sample = sampleTrafficRoute(needPath(junctions.paths, route), distance);
         if (position) *position = sample.position;
         if (direction) *direction = sample.tangent;
+    };
+    functions.ahead = [&junctions](std::uint32_t route, float ahead, float step, float from) {
+        return trafficRouteAhead(needPath(junctions.paths, route), ahead, step, from);
+    };
+    functions.nearest = [&junctions](std::uint32_t route, const AiVec3& position, unsigned samples, float scale) {
+        return trafficRouteNearest(needPath(junctions.paths, route), position, samples, scale);
     };
     functions.length = [&junctions](std::uint32_t route) { return static_cast<std::uint16_t>(needPath(junctions.paths, route).points.size()); };
     functions.signal = [&junctions](std::uint32_t route) { return trafficSignalId(trafficSignalForRoute(junctions.world.signals, route)); };

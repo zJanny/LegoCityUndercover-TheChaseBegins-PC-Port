@@ -2603,6 +2603,15 @@ add_test(NAME traffic-junction-update-real-data COMMAND traffic-junction-update-
   "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
 set_tests_properties(traffic-junction-update-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)
 
+target_sources(chase_runtime PRIVATE src/runtime/traffic_route_functions.cpp)
+add_executable(traffic-route-functions-test tests/traffic_route_functions_test.cpp)
+target_link_libraries(traffic-route-functions-test PRIVATE chase_runtime chase_assets)
+target_compile_options(traffic-route-functions-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME traffic-route-functions COMMAND traffic-route-functions-test)
+add_test(NAME traffic-route-functions-real-data COMMAND traffic-route-functions-test
+  "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+set_tests_properties(traffic-route-functions-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)
+
 target_sources(chase_runtime PRIVATE src/runtime/traffic_light_parts.cpp)
 add_executable(traffic-light-parts-test tests/traffic_light_parts_test.cpp)
 target_link_libraries(traffic-light-parts-test PRIVATE chase_runtime chase_assets)

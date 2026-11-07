@@ -19,7 +19,7 @@ IN_PROGRESS, updated 2026-11-07T18:12:03+01:00.
 - The four movement functions are ported as `src/runtime/traffic_route_mover.*`: pure steps on the driver record, the junction records and the route functions.
 - The leave call 0x21d6b8 and the ground probe 0x20ae2c (the mover's hooks `leaveTraffic` and `snapTarget`) are ported as `src/runtime/traffic_leave_snap.*`; its ground ray cast and colour message are ported as `src/runtime/traffic_ground_world.*`.
 - The junction records, their light cycle and the traffic lights: [pedestrians-traffic-cars-junction.md](pedestrians-traffic-cars-junction.md).
-- The route functions `evaluate`, `length` and `signal` read the junctions' route paths (level roads and lanes); `ahead` and `nearest` are not ported (TRAFFIC-23).
+- The route functions `evaluate`, `ahead`, `nearest`, `length` and `signal` read the junctions' route paths (level roads and lanes); `ahead` and `nearest` are `src/runtime/traffic_route_functions.*` ([pedestrians-traffic-cars-driver.md](pedestrians-traffic-cars-driver.md)).
 - The AI driver is not connected to the spawned cars (TRAFFIC-2 in [pedestrians-traffic-cars-driver.md](pedestrians-traffic-cars-driver.md)), so the cars still stand still and no car is ever queued.
 
 ## 3. Verified behaviour
@@ -47,7 +47,6 @@ Read from the code (test `traffic-route-mover`), all from [traffic-ai-driver.md 
 
 ## 5. Open items
 
-- [ ] TRAFFIC-23 — The route functions `ahead` and `nearest` of the route type table for the traffic routes and lanes; `trafficRouteFunctions` leaves them unset. blocks: TRAFFIC-2. evidence: [traffic-junction.md §2026-11-07T12:09:40](../../re/traffic-junction.md#ts-20261107-120940)
 - [ ] TRAFFIC-29 — Read the order in which the grid gathers the entries and its cap of 100, the composite box owners and the walk for a slanted segment, and give `castTrafficGround` the original order. blocks: TRAFFIC-S23. evidence: [traffic-ground-cast.md §2026-11-07T12:11:38](../../re/traffic-ground-cast.md#ts-20261107-121138)
 - [ ] TRAFFIC-30 — Read the node tree of a car, the draw's use of the node's tint bytes and the vertex paint of the colour message, and send the message to the car's mesh nodes after the probe. needs: TRAFFIC-2. blocks: TRAFFIC-S24. evidence: [traffic-ground-cast.md §2026-11-07T12:11:38](../../re/traffic-ground-cast.md#ts-20261107-121138)
 

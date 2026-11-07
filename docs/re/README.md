@@ -127,6 +127,7 @@ Read this index, then open only the file you need.
 | [traffic-ai-driver-steering.md](traffic-ai-driver-steering.md) | The steering of the traffic AI driver in states 5 and 8: the controller 0x27872c (steering and speed controllers, target speed, stuck placement), the contact step 0x29cc38 and the top gear speed 0x20362c |
 | [traffic-ground-cast.md](traffic-ground-cast.md) | The vertical ground ray cast of the traffic probe (0x22b108, 0x266834, 0x293188), the colour message to mesh nodes and the path name lookup 0x23895c |
 | [traffic-junction.md](traffic-junction.md) | The junction class `props/traffic_junction` (set-up 0x1ca5a4: ends, sides, choice table, Hermite lanes, conflict pairs, light pairs), the traffic lights `props/prop_trafficlight` and the light cycle 0x1d8924 |
+| [traffic-route-functions.md](traffic-route-functions.md) | The route type table 0x3581d4 of the traffic routes and lanes: `ahead` 0x29fb6c and `nearest` 0x21d5b0 (type 0), the stubs of type 1 |
 | [player-falling-jumping.md](player-falling-jumping.md) | Falling, landing stun, jumping, step-off slide, slope slow-down, state table |
 | [player-attack.md](player-attack.md) | Attack on foot: Y tap, combat action states 0xa3 / 0xa4, combo, target search, hit test, messages 62 and 0 to the target |
 | [player-attack-characters.md](player-attack-characters.md) | Characters as attack targets: entity gate, sides and target modes, weights, the grab test, the fight move a Y tap starts on a goon (code and oracle) |
