@@ -106,7 +106,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | UnlockCharacter | 0x263918 | 1 | 34 / 1 / 0 / 0 | 8 | A | 27 | handled as stand-in, partial (SCRIPT-S21, SCRIPT-61) |
 | AISuperJump | 0x1b2344 | 3 | 31 / 9 / 0 / 0 | 7 | stand-in | 34 | set-up 0x213300, state 11 and the horizontal step ported; the height of the flight is a stand-in (SCRIPT-103, SCRIPT-S103); returns 1 ([ai-states.md §2026-10-25T16:37:12](ai-states.md#ts-20261025-163712)): [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
 | KillScript | 0x1c3834 | 1 | 30 / 5 / 1 / 0 | 7 | A | 26 | handled: threads of the script except the caller end |
-| BulletTime | 0x1a2df0 | 3 | 28 / 6 / 0 / 0 | 9 | stand-in | 29 | SCRIPT-S323, SCRIPT-431 |
+| BulletTime | 0x1a2df0 | 3 | 28 / 6 / 0 / 0 | 9 | stand-in | 29 | SCRIPT-S323, SCRIPT-S332, SCRIPT-437 |
 | SetPartyCharacter | 0x27beb4 | 3 | 28 / 10 / 3 / 0 | 8 | stand-in | 35 | stand-in: a swap to another character is not ported (SCRIPT-S234, SCRIPT-279): [script-natives-world.md §2026-10-18T11:01:40](script-natives-world.md#ts-20261018-110140) |
 | SetRaceInProgress | 0x27bff4 | 1 | 28 / 4 / 0 / 0 | 6 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | ShowBossHearts | 0x1da788 | 2 | 27 / 0 / 0 / 0 | 7 | stand-in | 30 | call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |

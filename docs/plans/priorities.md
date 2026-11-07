@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1093 open items and stand-ins, 196 linked to game usage, 897 with unknown reach.
+Items: 1096 open items and stand-ins, 197 linked to game usage, 899 with unknown reach.
 
 ## Top 50 overall
 
@@ -37,8 +37,8 @@ Items: 1093 open items and stand-ins, 196 linked to game usage, 897 with unknown
 | 1 | [VEH-S2](features/vehicles.md?display=source#L21) | 7016 | 0 | 8 | 0 | 1 implemented | `enableobject` | Owner flags (0x1340 parked, 0x1300 traffic, bit 0 disabled) are not modelled: a vehicle collides while its ... |
 | 2 | [SCRIPT-52](features/script-system.md?display=source#L41) | 3101 | 0 | 8 | 1 | 2 implemented | `enablebound`, `enabletrigger` | Class owners: an empty object name as the owner itself, the variable `TaskComplete.TASK_COMPLETE` (saved per ... |
 | 3 | [PLAYER-S9](features/player-movement-attack.md?display=source#L22) | 0 | 2513 | 8 | 0 | - | `leprops/leprop_wobblydestructible` | `attackTargetObjects` — of the level objects only `leprop_wobblydestructible` props are attack targets (the ... |
-| 4 | [PART-3](features/particles.md?display=source#L28) | 1019 | 281 | 8 | 1 | 1 implemented | `triggerobject`, `particles` | The rest of the level object class `particles` (kind 1): read in full, ported are only TriggerObject's ... |
-| 5 | [SCRIPT-S325](features/script-system-missions-1-4-roof.md?display=source#L22) | 1019 | 281 | 8 | 0 | 1 implemented | `triggerobject`, `particles` | The class `particles` is ported only for TriggerObject's messages and the one-shot timer: the endless ... |
+| 4 | [PART-3](features/particles.md?display=source#L28) | 1019 | 281 | 8 | 2 | 1 implemented | `triggerobject`, `particles` | The rest of the level object class `particles` (kind 1): read in full, ported are only TriggerObject's ... |
+| 5 | [SCRIPT-S325](features/script-system-missions-1-4-roof.md?display=source#L23) | 1019 | 281 | 8 | 0 | 1 implemented | `triggerobject`, `particles` | The class `particles` is ported only for TriggerObject's messages and the one-shot timer: the endless ... |
 | 6 | [SCRIPT-285](features/script-system-missions.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
 | 7 | [SCRIPT-365](features/script-system-missions-reference.md?display=source#L30) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The other switch kinds (100 energy switches, 125, 138 fires, 139 switchfloor, 141, 185 ability props and ... |
 | 8 | [SCRIPT-389](features/script-system-platforms.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The ledge lift starts one update later than in the oracle (the update between the switch's state 3 and the ... |
@@ -108,7 +108,7 @@ Items: 1093 open items and stand-ins, 196 linked to game usage, 897 with unknown
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
-| 1 | [PART-3](features/particles.md?display=source#L28) | 1019 | 281 | 8 | 1 | 1 implemented | `triggerobject`, `particles` | The rest of the level object class `particles` (kind 1): read in full, ported are only TriggerObject's ... |
+| 1 | [PART-3](features/particles.md?display=source#L28) | 1019 | 281 | 8 | 2 | 1 implemented | `triggerobject`, `particles` | The rest of the level object class `particles` (kind 1): read in full, ported are only TriggerObject's ... |
 | 2 | [LEVOBJ-S1](features/level-objects.md?display=source#L21) | 0 | 120 | 8 | 0 | - | `chars/char_ai_actor` | Characters other than pedestrians run the idle state of `char_ai_actor` (verified for `char_ai_actor` ... |
 | 3 | [STUD-4](features/studs.md?display=source#L38) | 109 | 0 | 7 | 0 | 1 stand-in, 1 none | `enablestudsbygroup`, `spawnstuds` | How a group is enabled (0x28a2cc sequencer, `EnableStudsByGroup` and `SpawnStuds` script functions ... |
 | 4 | [LEVOBJ-S94](features/level-objects-buildit-super.md?display=source#L18) | 90 | 0 | 7 | 0 | 1 stand-in | `resetobject` | The super build-it prompt gate is the port's "player free" flag, closed from the OK answer on by the zone ... |
@@ -137,12 +137,12 @@ Items: 1093 open items and stand-ins, 196 linked to game usage, 897 with unknown
 
 ## Scripts and missions
 
-128 of 266 items linked.
+129 of 269 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
 | 1 | [SCRIPT-52](features/script-system.md?display=source#L41) | 3101 | 0 | 8 | 1 | 2 implemented | `enablebound`, `enabletrigger` | Class owners: an empty object name as the owner itself, the variable `TaskComplete.TASK_COMPLETE` (saved per ... |
-| 2 | [SCRIPT-S325](features/script-system-missions-1-4-roof.md?display=source#L22) | 1019 | 281 | 8 | 0 | 1 implemented | `triggerobject`, `particles` | The class `particles` is ported only for TriggerObject's messages and the one-shot timer: the endless ... |
+| 2 | [SCRIPT-S325](features/script-system-missions-1-4-roof.md?display=source#L23) | 1019 | 281 | 8 | 0 | 1 implemented | `triggerobject`, `particles` | The class `particles` is ported only for TriggerObject's messages and the one-shot timer: the endless ... |
 | 3 | [SCRIPT-285](features/script-system-missions.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
 | 4 | [SCRIPT-365](features/script-system-missions-reference.md?display=source#L30) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The other switch kinds (100 energy switches, 125, 138 fires, 139 switchfloor, 141, 185 ability props and ... |
 | 5 | [SCRIPT-389](features/script-system-platforms.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The ledge lift starts one update later than in the oracle (the update between the switch's state 3 and the ... |
@@ -269,7 +269,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-missions-1-3-generator.md](features/script-system-missions-1-3-generator.md): SCRIPT-364 (+1)
 - [script-system-missions-1-3.md](features/script-system-missions-1-3.md): SCRIPT-368 (+2), SCRIPT-399, SCRIPT-S291, SCRIPT-S298, SCRIPT-S315, SCRIPT-S316
 - [script-system-missions-1-4-fight.md](features/script-system-missions-1-4-fight.md): SCRIPT-423 (+1), SCRIPT-428 (+1), SCRIPT-S320, SCRIPT-S321, SCRIPT-S322, SCRIPT-S324, SCRIPT-S326
-- [script-system-missions-1-4-roof.md](features/script-system-missions-1-4-roof.md): SCRIPT-430 (+1), SCRIPT-S328
+- [script-system-missions-1-4-roof.md](features/script-system-missions-1-4-roof.md): SCRIPT-430 (+1), SCRIPT-439 (+1), SCRIPT-S328, SCRIPT-S332
 - [script-system-missions-1-4.md](features/script-system-missions-1-4.md): SCRIPT-415
 - [script-system-missions-reference.md](features/script-system-missions-reference.md): SCRIPT-359 (+1), SCRIPT-360 (+1), SCRIPT-370 (+1), SCRIPT-S289, SCRIPT-S292, SCRIPT-S293, SCRIPT-S299
 - [script-system-missions.md](features/script-system-missions.md): SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S255

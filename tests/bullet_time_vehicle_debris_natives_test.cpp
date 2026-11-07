@@ -37,7 +37,7 @@ void bulletTimeBlendsTheTimeScale() {
     require(!system.active() && system.sounds().empty(), "nothing was stored or played");
     require(system.set(0.25f, 0.125f), "a scale below 1.0 starts a blend");
     require(system.active() && system.baseScale() == 1.0f && system.targetScale() == 0.25f && system.duration() == 0.125f, "+0x58 base, +0x5c scale, +0x64 duration");
-    require(system.mode() == runtime::kBulletTimeSlowMode, "+0x68 is 255 for a scale below 1.0 with the flag clear (0x2393c8)");
+    require(system.mode() == runtime::kBulletTimeNoMode, "+0x68 is 255 for a scale below 1.0 with the flag clear (0x2393c8)");
     require(system.sounds() == std::vector<runtime::BulletTimeSound>({{false, 0, 0.0f, runtime::BulletTimeVoices::Pause}, {false, runtime::kBulletTimeSoundStart, 0.0f}}),
             "every voice paused (0x1eecec(1) -> 0x1cef9c(1)), then sound 97 at the owner (0x23ae84(0x61, owner))");
     require(!system.cameraShotRequested(), "the flag is clear: no camera shot (0x2393c4)");

@@ -4,7 +4,10 @@
 // from the value it had when the call came to the new scale, on its own real-time clock. The scheduler 0x100f44 multiplies the tick count of every
 // step by that scale, so the whole game update slows down (Scheduler::setScale). The system plays the sounds 97, 98 and 99 at the owner (0x23ae84)
 // and stops 97 and 98 (0x23ae50). No SDL dependency.
+#include "runtime/bullet_time_scale.hpp"
+
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 namespace chase::runtime {
@@ -12,7 +15,6 @@ namespace chase::runtime {
 constexpr std::uint16_t kBulletTimeSoundStart = 97;
 constexpr std::uint16_t kBulletTimeSoundLoop = 98;
 constexpr std::uint16_t kBulletTimeSoundEnd = 99;
-constexpr std::uint8_t kBulletTimeSlowMode = 255;
 
 // A sound call of the system for its owner: a play through 0x23ae84, or a stop through 0x23ae50 -> 0x23f75c with the duration as the fade.
 enum class BulletTimeVoices : std::uint8_t { None, Pause, Resume };
@@ -35,9 +37,13 @@ public:
     // (0x20395c, 0x2a36b4: not ported, cameraShotRequested) and the mode byte +0x68 comes from the shot record; with the flag clear the mode is 255
     // and the mode calls of the restore (0x221054 for 0 / 4, 0x1fc060 for 3) are not made. Returns false when it did nothing: no blend is running and
     // the scale is 1.0, or the blend already holds 1.0 and the scale is 1.0.
-    bool set(float scale, float duration, bool flag = false);
+    bool set(float scale, float duration, bool flag = false, std::optional<std::uint8_t> shotRecordMode = std::nullopt);
     bool cameraShotRequested() const { return cameraShot_; }
     void clearCameraShotRequest() { cameraShot_ = false; }
+    // The restore's camera mode call from the mode byte (bulletTimeModeCall) and its lookup of the object named kBulletTimeRestoreObjectName; both are
+    // requests for the host, made before the sounds as in 0x239410..0x23948c.
+    BulletTimeModeCall takeModeCall();
+    bool takeRestoreObjectRequest();
     // 0x2ec070 once per update. `realDt` is the real time since the last update: the clock +0x28 is a 3000 Hz tick timer (0x25a1a0) that the time
     // scale does not slow. `loopSoundIdle` is the test of 0x237acc: no voice of 97 runs for the owner and 98 is not playing; then, while the target
     // scale is not 1.0, the system plays 98. Returns true in the update in which a blend reaches its target (progress clamped to 1.0).
@@ -64,6 +70,8 @@ private:
     std::uint8_t mode_ = 0;     // +0x68
     bool reached_ = false;
     bool cameraShot_ = false;
+    BulletTimeModeCall modeCall_ = BulletTimeModeCall::None;
+    bool restoreObject_ = false;
     float clock_ = 0.0f;
     float timeScale_ = 1.0f;
     std::vector<BulletTimeSound> sounds_;

@@ -83,6 +83,7 @@ Outside the prefix: `CarPursuitHint` (PlayerVehicleBoundEntered, `1-4_Police_Car
 <a id="ts-20261102-150448"></a>
 
 ## 2026-11-02T15:04:48+01:00 — Mission 1-4: BulletTime, VehicleSetAI, VehicleSetChased and SpawnDebris2Colour (llvm-objdump on game.arm.elf; no REA session, no emulator)
+Corrected by [scripts-missions-1-4-roof.md §2026-11-07T12:10:05](scripts-missions-1-4-roof.md#ts-20261107-121005): the object looked up at the end of the restore is named `5-11_AI_Boss_Dcam_Running`.
 Corrected by [scripts-missions-1-4.md §2026-11-02T22:40:54](#ts-20261102-224054): 97, 98 and 99 are sounds at the owner (0x23ae84 is the sound play, 0x23ae50 the stop), and the blended float is the scheduler's tick scale C+0x1c, read by the scheduler 0x100f44.
 
 Evidence: llvm-objdump (`--triple=armv6k --mattr=+vfp2`) of `artifacts/game/game.arm.elf`, data words of the three segments, the script calls of `1-4_SO_Phase2`, `1-4_Car_Chase` and `1-4_Hatch_Open` dumped with the C++ level loader. Round 20261102-mission14, agent 20261102-mission14-C. Ported in `src/runtime/bullet_time.*`, `vehicle_ai_natives.*`, `script_debris.*` and `game_mission14_natives_glue.cpp`; pinned by CTest `mission14-natives` (made-up scripts with the argument lists of the shipped calls) and `mission-1-4-census-real-data`.

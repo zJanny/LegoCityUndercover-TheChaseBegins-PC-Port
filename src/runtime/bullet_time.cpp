@@ -2,7 +2,7 @@
 
 namespace chase::runtime {
 
-bool BulletTimeSystem::set(float scale, float duration, bool flag) {
+bool BulletTimeSystem::set(float scale, float duration, bool flag, std::optional<std::uint8_t> shotRecordMode) {
     if (active_ ? (scale_ == 1.0f && scale == 1.0f) : scale == 1.0f) return false;
     const bool slowing = scale < 1.0f;
     base_ = timeScale_;
@@ -12,12 +12,14 @@ bool BulletTimeSystem::set(float scale, float duration, bool flag) {
     active_ = true;
     reached_ = false;
     if (slowing) {
-        mode_ = kBulletTimeSlowMode;
+        mode_ = bulletTimeSlowingMode(flag, true, shotRecordMode);
         cameraShot_ = flag;
         sounds_.push_back({false, 0, 0.0f, BulletTimeVoices::Pause});
         sounds_.push_back({false, kBulletTimeSoundStart, 0.0f});
         return true;
     }
+    modeCall_ = bulletTimeModeCall(mode_);
+    restoreObject_ = true;
     sounds_.push_back({true, kBulletTimeSoundStart, duration});
     sounds_.push_back({true, kBulletTimeSoundLoop, duration});
     sounds_.push_back({false, 0, 0.0f, BulletTimeVoices::Resume});
@@ -43,6 +45,18 @@ bool BulletTimeSystem::update(float realDt, bool loopSoundIdle) {
 void BulletTimeSystem::stop() {
     timeScale_ = 1.0f;
     active_ = false;
+}
+
+BulletTimeModeCall BulletTimeSystem::takeModeCall() {
+    const BulletTimeModeCall call = modeCall_;
+    modeCall_ = BulletTimeModeCall::None;
+    return call;
+}
+
+bool BulletTimeSystem::takeRestoreObjectRequest() {
+    const bool request = restoreObject_;
+    restoreObject_ = false;
+    return request;
 }
 
 std::vector<BulletTimeSound> BulletTimeSystem::takeSounds() {

@@ -34,9 +34,12 @@ void LevelSession::applyScriptNatives() {
     }
     const std::uint16_t bulletTimeOwner = levelScripts.soundNatives().ownerOf("player1");
     if (levelScripts.bulletTime().cameraShotRequested()) {
-        std::cout << "bullet time camera shot not ported (SCRIPT-431) at update " << updatesForLog << '\n';
+        std::cout << "bullet time camera shot not ported (SCRIPT-437) at update " << updatesForLog << '\n';
         levelScripts.bulletTime().clearCameraShotRequest();
     }
+    if (const runtime::BulletTimeModeCall modeCall = levelScripts.bulletTime().takeModeCall(); modeCall != runtime::BulletTimeModeCall::None)
+        std::cout << "bullet time camera mode call " << (modeCall == runtime::BulletTimeModeCall::GameplayRecords ? "0x221054" : "0x1fc060")
+                  << " not ported (SCRIPT-437) at update " << updatesForLog << '\n';
     for (const runtime::BulletTimeSound& sound : levelScripts.bulletTime().takeSounds()) {
         if (sound.voices != runtime::BulletTimeVoices::None) {
             const bool pause = sound.voices == runtime::BulletTimeVoices::Pause;
