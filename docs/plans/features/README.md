@@ -59,7 +59,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [script-system-platforms](script-system-platforms.md) | IN_PROGRESS | SCRIPT-377 orient and type 7 platforms, shape curves, lift timers; SCRIPT-385 oracle check of the path platforms; SCRIPT-388 the platform's push and squash; SCRIPT-389 the lift starts one update late |
 | [script-system-missions-1-3-generator](script-system-missions-1-3-generator.md) | IN_PROGRESS | SCRIPT-364 generator scene against the oracle |
 | [script-system-missions-1-3-end](script-system-missions-1-3-end.md) | IN_PROGRESS | SCRIPT-382 push cart and mission end against the oracle; SCRIPT-390 the lift's switch at the top |
-| [script-system-missions-1-4](script-system-missions-1-4.md) | IN_PROGRESS | SCRIPT-415 the chase; SCRIPT-422 the stolen car drives; SCRIPT-416 the arrival against the oracle |
+| [script-system-missions-1-4](script-system-missions-1-4.md) | IN_PROGRESS | SCRIPT-415 the chase; SCRIPT-422 the stolen car drives; SCRIPT-435 the time before the arrival cutscene |
 | [script-system-missions-1-4-fight](script-system-missions-1-4-fight.md) | IN_PROGRESS | SCRIPT-428 rest of the idle decision; SCRIPT-419 spawner details; SCRIPT-423 the StartState entries not ported |
 | [script-system-missions-1-4-roof](script-system-missions-1-4-roof.md) | IN_PROGRESS | SCRIPT-414 rest of the roof scene; SCRIPT-430 a goon in the air; SCRIPT-431 rest of BulletTime |
 | [script-system-use-markers](script-system-use-markers.md) | IN_PROGRESS | SCRIPT-299 markers of the other 34 kinds; SCRIPT-355 special cases and HeadMarker; SCRIPT-356 list builder; SCRIPT-357 placement ray |

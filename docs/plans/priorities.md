@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1086 open items and stand-ins, 196 linked to game usage, 890 with unknown reach.
+Items: 1086 open items and stand-ins, 197 linked to game usage, 889 with unknown reach.
 
 ## Top 50 overall
 
@@ -137,7 +137,7 @@ Items: 1086 open items and stand-ins, 196 linked to game usage, 890 with unknown
 
 ## Scripts and missions
 
-127 of 265 items linked.
+128 of 265 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -271,7 +271,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-missions-1-3.md](features/script-system-missions-1-3.md): SCRIPT-368 (+2), SCRIPT-399, SCRIPT-S291, SCRIPT-S298, SCRIPT-S315, SCRIPT-S316
 - [script-system-missions-1-4-fight.md](features/script-system-missions-1-4-fight.md): SCRIPT-423 (+1), SCRIPT-428 (+1), SCRIPT-S320, SCRIPT-S321, SCRIPT-S322, SCRIPT-S324, SCRIPT-S326
 - [script-system-missions-1-4-roof.md](features/script-system-missions-1-4-roof.md): SCRIPT-430 (+1), SCRIPT-S328
-- [script-system-missions-1-4.md](features/script-system-missions-1-4.md): SCRIPT-415, SCRIPT-416
+- [script-system-missions-1-4.md](features/script-system-missions-1-4.md): SCRIPT-415
 - [script-system-missions-reference.md](features/script-system-missions-reference.md): SCRIPT-359 (+1), SCRIPT-360 (+1), SCRIPT-370 (+1), SCRIPT-S289, SCRIPT-S292, SCRIPT-S293, SCRIPT-S299
 - [script-system-missions.md](features/script-system-missions.md): SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S255
 - [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-324 (+3), SCRIPT-352 (+2), SCRIPT-325 (+1), SCRIPT-334 (+1), SCRIPT-405 (+1), SCRIPT-S284 (+1), SCRIPT-344, SCRIPT-353, SCRIPT-S262, SCRIPT-S266, SCRIPT-S267

@@ -11,7 +11,7 @@ Subtopics: [scripts-missions-1-4-spawners-conduct.md](scripts-missions-1-4-spawn
 - The StartState table 0x58db48 has ten entries registered by 0x288e14 and 0x26a27c; the spawn word runs once the character came out. Entry 0 sends the character idle or runs an AIMove to its `Runto` target (ForceMove the avoid argument), entry 6 super-jumps it to the target (`SuperjumpHeight`, default 3); in mission 1-4 Spawners 06, 07 and 01 super-jump their goons to `1-4_AI_Goon_NN_GoTo`, the others send them idle. Entries 0, 3, 6 and 7 are ported; 1, 2, 4, 5, 8 and 9 are read in outline. [§2026-11-02T22:18:08](#ts-20261102-221808)
 - What an idle AI character does next (the decision of AI state 0, the side lists, the target search, the sight test with `AIViewDistance` and `AIRangeBound`, CharacterInvulnerable): [scripts-missions-1-4-spawners-conduct.md](scripts-missions-1-4-spawners-conduct.md).
 - Renamed files: src/runtime/game_ai_spawner_glue.cpp -> src/runtime/game_ai_spawner.cpp.
-- The original's `1-4_ShowroomArrival` cutscene lasts the length of its file, 16.7 s (about 502 updates at 1/30 s), with the cut times matching the port; the port runs about 1.3 s longer. [§2026-11-07T10:36:43](#ts-20261107-103643)
+- The original's `1-4_ShowroomArrival` cutscene plays for the length of its file, 16.7 s, with the cut times matching the port [§2026-11-07T10:36:43](#ts-20261107-103643); the port's 542 updates from DCamCutScenePlay to the end of the Wait are that play (507 updates of 0.033 s) plus the fade of flag a, the end fade and the exit wait, and from the first cut to the placement it is within two updates of the original's free run. Before the first cut the port is about 0.4 s early (SCRIPT-435). [§2026-11-07T12:08:43](#ts-20261107-120843)
 
 <a id="ts-20261102-153018"></a>
 
@@ -109,6 +109,8 @@ Creates: 0x2cc73c allocates 44 bytes and stores the int parameter `ForceMove` (0
 
 ## 2026-11-07T10:36:43+01:00 — `1-4_ShowroomArrival` against the oracle again: the cutscene lasts the file length, 16.7 s (Azahar RPC, stepped runs)
 
+Corrected by [scripts-missions-1-4-spawners.md §2026-11-07T12:08:43](#ts-20261107-120843): the port is not 1.3 s longer; its 542 updates are the play (507 updates, as in this run) plus the two fades and the exit wait, which run on the game clock and take about one update each in a stepped run.
+
 [Corrects scripts-missions-1-4.md §2026-11-02T15:54:42](scripts-missions-1-4.md#ts-20261102-155442): the free-run length of 17.3 s included the script's own waits on the game clock, so the cutscene itself is shorter than that entry says and the port's excess is larger.
 
 Provenance: round 20261103-large, emulator servant, 2026-11-03, recorded from a save state in front of the trigger (Chase 1.3 m from the waypoint; missions 1-1 to 1-3 done, 1-4 not started); no worker RPC request, no entity or script of the port was changed. New 3DS, OpenGL renderer, RPC stepped updates with the stick held forward, memtrace of the player node, the player controller, the camera object, the game clock and the vblank counter. Run 1 used the game's own step of 0.07 s, run 2 (a later load of the same state) a fixed 0.033 s; both give the same simulated time.
@@ -128,4 +130,26 @@ When the cutscene starts the game replaces the scheduler controller: the dt limi
 - Where the port's 1.3 s come from (not fixed in this round; SCRIPT-416).
 - The player stood still for 13 updates (6 to 18) after the first 5 steps and then walked again; the cause is unknown, so the update count for entering the waypoint is not measured.
 - The spawns of `1-4_Spawner_05` (SCRIPT-420) were not measured.
+
+<a id="ts-20261107-120843"></a>
+
+## 2026-11-07T12:08:43+01:00 — The port's 542 updates of `1_4_a` against the stepped run: the play matches, the rest is clock time (port code read, llvm-objdump of game.arm.elf; no emulator, no REA session)
+
+[Corrects §2026-11-07T10:36:43](#ts-20261107-103643): the port does not hold or wait 1.3 s too long. That entry compared the port's whole count with a stepped run in which the clock-based parts of the cutscene take about one update each.
+
+Evidence: round 20261107-traffic, agent 20261107-traffic-F, 2026-11-07. The script dumped with the C++ level loader (`parseLevel`); the port's update numbers from CTest `game-showroom-1-4` (step 0.033 s); llvm-objdump (armv6k, vfp2) at the addresses below; the oracle values are those of the corrected entry and of [scripts-missions-1-4.md §2026-11-02T15:54:42](scripts-missions-1-4.md#ts-20261102-155442).
+
+**The script around the cutscene.** `wait 0`, `DCamCutSceneLoad "1_4_a"`, `ShowDialogBG 1`, `DCamCutScenePlay "1_4_a" 1 1 1 1` (flag a set), `DCamCutSceneWait "1_4_a"`, `DCamCutSceneFree "1_4_a"`, `ShowDialogBG 0`, `EnableDistanceFade 1-4_Car_Salesman 1`, four more calls, `PositionObject Player1 1-4_P1_GoTo`.
+
+**What the original runs on the clock.** The fade of flag a (0x26fa18 -> 0x2520e8, 0.5 s), the end fade of the mode update 0x2fae68 (once 0x2d19cc returns 0: 0x2520e8 with 0.5 s, then 0x197134) and the fade in of the exit 0x2fac7c (0x252068) all use the one screen fade, whose position (0x1202f8) is the clock since its start tick times the rate ([cutscenes.md §2026-10-19T09:12:06](cutscenes.md#ts-20261019-091206)); the mode switch waits for that fade and two render ticks before the exit. DCamCutSceneWait 0x288a40 returns the negated busy test 0x2297b0, which is set while a slot's object (+0x20) is the active object at 0x58988c + 0x28. In the stepped run the clock moves about 0.77 s per update, so each fade ends in the update after its start: there the 507 updates from the first cut (update 23) to the placement (update 529) are the play of the file, 16.7 s at 0.033 s, and the end chain adds no update that can be told apart.
+
+**The port's 542 updates** (CTest `game-showroom-1-4`): script start 100, DCamCutScenePlay 102; the fade of flag a takes 16 updates (16 x 0.033 = 0.528 s, the first count reaching 0.5 s); first cut (mode entered) 118; the play 507 updates (506 x 0.033 = 16.698 s is below 16.7 s), to update 625; the end fade 16 updates; the exit wait 3 updates (2 / 30 s, stand-in MOVIE-S34); the Wait and Free end in update 644, the placement follows in the same update. 16 + 507 + 16 + 3 = 542. So the play equals the stepped run's 507 updates, and the 35 others are the two fades and the wait the stepped run cannot show.
+
+**Against the free run.** From the first cut to the placement the original takes 17.28 to 17.32 s (16.7 s of play, the 0.5 s end fade and the wait); the port takes 526 x 0.033 = 17.36 s, 0.04 to 0.08 s (one or two updates) more, because each phase rounds up to whole updates. No change was made. Pinned by CTest `natives-cutscene-real-data` (16, 507 and 542 updates at 0.033 s, and the free-run window plus two updates).
+
+**The length rule.** For `1_4_a` the camera frames / 30 and the soundtrack are both 16.7 s ([cutscenes.md §2026-10-13T03:20](cutscenes.md#ts-20261013-0320)), so this cutscene does not tell whether the original ends with the camera clip (0x2d19cc) or the soundtrack (MOVIE-S10, MOVIE-36).
+
+**Unknowns.**
+- Before the first cut the port is early: from the script start to the first cut the original's free run takes 1.00 to 1.02 s (control taken at 0.93 s), the port 18 updates (0.59 s). Candidates: the time DCamCutSceneLoad takes to load the cutscene (the retry field at argument 0 + 0x44 of the Load, not read), the `wait 0` on the clock, or a later start of the fade of flag a. The last fits the free run: the top screen fades to black only during +0.9 to +1.0 s ([scripts-missions-1-4.md §2026-11-02T15:54:42](scripts-missions-1-4.md#ts-20261102-155442)), not over the 0.5 s of the fade at 0x26fa5c, so the fade seems to start late or run shorter. The stepped run (waypoint 20, control 21, first cut 23) cannot separate them; a free run with the clock at DCamCutSceneLoad 0x2889a4 and DCamCutScenePlay 0x26fa18 can (SCRIPT-435).
+- What takes control in update 21 of the stepped run (0.93 s in the free run) and when the port takes it.
 
