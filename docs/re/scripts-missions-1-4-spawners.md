@@ -1,12 +1,15 @@
 # Mission 1-4: the AI spawner class
 
-The AI spawner class (kind 14, `props/prop_aispawner`) that holds and releases the characters of the missions, the spawners of the eight main levels and the spawner chain of mission 1-4. Split from [scripts-missions-1-4.md](scripts-missions-1-4.md). Items: [script-system-missions-1-4.md](../plans/features/script-system-missions-1-4.md).
+The AI spawner class (kind 14, `props/prop_aispawner`) that holds and releases the characters of the missions, the spawners of the eight main levels and the spawner chain of mission 1-4. Split from [scripts-missions-1-4.md](scripts-missions-1-4.md). Items: [script-system-missions-1-4-fight.md](../plans/features/script-system-missions-1-4-fight.md).
+
+Subtopics: [scripts-missions-1-4-spawners-conduct.md](scripts-missions-1-4-spawners-conduct.md)
 
 ## Current state
 
 - The mission is a chain of AI spawners: each spawner holds its characters (disabled, word +0xc bit 4) from the post-link until it is triggered, releases them one by one and, once every slot has spawned and (with `WaitForDead`) every character has bit 4 again (defeated or arrested), fires the object named by its `TriggerObject` parameter. All eight spawners of the mission have `StartActive` 0, `StartSpawned` 0 and `SpawnFromSpawner` 0. The class (create, post-link, handler, update, state change) is read and ported for all 109 spawners of the eight levels; the spawned character's StartState and the view test are not. [§2026-11-02T15:30:18](#ts-20261102-153018)
 - `1-4_Spawner_01` (goons 01, 02) and `1-4_Pursuit_Booster_Spawner` are triggered by nothing in the data or the executable; their characters stay held for the whole level. [§2026-11-02T15:30:18](#ts-20261102-153018)
 - The StartState table 0x58db48 has ten entries registered by 0x288e14 and 0x26a27c; the spawn word runs once the character came out. Entry 0 sends the character idle or runs an AIMove to its `Runto` target (ForceMove the avoid argument), entry 6 super-jumps it to the target (`SuperjumpHeight`, default 3); in mission 1-4 Spawners 06, 07 and 01 super-jump their goons to `1-4_AI_Goon_NN_GoTo`, the others send them idle. Entries 0, 3, 6 and 7 are ported; 1, 2, 4, 5, 8 and 9 are read in outline. [§2026-11-02T22:18:08](#ts-20261102-221808)
+- What an idle AI character does next (the decision of AI state 0, the side lists, the target search, the sight test with `AIViewDistance` and `AIRangeBound`, CharacterInvulnerable): [scripts-missions-1-4-spawners-conduct.md](scripts-missions-1-4-spawners-conduct.md).
 - Renamed files: src/runtime/game_ai_spawner_glue.cpp -> src/runtime/game_ai_spawner.cpp.
 
 <a id="ts-20261102-153018"></a>

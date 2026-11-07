@@ -103,6 +103,14 @@ bool AiCore::movedLastUpdate(const std::string& name) const { return std::find(m
 void AiCore::requestIdle(AiCharacter& target) {
     target.state = AiState::Idle;
     target.move.reset();
+    target.combatTarget.clear();
+}
+
+void AiCore::startCombat(const std::string& name, const std::string& target) {
+    AiCharacter& character = at(name);
+    character.state = AiState::Combat;
+    character.combatTarget = target;
+    character.move.reset();
 }
 
 void AiCore::requestMillAbout(AiCharacter& target) {

@@ -50,12 +50,13 @@ unsigned aiNativeObjects(AiNativeKind kind);
 bool aiNativeIsStandIn(AiNativeKind kind);
 
 // Requested state byte of the AI component (+0x15). Idle: 0x2246c0 stores 0. NoState: 0x241304 (AIEnable, AINoState)
-// stores 1. FollowPath: the path state writes 5. MillAbout: 0x22471c stores 9. FaceTarget: 0x211110 stores 10.
+// stores 1. Combat: the sighting 0x21102c stores 2 (goon_conduct.hpp; its routines 0x2c4708 are not ported). FollowPath: the path state writes 5. MillAbout: 0x22471c stores 9. FaceTarget: 0x211110 stores 10.
 // RunAway: 0x228c70 requests 25. Stalk: 0x282b88 requests 27. Takedown / Pursuit: AIPursuit passes 35 (takedown argument set) or 36 to 0x218b38. MoveTo: the state AIMove requests
 // through 0x2414b4 (its number is not read; the value is a placeholder).
 enum class AiState : std::uint8_t {
     Idle = 0,
     NoState = 1,
+    Combat = 2,
     FollowPath = 5,
     MillAbout = 9,
     FaceTarget = 10,
@@ -128,6 +129,7 @@ struct AiCharacter {
     std::optional<AiMoveOrder> move;
     std::string faceTarget;
     std::optional<AiPursuit> pursuit;
+    std::string combatTarget;
     std::optional<float> stalkDistance;
     std::optional<AiSuperJump> superJump;
     bool runningAway = false;
@@ -184,6 +186,8 @@ public:
     // StartState entries of the AI spawner (ai_start_state.hpp).
     void startIdle(const std::string& lowerCaseName) { requestIdle(at(lowerCaseName)); }
     void startMillAbout(const std::string& lowerCaseName) { requestMillAbout(at(lowerCaseName)); }
+    // 0x21102c for a character that holds a side slot: AI state 2 with ctrl+0xc4 = `target` (goon_conduct.hpp).
+    void startCombat(const std::string& lowerCaseName, const std::string& target);
 
     // Position of a character that something else moves (the player node, PositionObject).
     void setPosition(const std::string& lowerCaseName, const float position[3]);

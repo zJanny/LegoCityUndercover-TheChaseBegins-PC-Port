@@ -56,6 +56,7 @@
 #include "runtime/scanner.hpp"
 #include "runtime/switch_set.hpp"
 #include "runtime/ai_spawner.hpp"
+#include "runtime/goon_conduct.hpp"
 #include "runtime/fall_arrest_bounds.hpp"
 #include "runtime/particle_object.hpp"
 #include "runtime/scanner_info.hpp"
@@ -349,6 +350,11 @@ private:
     void loadAiSpawners();
     void deliverAiSpawnerMessage(const chase::runtime::ScriptObjectMessage& sent);
     void updateAiSpawners();
+    // What idle AI characters do next, their side slots and sightings (runtime/goon_conduct.hpp; glue src/runtime/game_goon_conduct.cpp).
+    chase::runtime::AiConduct aiConduct;
+    std::set<std::string> aiConductUnslottedSightings;
+    void loadAiConduct();
+    void updateAiConduct();
     // The particle objects, kind 1, and the FallArrest bounds (runtime/particle_object.hpp, runtime/fall_arrest_bounds.hpp; glue
     // src/runtime/game_particle_objects.cpp), and the BulletTime system's step on the real clock (src/game_level_natives.cpp).
     chase::runtime::ParticleObjects particleObjects;

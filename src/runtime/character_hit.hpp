@@ -84,7 +84,7 @@ struct CharacterHitTarget {
     std::uint8_t spawnCounter = 255;  // ctrl+0x2ce (255 from the create at 0x236f54)
     std::uint8_t cooldown = 0;     // updates left in the hit list 0x593178, 0 when not listed
     bool onGround = true;          // ctrl+0x314 bit 6
-    bool reactionLocked = false;   // ctrl+0xd8 bit 6
+    bool reactionLocked = false;   // ctrl+0xd8 bit 6, written by CharacterInvulnerable (AiCharacter::invulnerable)
     bool attackWindow = false;     // in 0xa3 / 0xa4: the attack record +9 is 0 or 3 and its +0x10 bit 4 is set (0x25ed90; goons do not attack in the port)
     bool oneHitKill = false;       // ctrl+0x315 bit 5
     std::uint8_t selectMode = 0;   // ctrl+0xda & 7 for 0x219ba0 (start value not read: STAND-IN COMBAT-S1)

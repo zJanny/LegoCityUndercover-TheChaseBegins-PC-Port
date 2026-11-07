@@ -44,6 +44,8 @@ void LevelSession::characterHit(const std::string& lowerInstance, const runtime:
     target.disabled = objectState.isDisabled(lowerInstance);
     target.state = entry->second.states.state();
     target.pending = entry->second.states.pending();
+    const runtime::AiCharacter* ai = levelScripts.ai().character(lowerInstance);
+    target.reactionLocked = ai && ai->invulnerable.value_or(false);
     const runtime::CharacterHitResult result = runtime::receiveHit(target, hit);
     if (result.aggro) characterAggro(lowerInstance, hit.sender);
     std::cout << "character " << lowerInstance << ": hit (kind " << unsigned(hit.kind) << ", damage " << hit.damage << ") at update " << updatesForLog;

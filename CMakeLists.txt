@@ -2586,7 +2586,7 @@ target_link_libraries(traffic-leave-snap-test PRIVATE chase_runtime)
 target_compile_options(traffic-leave-snap-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME traffic-leave-snap COMMAND traffic-leave-snap-test)
 
-target_sources(chase_runtime PRIVATE src/runtime/ai_spawner.cpp src/runtime/ai_start_state.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/ai_spawner.cpp src/runtime/ai_start_state.cpp src/runtime/goon_conduct.cpp)
 add_executable(ai-spawner-test tests/ai_spawner_test.cpp)
 target_link_libraries(ai-spawner-test PRIVATE chase_runtime chase_assets)
 target_compile_options(ai-spawner-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -2601,8 +2601,18 @@ target_compile_options(ai-spawner-real-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME ai-spawner-real-data COMMAND ai-spawner-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
 set_tests_properties(ai-spawner-real-data PROPERTIES SKIP_RETURN_CODE 77)
 set_property(TEST ai-spawner-real-data APPEND PROPERTY LABELS needs-game-data)
+add_executable(goon-conduct-test tests/goon_conduct_test.cpp)
+target_link_libraries(goon-conduct-test PRIVATE chase_runtime chase_assets)
+target_compile_options(goon-conduct-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME goon-conduct COMMAND goon-conduct-test)
+add_executable(goon-conduct-real-test tests/goon_conduct_real_test.cpp)
+target_link_libraries(goon-conduct-real-test PRIVATE chase_runtime chase_assets)
+target_compile_options(goon-conduct-real-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME goon-conduct-real-data COMMAND goon-conduct-real-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+set_tests_properties(goon-conduct-real-data PROPERTIES SKIP_RETURN_CODE 77)
+set_property(TEST goon-conduct-real-data APPEND PROPERTY LABELS needs-game-data)
 if(TARGET chase-game)
-  target_sources(chase-game PRIVATE src/runtime/game_ai_spawner.cpp)
+  target_sources(chase-game PRIVATE src/runtime/game_ai_spawner.cpp src/runtime/game_goon_conduct.cpp)
   # SCRIPT-410: the 42 characters of the 17 spawners of lvl_01 are held from the level load; the TriggerObject of 1-4_ShowroomArrival starts
   # 1-4_Spawner_05, which releases goons 03 and 06 one after the other (state 1, spawn, state 1, spawn; class code read by 20261102-mission14-A,
   # docs/re/scripts-missions-1-4-spawners.md). The update numbers are the port's, not measured in the original.
@@ -2625,6 +2635,18 @@ if(TARGET chase-game)
   set_tests_properties(game-ai-start-state-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
     PASS_REGULAR_EXPRESSION "ai start state 6 1-4_ai_goon_07: super jump to 1-4_ai_goon_07_goto at update 2\n.*ai start state 6 1-4_ai_goon_08: super jump to 1-4_ai_goon_08_goto at update 22\n.*ai start state 6 1-4_ai_goon_14: super jump to 1-4_ai_goon_14_goto at update 42")
   set_property(TEST game-ai-start-state-1-4 APPEND PROPERTY LABELS needs-game-data)
+  # SCRIPT-429: the idle decision of AI state 0 (0x2a9874) in the first fight of mission 1-4. Goons 03 and 06 stand idle while the director holds
+  # control in cutscene 1_4_a; in the first update after it each takes a slot of the bad side list (0x206d18) and sees the player at 1-4_P1_GoTo
+  # inside 1-4_AIRange_01 within AIViewDistance 50 (0x1f8d5c, 0x1f6958), at the distances goon-conduct-real-data pins from the level data
+  # (12.387, 13.762; read by 20261103-large-C, docs/re/scripts-missions-1-4-spawners-conduct.md). The update numbers are the port's.
+  add_test(NAME game-goon-conduct-1-4 COMMAND chase-game
+    --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+    --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+    --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+    --call-script 1-4_ShowroomArrival --script "0 0 560")
+  set_tests_properties(game-goon-conduct-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+    PASS_REGULAR_EXPRESSION "ai conduct: [0-9]+ characters, 36 with AIRangeBound\n.*cutscene 1_4_a ended at update [0-9]+\n.*ai conduct 1-4_ai_goon_03: engaged \\(bad slot 0\\) at update [0-9]+\nai conduct 1-4_ai_goon_03: sees player1 at 12\\.387[0-9]*, AI state 2 \\(not ported\\) at update [0-9]+\nai conduct 1-4_ai_goon_06: engaged \\(bad slot 1\\) at update [0-9]+\nai conduct 1-4_ai_goon_06: sees player1 at 13\\.762[0-9]*, AI state 2 \\(not ported\\) at update [0-9]+")
+  set_property(TEST game-goon-conduct-1-4 APPEND PROPERTY LABELS needs-game-data)
 endif()
 
 target_sources(chase_runtime PRIVATE src/runtime/particle_object.cpp src/runtime/fall_arrest_bounds.cpp)
@@ -2664,7 +2686,7 @@ foreach(test_name ${chase_all_tests})
   set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${CMAKE_BINARY_DIR}/test-xdg/${test_name}")
 endforeach()
 
-foreach(slow_test game-script-takedown-goon game-script-takedown-arrestable game-script-arrest-goon game-arrest-showroom-1-4 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-girder-guy-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-bullet-time-1-4 game-ladder-kick-1-4 game-skylight-debris-1-4 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-helipad-collision game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data reflection-real-data)
+foreach(slow_test game-script-takedown-goon game-script-takedown-arrestable game-script-arrest-goon game-arrest-showroom-1-4 game-goon-conduct-1-4 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-girder-guy-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-bullet-time-1-4 game-ladder-kick-1-4 game-skylight-debris-1-4 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-helipad-collision game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data reflection-real-data)
   if(TEST ${slow_test})
     set_property(TEST ${slow_test} APPEND PROPERTY LABELS slow)
   endif()

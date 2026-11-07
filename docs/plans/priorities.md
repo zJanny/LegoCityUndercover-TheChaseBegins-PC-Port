@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1084 open items and stand-ins, 196 linked to game usage, 888 with unknown reach.
+Items: 1086 open items and stand-ins, 196 linked to game usage, 890 with unknown reach.
 
 ## Top 50 overall
 
@@ -43,7 +43,7 @@ Items: 1084 open items and stand-ins, 196 linked to game usage, 888 with unknown
 | 7 | [SCRIPT-365](features/script-system-missions-reference.md?display=source#L30) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The other switch kinds (100 energy switches, 125, 138 fires, 139 switchfloor, 141, 185 ability props and ... |
 | 8 | [SCRIPT-389](features/script-system-platforms.md?display=source#L31) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The ledge lift starts one update later than in the oracle (the update between the switch's state 3 and the ... |
 | 9 | [SCRIPT-4](features/script-system.md?display=source#L38) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
-| 10 | [SCRIPT-420](features/script-system-missions-1-4.md?display=source#L33) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The spawns of `1-4_Spawner_05` against the oracle: the updates from the arrival's TriggerObject to goons 03 ... |
+| 10 | [SCRIPT-420](features/script-system-missions-1-4-fight.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The spawns of `1-4_Spawner_05` against the oracle: the updates from the arrival's TriggerObject to goons 03 ... |
 | 11 | [SCRIPT-S220](features/script-system-missions-reference.md?display=source#L18) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Closed 2026-10-25: the reference list holds the records of every registering kind ... |
 | 12 | [TRAV-21](features/player-traversal.md?display=source#L30) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Brick use handler 0x1b53a8 (messages 3 / 4 into state 145): sender unknown; `TriggerObject` switching ... |
 | 13 | [SCRIPT-273](features/script-system-natives-animation.md?display=source#L34) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state request 81 (the cutscene call, state 0x51 has the same functions) and its cape animation ... |
@@ -76,14 +76,14 @@ Items: 1084 open items and stand-ins, 196 linked to game usage, 888 with unknown
 | 40 | [SCRIPT-377](features/script-system-platforms.md?display=source#L28) | 0 | 183 | 8 | 2 | - | `leprops/leprop_platform`, `props/prop_platform` | The rest of the platform class: `orient` and type 7 rotations of platforms without a path, the shape curves ... |
 | 41 | [SCRIPT-388](features/script-system-platforms.md?display=source#L30) | 0 | 183 | 8 | 1 | - | `leprops/leprop_platform`, `props/prop_platform` | The platform's sweep in its entity move (the push of characters beside a sideways move with message 45 ... |
 | 42 | [SCRIPT-S18](features/script-system-natives-state.md?display=source#L18) | 175 | 0 | 7 | 0 | 2 stand-in | `resetobject`, `skiptofinalstate` | The six flag natives and ResetObject / SkipToFinalState store their value or message by instance name without ... |
-| 43 | [TRANS-5](features/level-transitions.md?display=source#L33) | 127 | 25 | 7 | 0 | 5 stand-in, 4 none, 1 implemented | `charsetallowvehicleentry`, `playcredits`, `playscriptonstartup`, `positionplayer` +7 | The 31 scripts of the shipped levels that call SceneChange, CharSetAllowVehicleEntry or ... |
-| 44 | [SCRIPT-73](features/script-system-hud-natives.md?display=source#L33) | 148 | 0 | 6 | 1 | 5 stand-in | `disableicon`, `enableminimapwipe`, `enablescanner`, `overridescannable` +1 | Map and scanner natives (EnableMinimapWipe 0x187f28, EnableScanner, OverrideScannable, PanMapToObject, map ... |
-| 45 | [CAMERA-S51](features/camera.md?display=source#L26) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
-| 46 | [SCRIPT-S271](features/script-system-dcam.md?display=source#L21) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | `ShakeScreen` draws its random numbers from `breakRandomStandIn`, the port's stand-in stream; the seed and ... |
-| 47 | [RENDER-62](features/rendering.md?display=source#L45) | 0 | 137 | 8 | 0 | - | `point` | Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces |
-| 48 | [LEVOBJ-S1](features/level-objects.md?display=source#L21) | 0 | 120 | 8 | 0 | - | `chars/char_ai_actor` | Characters other than pedestrians run the idle state of `char_ai_actor` (verified for `char_ai_actor` ... |
-| 49 | [SCRIPT-66](features/script-system-hud-natives.md?display=source#L28) | 113 | 0 | 7 | 1 | 8 stand-in | `informationbox`, `showbosshearts`, `showcharacterintro`, `showintrotext` +4 | ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle and showinfopointer only count their calls ... |
-| 50 | [STUD-4](features/studs.md?display=source#L38) | 109 | 0 | 7 | 0 | 1 stand-in, 1 none | `enablestudsbygroup`, `spawnstuds` | How a group is enabled (0x28a2cc sequencer, `EnableStudsByGroup` and `SpawnStuds` script functions ... |
+| 43 | [SCRIPT-427](features/script-system-missions-1-4-fight.md?display=source#L28) | 152 | 0 | 5 | 0 | 1 implemented | `subobjectiveenemyenable` | The arrows over the goons the user saw: SubObjectiveEnemyEnable is a no-op in the original and the arrow list ... |
+| 44 | [TRANS-5](features/level-transitions.md?display=source#L33) | 127 | 25 | 7 | 0 | 5 stand-in, 4 none, 1 implemented | `charsetallowvehicleentry`, `playcredits`, `playscriptonstartup`, `positionplayer` +7 | The 31 scripts of the shipped levels that call SceneChange, CharSetAllowVehicleEntry or ... |
+| 45 | [SCRIPT-73](features/script-system-hud-natives.md?display=source#L33) | 148 | 0 | 6 | 1 | 5 stand-in | `disableicon`, `enableminimapwipe`, `enablescanner`, `overridescannable` +1 | Map and scanner natives (EnableMinimapWipe 0x187f28, EnableScanner, OverrideScannable, PanMapToObject, map ... |
+| 46 | [CAMERA-S51](features/camera.md?display=source#L26) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
+| 47 | [SCRIPT-S271](features/script-system-dcam.md?display=source#L21) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | `ShakeScreen` draws its random numbers from `breakRandomStandIn`, the port's stand-in stream; the seed and ... |
+| 48 | [RENDER-62](features/rendering.md?display=source#L45) | 0 | 137 | 8 | 0 | - | `point` | Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces |
+| 49 | [LEVOBJ-S1](features/level-objects.md?display=source#L21) | 0 | 120 | 8 | 0 | - | `chars/char_ai_actor` | Characters other than pedestrians run the idle state of `char_ai_actor` (verified for `char_ai_actor` ... |
+| 50 | [SCRIPT-66](features/script-system-hud-natives.md?display=source#L28) | 113 | 0 | 7 | 1 | 8 stand-in | `informationbox`, `showbosshearts`, `showcharacterintro`, `showintrotext` +4 | ShowTally, ShowBossHearts, ShowRaceStart, ShowPortraitOverVehicle and showinfopointer only count their calls ... |
 
 ## Player and camera
 
@@ -99,7 +99,7 @@ Items: 1084 open items and stand-ins, 196 linked to game usage, 888 with unknown
 | 6 | [CAMERA-S51](features/camera.md?display=source#L26) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
 | 7 | [PLAYER-S15](features/player-movement-attack.md?display=source#L25) | 97 | 0 | 7 | 0 | 1 stand-in | `enabletargetable` | `appendAttackCharacters` — the character facts besides the box and the near list: the `MeshCollision` branch ... |
 | 8 | [TRAV-55](features/player-traversal-zipline.md?display=source#L40) | 0 | 66 | 7 | 0 | - | `props/parkour_zipline` | The zipline poles (`props/parkour_zipline` anchors) can be walked through in `chase-game` (user report); in ... |
-| 9 | [COMBAT-S5](features/combat-characters.md?display=source#L26) | 62 | 0 | 4 | 0 | 1 stand-in | `aiignoreplayer` | `characterAggro` knows only the side bit of the target: ctrl+0xd8 bit 5, AIIgnorePlayer, ctrl+0xc4, ctrl+0x72 ... |
+| 9 | [COMBAT-S5](features/combat-characters.md?display=source#L26) | 62 | 0 | 4 | 0 | 1 stand-in | `aiignoreplayer` | `characterAggro` knows only the side bit of the target: ctrl+0xd8 bit 5 (the side slot, now kept by the idle ... |
 | 10 | [TRAV-66](features/player-traversal.md?display=source#L26) | 0 | 39 | 4 | 0 | - | `props/parkour_fencevault` | The other kinds that share the fence's B press list are not identified or ported (their order decides who ... |
 
 ## Level objects
@@ -137,7 +137,7 @@ Items: 1084 open items and stand-ins, 196 linked to game usage, 888 with unknown
 
 ## Scripts and missions
 
-127 of 262 items linked.
+127 of 264 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -147,7 +147,7 @@ Items: 1084 open items and stand-ins, 196 linked to game usage, 888 with unknown
 | 4 | [SCRIPT-365](features/script-system-missions-reference.md?display=source#L30) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The other switch kinds (100 energy switches, 125, 138 fires, 139 switchfloor, 141, 185 ability props and ... |
 | 5 | [SCRIPT-389](features/script-system-platforms.md?display=source#L31) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The ledge lift starts one update later than in the oracle (the update between the switch's state 3 and the ... |
 | 6 | [SCRIPT-4](features/script-system.md?display=source#L38) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The code that hides the revealer targets; the role of the other type-4 parameters (Destination, ObjectTo ... |
-| 7 | [SCRIPT-420](features/script-system-missions-1-4.md?display=source#L33) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The spawns of `1-4_Spawner_05` against the oracle: the updates from the arrival's TriggerObject to goons 03 ... |
+| 7 | [SCRIPT-420](features/script-system-missions-1-4-fight.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The spawns of `1-4_Spawner_05` against the oracle: the updates from the arrival's TriggerObject to goons 03 ... |
 | 8 | [SCRIPT-S220](features/script-system-missions-reference.md?display=source#L18) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Closed 2026-10-25: the reference list holds the records of every registering kind ... |
 | 9 | [SCRIPT-273](features/script-system-natives-animation.md?display=source#L34) | 881 | 0 | 8 | 1 | 2 stand-in | `playanimation`, `playcharanim` | PlayCharAnim's state request 81 (the cutscene call, state 0x51 has the same functions) and its cape animation ... |
 | 10 | [SCRIPT-345](features/script-system-natives-animation.md?display=source#L37) | 859 | 0 | 8 | 0 | 2 stand-in | `loadanimation`, `playcharanim` | The port starts `1-2_Cage_Key_Target_Script` in the update of the press (as the original) but calls ... |
@@ -269,8 +269,9 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-missions-1-3-end.md](features/script-system-missions-1-3-end.md): SCRIPT-391, SCRIPT-400, SCRIPT-408, SCRIPT-409, SCRIPT-S303, SCRIPT-S304, SCRIPT-S311, SCRIPT-S319
 - [script-system-missions-1-3-generator.md](features/script-system-missions-1-3-generator.md): SCRIPT-364 (+1)
 - [script-system-missions-1-3.md](features/script-system-missions-1-3.md): SCRIPT-368 (+2), SCRIPT-399, SCRIPT-S291, SCRIPT-S298, SCRIPT-S315, SCRIPT-S316
+- [script-system-missions-1-4-fight.md](features/script-system-missions-1-4-fight.md): SCRIPT-423 (+1), SCRIPT-428 (+1), SCRIPT-S320, SCRIPT-S321, SCRIPT-S322, SCRIPT-S324, SCRIPT-S326
 - [script-system-missions-1-4-roof.md](features/script-system-missions-1-4-roof.md): SCRIPT-425 (+1)
-- [script-system-missions-1-4.md](features/script-system-missions-1-4.md): SCRIPT-423 (+1), SCRIPT-415, SCRIPT-416, SCRIPT-S320, SCRIPT-S321, SCRIPT-S322, SCRIPT-S324
+- [script-system-missions-1-4.md](features/script-system-missions-1-4.md): SCRIPT-415, SCRIPT-416
 - [script-system-missions-reference.md](features/script-system-missions-reference.md): SCRIPT-359 (+1), SCRIPT-360 (+1), SCRIPT-370 (+1), SCRIPT-S289, SCRIPT-S292, SCRIPT-S293, SCRIPT-S299
 - [script-system-missions.md](features/script-system-missions.md): SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S255
 - [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-324 (+3), SCRIPT-352 (+2), SCRIPT-325 (+1), SCRIPT-334 (+1), SCRIPT-405 (+1), SCRIPT-S284 (+1), SCRIPT-344, SCRIPT-353, SCRIPT-S262, SCRIPT-S266, SCRIPT-S267

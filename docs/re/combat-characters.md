@@ -16,10 +16,11 @@ Subtopics: [combat-characters-arrest.md](combat-characters-arrest.md)
 - The fight move's target enters MELEE PUTDOWN (227, enter 0x1d6d04: clip of `tables/tablescombat.bxls` sheet 2 by the move's sheet 1 byte +0xa, target mode 1); at its clip end 0x22e884 (kind 16) requests PUTDOWN STUN 309. The takedown states 0x122..0x13e share the enter 0x28cbf8 (stun clip, a time of sheet 5 by `HitTimingStun` / `HitTimingArrestable`, the arrest health drop by sheet 2 byte +10), the hook 0x29ad90 (timer, then GENERIC GETUP 313) and the exit 0x283a0c. At arrest health 0 the character goes into the eight-slot list 0x5187cc and CharacterArrestable is raised (*0x376004), or with a CharacterAvoidArrest trigger AVOID ARREST 314 follows. A mission 1-4 goon needs two throws by the code. [§2026-11-02T15:37:50](#ts-20261102-153750)
 - Measured: a Y-tap throw drops the arrest health of a mission 1-4 goon by 1 (2 -> 1: 309 for 10 updates, then 313 and state 1); a counter throw (rows 18 / 21) drops it to 0, which lists the goon and raises CharacterArrestable in its landing update and shows the hint "Press A to arrest a criminal." with a ring over the goon; it lies about 4 s. In one update the state update's request is entered at once and the hook runs after the enter. [§2026-11-02T15:56:52](#ts-20261102-155652)
 - The aggro 0x1d1170 (receiver 0x1b8770): same side nothing; not engaged (ctrl+0xd8 bit 5) the pursuit call 0x21102c (AI state 2); engaged the target switch 0x2080a0 beyond ctrl+0x80 and the counter ctrl+0x72 = 90. [§2026-11-02T15:37:50](#ts-20261102-153750)
+- ctrl+0xd8 bit 5 ("engaged") means the character holds one of the six slots of its side list (0x58deb0 bad guys, 0x58dec8 the others), set by the engage 0x206d18 and cleared by the release 0x21decc. [§2026-11-07T10:39:33](#ts-20261107-103933)
 - Port: `src/runtime/character_takedown.*`, glue `src/runtime/game_character_takedown_glue.cpp`. [§2026-11-02T15:37:50](#ts-20261102-153750)
 - The popups 600 / 700 of a fight are 10 x the running sum of the stud counts (sheet 2 byte +11) of the throws, requested by 0x1b9878 for the HUD object 0x5197c8 at the strike of each throw, next to the stud drop 0x21e2e4. [§2026-11-02T16:13:53](#ts-20261102-161353)
 - The arrest by A (the A tap, 0x2107e0, ARRESTING, ARREST, ARRESTED, CharacterArrested and the spawner's done bit): [combat-characters-arrest.md](combat-characters-arrest.md).
-- Open: the arrestable lie of about 124 updates against 120 by the timer, the owner and reset of the popup sum, the counter takedown, the pair motion, the AI pursuit, the KNOCK BACK states, the countdown of the hit list 0x593178.
+- Open: the arrestable lie of about 124 updates against 120 by the timer, the owner and reset of the popup sum, the counter takedown, the pair motion, the AI pursuit (state 2), the KNOCK BACK states, the countdown of the hit list 0x593178.
 - Renamed files: src/runtime/game_character_hit_glue.cpp -> src/runtime/game_character_hit.cpp, src/runtime/game_character_takedown_glue.cpp -> src/runtime/game_character_takedown.cpp.
 
 <a id="ts-20261101-152321"></a>
@@ -219,3 +220,17 @@ Answers the open point of the score popups in [§2026-11-01T15:23:21](#ts-202611
 ### Unknowns
 
 - Which list or owner holds the combat object with the u16 at +0x34 and when it is reset; the widget that draws object 0x5197c8 (the 200 is shown at the top left next to a silver stud icon for about 2 s).
+
+<a id="ts-20261107-103933"></a>
+
+## 2026-11-07T10:39:33+01:00 — ctrl+0xd8 bit 5, which the aggro tests, means "holds a slot of its side list" (llvm-objdump of artifacts/game/game.arm.elf, 20261103-large-C; no emulator)
+
+Answers the open point on ctrl+0xd8 bit 5 in [§2026-11-02T15:37:50](#ts-20261102-153750); the read itself is [scripts-missions-1-4-spawners-conduct.md §2026-11-03T08:54:21](scripts-missions-1-4-spawners-conduct.md#ts-20261103-085421).
+
+- Writers: the engage 0x206d18 sets it when the character finds its own entry or a free one in its side list (0x58deb0 for entity +0xc bit 2, the bad guys, else 0x58dec8; six entries each), the release 0x21decc clears it with the entry, and the AI set-up 0x2bc934 clears it. Checked again at 0x206d24..0x206d5c (`tst r2, #32`, `orr r2, r2, #32`, the loop to 6).
+- So the aggro's branch "bit 5 clear" is a character that holds no slot: 0x21102c engages it and requests AI state 2 only when a slot was free. At most six characters per side are engaged; the idle decision of AI state 0 takes a slot for every shown idle character.
+- Port: the slot is `AiConductEntity::engaged` in `src/runtime/goon_conduct.*`; the aggro's `aggroOnHit` (`src/runtime/character_takedown.*`) still takes the bit as clear (COMBAT-S5).
+
+### Unknowns
+
+- The AI pursuit state 2 itself (decision 0x2c4708, its enter and exit); COMBAT-9.

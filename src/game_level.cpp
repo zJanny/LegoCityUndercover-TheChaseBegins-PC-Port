@@ -187,6 +187,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     const std::size_t characters = std::size_t(std::count_if(placedCharacters.begin(), placedCharacters.end(), [](const auto& placed) { return placed.has_value(); }));
     levelCharacters.emplace(archive, drawable.characters, placedCharacters);
     loadAiSpawners();
+    loadAiConduct();
     loadParticleObjects();
     pedestrians.load(archive, level, classOf, drawable.characters, placedCharacters, objectState);
     propAnimations = runtime::PropAnimations(archive, animatedProps);
