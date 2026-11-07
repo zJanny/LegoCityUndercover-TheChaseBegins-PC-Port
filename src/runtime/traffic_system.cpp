@@ -95,7 +95,7 @@ void TrafficSystem::syncCars(const TrafficSystemStep& step) {
         car.disabled = !step.entityEnabled(i);
         car.pinned = false;
         car.lodClass = static_cast<unsigned>(lodClass);
-        car.despawnRadius = kTrafficStandInDespawnRadius;
+        car.despawnRadius = step.despawnRadius;
         car.roomActive = carRooms_[i] != 0 && pedestrianRoomActive(step.room(carRooms_[i]), kTrafficCarLayerClass, step.layers);
     }
 }

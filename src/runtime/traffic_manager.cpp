@@ -101,6 +101,12 @@ void TrafficManager::despawnCar(std::size_t car, std::vector<TrafficEvent>* even
     if (events) events->push_back({TrafficEventKind::Despawn, car});
 }
 
+void TrafficManager::leaveTraffic(std::size_t car, std::vector<TrafficEvent>* events) {
+    if (cars_.at(car).pinned) return;
+    if (!cars_[car].disabled) despawnCar(car, events);
+    fades_[car] = kTrafficOpaque;
+}
+
 void TrafficManager::lowerCountdown(std::uint32_t live) {
     const std::uint32_t next = spacedCountdown(live);
     if (countdown_ == 0 || countdown_ > next) countdown_ = next;

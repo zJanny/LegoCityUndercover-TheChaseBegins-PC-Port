@@ -83,6 +83,7 @@ struct TrafficSystemStep {
     std::function<std::optional<PedestrianRoom>(int room)> room;
     DistanceFadeTable lod;
     PedestrianLayerTable layers{};
+    float despawnRadius = kTrafficStandInDespawnRadius;
     std::function<bool(const TrafficCarPlacement& placement)> place;
 };
 

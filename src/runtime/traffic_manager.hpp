@@ -130,6 +130,9 @@ public:
     std::uint32_t countdown() const { return countdown_; }
     bool prefilling() const { return prefill_; }
 
+    // 0x21d6b8 for a car of the table: a pinned car is left alone; else an enabled car is despawned, and the fade byte is 255.
+    void leaveTraffic(std::size_t car, std::vector<TrafficEvent>* events);
+
     // 0x2def8c.
     bool trySpawn(std::size_t car, const TrafficFrame& frame, GameRandom& random, std::vector<TrafficEvent>* events);
     // 0x2df8b8.

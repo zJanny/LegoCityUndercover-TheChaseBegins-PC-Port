@@ -54,7 +54,6 @@ IN_PROGRESS, updated 2026-11-02T23:47:41+01:00. The manager is wired into `chase
 - [ ] TRAFFIC-14 — The initial value of path record +0x24 in the level files and what the spawn and the follower do for a path outside the route list; the port gives such a point no route. blocks: TRAFFIC-S3. evidence: [traffic-ai-driver.md §2026-11-02T23:46:29](../../re/traffic-ai-driver.md#ts-20261102-234629)
 - [ ] TRAFFIC-15 — Which junction objects the original's global list holds (creation flags, rooms not streamed in) and the timing of an EnableTrafficPath call against the traffic update inside one frame; the port takes every object of the class and applies the calls at the next update. blocks: TRAFFIC-S10. evidence: [traffic-ai-driver.md §2026-11-02T23:46:29](../../re/traffic-ai-driver.md#ts-20261102-234629)
 - [ ] TRAFFIC-12 — The cars of the other levels: the node flags (LOD class), layer class, the writer of record +0x20 (removal radius row) and the room-type byte; only lvl_01's ten cars were read. blocks: TRAFFIC-S1, TRAFFIC-S8. evidence: [traffic.md §2026-10-25T12:35:43](../../re/traffic.md#ts-20261025-123543)
-- [ ] TRAFFIC-13 — The removal radius (50, TRAFFIC-S8) is not an input of `TrafficSystemStep` (it is set inside `TrafficSystem::syncCars`), so a QoL hook cannot scale it; make it an input with default 50. blocks: QOLVD-6. evidence: [view-edges.md §2026-11-02T21:25:47](../../re/view-edges.md#ts-20261102-212547)
 
 ## 6. Findings summary
 

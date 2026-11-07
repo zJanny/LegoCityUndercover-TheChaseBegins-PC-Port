@@ -12,6 +12,7 @@ Subtopic of [traffic.md](traffic.md): the junction routes (route list, EnableTra
 - Driver +0x78 is written only by the spawn (0) and by the state change 0x1cb148. Each update the vehicle update runs 0x1cb148, which copies the request +0x79 into +0x78. After a spawn this gives 0 → 1 → 2, one update per step (code and servant). State 3 (junction, next route +8) follows from 2 at the route end. State 4 follows a contact, 7 destroys the car, and 6 leads to 7 after the car has stood for 90 updates. [§2026-10-25T12:26:09](#ts-20261025-122609)
 - The traffic post step 0x1bc79c replaces the input copy for AI cars. It moves the car in states 2 and 3 (0x2613ac) and takes the junction, the recovery after a hit (4 → 8) and the break (6 → 7). [§2026-10-25T12:26:09](#ts-20261025-122609)
 - In states 2 and 3 the route mover 0x2613ac turns the node toward the target +0xc above speed 1 (by dt x 4, dt x 6 above 20) and moves it dt x +0x68 along its forward row. Within entity +0x5c of the target it advances +0x64 by 0.4 (0.15 on a route of length 4) and moves the target to the route point there. At the route end the junction choice 0x2cb1e8 picks a random enabled output of the junction the road leads into, puts the car on the lane that joins them (+4 = lane, +8 = output), queues it at the junction and requests state 3. The speed moves 0.18 of the way to +0x70 each update. The stop test 0x2ca504 stops a car on an input road at a light listing that road unless the light's pair is the junction's passing pair. The queue 0x22a080 removes the car when it leaves the junction. [§2026-11-02T23:44:38](#ts-20261102-234438)
+- The two calls of the route mover without a junction are read: the leave call 0x21d6b8 (a pinned car is left alone, else an enabled car gets message 0x80000006 and is disabled, and its fade byte is 255) and the probe 0x20ae2c, which is a ray cast through the target and not a snap: it sends the colour of the ground triangle under the target to the car's node. [§2026-11-03T08:37:32+01:00](#ts-20261103-083732)
 - Traffic cars are kinematic Bullet bodies (flags 0x102) through 0x22a270 → 0x213c74 → body command 4: at creation, in state 1 and when they leave 8. They become dynamic in states 4 and 6 and at a contact. Message 0x80000005 does nothing, 0x80000006 stops the car's sounds and effects, 0x80000007 sets the node fade. [§2026-10-25T12:26:09](#ts-20261025-122609)
 
 <a id="ts-20261025-121938"></a>
@@ -231,3 +232,30 @@ Stand-ins: TRAFFIC-S9 (junction lanes, conflicts and listed lanes are not read, 
 Unknowns:
 - The initial value of path record +0x24 in the level files and what a spawn does for a path outside the list (TRAFFIC-14).
 - Which junction objects the global list holds (creation flags, rooms not streamed in) and whether a native call and the traffic update can interleave inside one frame (TRAFFIC-15).
+
+<a id="ts-20261103-083732"></a>
+
+## 2026-11-03T08:37:32+01:00 — The leave call 0x21d6b8 and the ground probe 0x20ae2c of the route mover (llvm-objdump only, round 20261103-large, agent B)
+
+Method: llvm-objdump (`--triple=armv6k --mattr=+vfp2`) of `game.arm.elf`, functions 0x21d6b8, 0x20ae2c, 0x221064, 0x2b51b8, 0x23e110 and the head of 0x228528 read to the end; 0x22b108 only as far as its call site. No REA session, no emulator. Port: `src/runtime/traffic_leave_snap.*`, test `traffic-leave-snap`.
+
+**Leave call 0x21d6b8(entity), hook `leaveTraffic`.**
+- It searches the manager's car table (object 0x527410, pointers at +0x40, count at +0xc0) for the entity. Not found: returns 0.
+- Found at index i, with the entity's flags hword +0x10: bit 0x20 (pinned) set: returns 1 and changes nothing, not even the fade byte.
+- Otherwise, when bit 0 is clear (enabled), it sends message 0x80000006 (word 0) through 0x244fc8 and disables the entity with 0x2428c0 (the same two steps as the manager's removal in [traffic.md §2026-10-25T12:35:43](traffic.md#ts-20261025-123543)). Then it writes fade byte 255 at +0x370 + i and returns 1. A disabled car only gets the fade byte.
+- The port: `TrafficManager::leaveTraffic` (one Despawn event, fade 255) and `leaveTraffic(manager, car, events)`, which returns false for a car outside the table.
+
+**Probe 0x20ae2c(entity), hook `snapTarget`.** It does not move anything.
+- Driver = [[entity +0x7c] +0x2a4]. The ray runs from the target (driver +0xc) raised by 1.5 (literal 0x20af1c, 0x3fc00000) to the target lowered by 1.5.
+- The ray cast 0x22b108(from, to, filter, out) gets a filter record on the stack: a pair (0, -1), words 0 / 0, a triple (0, 512, 3), a byte 1, and the literal 0x362298 with 1. Its out record holds the owner at +0 and the hit triangle at +4, and the hit point at +12 (three floats). Nothing is read from the out record unless the call returns non-zero and the triangle is set.
+- 0x221064(mesh = [owner +0x1c], triangle, hit point, &colour) returns 0 or 1. On 1, 0x23e110([entity +0x3c], colour, -1, 1) runs: it stores {colour, -1} and calls 0x228528(object, command 1, args, recursive 1), which dispatches command 1 to the object's class handler (table 0x5303c4, 16 bytes per class, handler at +0xc) and to all its children. What command 1 does is not read.
+- The weights 0x2b51b8(out, triangle +16, triangle, point): the triangle holds three pointers to corner vectors at +16 / +20 / +24 and its plane normal at +0. It drops one axis of the normal: with a = first kept axis, b = second kept axis, the axes are (0,1) when |x| is at most |y| and |z| is at least |y|; (0,2) when |x| is at most |y| and |z| is below |y|; (1,2) when |x| is above |y| and above |z|; and (0,2) when |x| is above |y| and at most |z|. The last case drops y although z is the largest component, so the projection of such a triangle is degenerate (the weights fail). All differences are scaled by 0.125 (literal 0x2b52f8). With dA = (v1b-v2b), dB = (v0a-v2a), dC = (v1a-v2a), dD = (v0b-v2b): det = dB x dA - dC x dD (zero fails); w0 = ((Pa-v2a) x dA - dC x (Pb-v2b)) / det; w1 = (dB x (Pb-v0b) - (Pa-v0a) x dD) / det; w2 = (1 - w0) - w1. Single precision, no fused multiply-add.
+- The colour 0x221064: when mesh +8 is set, the three colour words are mesh[+4][triangle byte +0x1d / +0x1e / +0x1f]; each of the bytes 0, 1, 2 is summed over the corners with the weights (sum = sum + byte x weight, starting at 0.0), truncated (vcvt.s32), clamped to 0..255, and packed as byte 2 | byte 1 << 8 | byte 0 << 16 | 255 << 24. Without mesh +8 the three index bytes themselves are weighted the same way; the sum below 0 gives 0, above 255.0 (float bits compared as signed integers against 0x437f0000) gives 255, truncated, written to all three channels with alpha 255.
+
+**Removal radius.** Nothing was read in the original; the port only makes the stand-in 50 of TRAFFIC-S8 an input (`TrafficSystemStep::despawnRadius`, default 50) for the later view-distance feature ([view-edges.md §2026-11-02T21:25:47](view-edges.md#ts-20261102-212547)).
+
+Stand-ins: TRAFFIC-S16 (the ray cast, the triangle data and the receiver of command 1 are supplied by the caller).
+
+Unknowns:
+- The ray cast 0x22b108: how it chooses the triangle for the filter (group 512, mask 3) and what the fields of its out record other than the owner, triangle and point mean (TRAFFIC-22).
+- What command 1 of 0x228528 does to the node (TRAFFIC-22).

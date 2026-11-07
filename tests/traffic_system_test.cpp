@@ -286,6 +286,37 @@ void synthetic() {
             "without a junction within reach the route list is empty, bit 0 stays clear and the pregen data is not loaded (0x2df574)");
 }
 
+void removalRadiusInput() {
+    require(TrafficSystemStep{}.despawnRadius == 50.0f, "the removal radius input defaults to 50 (0x26e130 row of the ten lvl_01 cars, TRAFFIC-S8)");
+    assets::Level level = syntheticLevel();
+    const std::vector<std::uint8_t> file = twoPointFile(level.paths[0]);
+    StreamRooms rooms;
+    rooms[1];
+    std::map<int, RoomBox> boxes;
+    boxes[1] = {{-500, -10, -500}, {500, 10, 500}};
+    TrafficSceneEnter enter;
+    enter.loadedLevels = {&level};
+    enter.rooms = {&rooms, &boxes, 1};
+    enter.pregenFile = &file;
+    for (const float radius : {50.0f, 100000.0f}) {
+        GameRandom random(0x77u);
+        TrafficSystem system;
+        system.loadLevel(level, [](const assets::LevelObject&) { return 1.5f; }, random);
+        World world;
+        world.enabled.assign(3, false);
+        TrafficSystemStep step = stepAt(world, {10, 0, 60});
+        step.despawnRadius = radius;
+        system.enterScene(enter, step, random);
+        std::size_t removed = 0;
+        for (int i = 0; i < 120; ++i) {
+            const std::vector<TrafficEvent> events = system.update(step, random);
+            removed += count(events, TrafficEventKind::Despawn);
+            applyEvents(events, world);
+        }
+        require((radius == 50.0f) == (removed > 0), "a larger removal radius keeps the cars the default radius removes");
+    }
+}
+
 struct Measured {
     const char* instance;
     float heightOffRoad, centreOfMassY;
@@ -378,6 +409,7 @@ int shipped(const char* fib, const char* csv) {
 int main(int argc, char** argv) {
     try {
         synthetic();
+        removalRadiusInput();
         if (argc == 3) return shipped(argv[1], argv[2]);
         if (argc != 1) throw std::runtime_error("usage: traffic-system-test [<fib> <csv>]");
     } catch (const std::exception& error) {
