@@ -60,7 +60,8 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [script-system-missions-1-3-generator](script-system-missions-1-3-generator.md) | IN_PROGRESS | SCRIPT-364 generator scene against the oracle |
 | [script-system-missions-1-3-end](script-system-missions-1-3-end.md) | IN_PROGRESS | SCRIPT-382 push cart and mission end against the oracle; SCRIPT-390 the lift's switch at the top |
 | [script-system-missions-1-4](script-system-missions-1-4.md) | IN_PROGRESS | SCRIPT-415 the chase; SCRIPT-422 the stolen car drives; SCRIPT-435 the time before the arrival cutscene |
-| [script-system-missions-1-4-fight](script-system-missions-1-4-fight.md) | IN_PROGRESS | SCRIPT-428 rest of the idle decision; SCRIPT-419 spawner details; SCRIPT-423 the StartState entries not ported |
+| [script-system-missions-1-4-fight](script-system-missions-1-4-fight.md) | IN_PROGRESS | SCRIPT-419 spawner details; SCRIPT-423 the StartState entries not ported |
+| [script-system-missions-1-4-conduct](script-system-missions-1-4-conduct.md) | IN_PROGRESS | SCRIPT-432 AI state 14 after the return wait; SCRIPT-428 rest of the idle decision; SCRIPT-433 sleep clips |
 | [script-system-missions-1-4-roof](script-system-missions-1-4-roof.md) | IN_PROGRESS | SCRIPT-414 rest of the roof scene; SCRIPT-430 a goon in the air; SCRIPT-437 BulletTime camera shot; SCRIPT-438 callers and time scale readers; SCRIPT-439 slow motion length |
 | [script-system-use-markers](script-system-use-markers.md) | IN_PROGRESS | SCRIPT-299 markers of the other 34 kinds; SCRIPT-355 special cases and HeadMarker; SCRIPT-356 list builder; SCRIPT-357 placement ray |
 | [script-system-natives](script-system-natives.md) | IN_PROGRESS | SCRIPT-7 natives in batches SCRIPT-29 to SCRIPT-39, SCRIPT-57 to SCRIPT-65 |

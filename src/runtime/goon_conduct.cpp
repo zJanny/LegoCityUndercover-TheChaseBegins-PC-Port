@@ -80,7 +80,10 @@ AiConductParams aiConductParamsOf(const assets::LevelObject& object, const asset
     params.returnToSpawnPoint = intParam(object, cls, "ReturnToSpawnPoint", 1) != 0;
     params.millAbout = intParam(object, cls, "AIMillAbout", 0) != 0 || kAiConductGlobalMillAboutStandIn;
     params.patrolPath = referenceParam(object, cls, "AIPatrolPath");
-    params.sleepAnim = !stringParam(object, cls, "AISleepAnim").empty();
+    params.patrolAlertOnLos = (intParam(object, cls, "AIPatrolAlertOnLOS", 0) & 1) != 0;
+    params.idleReturn.sleepAnim = stringParam(object, cls, "AISleepAnim");
+    params.idleReturn.sleepAnimWake = stringParam(object, cls, "AISleepAnimWake");
+    params.idleReturn.waitTime = intParam(object, cls, "Wait_Time", kAiReturnWaitDefault);
     params.badGuy = intParam(object, cls, "AIBadGuy", 0) != 0;
     params.boss = intParam(object, cls, "Boss_IsBoss", 0) != 0;
     return params;
@@ -239,16 +242,16 @@ const AiConductEntity* AiConduct::findTarget(const AiConductEntity& self, float 
     return nullptr;
 }
 
-void AiConduct::sighted(AiConductEntity& self, const AiConductEntity& target, float distance) {
+void AiConduct::sighted(AiConductEntity& self, const AiConductEntity& target, float distance, bool held) {
     if (self.locomotionState == kAiSightRefusedLocomotionState) return;
     self.seenBits = kAiSeenBits;
-    engage(self);
+    if (!held) engage(self);
     AiConductEvent event;
     event.kind = AiConductEventKind::Sighted;
     event.character = self.name;
     event.target = target.name;
     event.distance = distance;
-    if (self.engaged) {
+    if (held || self.engaged) {
         self.aiState = kAiCombatState;
         self.target = target.name;
         event.combat = true;
@@ -257,7 +260,25 @@ void AiConduct::sighted(AiConductEntity& self, const AiConductEntity& target, fl
 }
 
 void AiConduct::thinkIdle(AiConductEntity& self, const AiConductBoundTest& inside) {
-    if (!self.cantGetThere && self.countdown == 0) {
+    if (!aiIdleGate(clock_)) return;
+    bool awake = true;
+    if (!self.params.idleReturn.sleepAnim.empty()) {
+        const AiSleepStep step = aiSleepStep({self.seenBits, self.locomotionState, self.params.friendly, !self.params.idleReturn.sleepAnimWake.empty(), self.clipEnded}, [&] {
+            const AiConductEntity* thePlayer = player();
+            return thePlayer && sees(self, *thePlayer, -1.0f, -1.0f, inside);
+        });
+        self.seenBits = step.bits;
+        awake = step.awake;
+        if (step.clip != AiSleepClip::None) {
+            AiConductEvent event;
+            event.kind = AiConductEventKind::SleepClip;
+            event.character = self.name;
+            event.loop = step.clip == AiSleepClip::Sleep;
+            event.clip = aiSleepClipName(event.loop ? self.params.idleReturn.sleepAnim : self.params.idleReturn.sleepAnimWake);
+            events_.push_back(event);
+        }
+    }
+    if (awake && !self.cantGetThere && self.countdown == 0) {
         if (const AiConductEntity* target = findTarget(self, float(self.params.viewDistance), -1.0f, inside); target && !self.params.friendly) {
             const float dx = target->position[0] - self.position[0], dy = target->position[1] - self.position[1], dz = target->position[2] - self.position[2];
             sighted(self, *target, std::sqrt(dx * dx + dy * dy + dz * dz));
@@ -287,7 +308,39 @@ void AiConduct::thinkIdle(AiConductEntity& self, const AiConductBoundTest& insid
         if (!self.hidden) engage(self);
         return;
     }
-    if (self.hidden) release(self);
+    if (self.hidden) {
+        release(self);
+        return;
+    }
+    if (aiReturnRequested(self.waitObject, self.params.returnToSpawnPoint, self.position, self.spawn)) requestReturn(self);
+}
+
+void AiConduct::requestReturn(AiConductEntity& self) {
+    self.aiState = kAiReturnToSpawnState;
+    AiConductEvent event;
+    event.kind = AiConductEventKind::ReturnToSpawn;
+    event.character = self.name;
+    events_.push_back(event);
+    enterReturn(self);
+}
+
+void AiConduct::enterReturn(AiConductEntity& self) {
+    release(self);
+    self.countdown = aiReturnCountdown(self.waitObject, self.params.idleReturn);
+}
+
+void AiConduct::thinkReturn(AiConductEntity& self, const AiConductBoundTest& inside) {
+    if (aiReturnWaitStep(self.waitObject, self.params.returnToSpawnPoint, self.countdown)) {
+        self.aiState = kAiReturnedState;
+        AiConductEvent event;
+        event.kind = AiConductEventKind::Returned;
+        event.character = self.name;
+        events_.push_back(event);
+    }
+    const AiConductEntity* target = findTarget(self, float(self.params.viewDistance), -1.0f, inside);
+    if (!target) return;
+    const float dx = target->position[0] - self.position[0], dy = target->position[1] - self.position[1], dz = target->position[2] - self.position[2];
+    sighted(self, *target, std::sqrt(dx * dx + dy * dy + dz * dz), true);
 }
 
 void AiConduct::update(const AiConductBoundTest& inside) {
@@ -296,14 +349,17 @@ void AiConduct::update(const AiConductBoundTest& inside) {
         AiConductEntity& entity = entities_[i];
         if (entity.player || lastState_[i] == entity.aiState) continue;
         if (entity.aiState == 0 || entity.aiState == kAiNoState) release(entity);
+        if (entity.aiState == kAiReturnToSpawnState) enterReturn(entity);
         lastState_[i] = entity.aiState;
     }
     for (std::size_t i = 0; i < entities_.size(); ++i) {
         AiConductEntity& entity = entities_[i];
         if (entity.player || !entity.present) continue;
         if (!entity.spawn) entity.spawn = entity.position;
-        if (!entity.thinks || entity.aiState != 0 || entity.params.sleepAnim) continue;
-        thinkIdle(entity, inside);
+        if (!entity.thinks) continue;
+        if (entity.aiState == 0) thinkIdle(entity, inside);
+        else if (entity.aiState == kAiReturnToSpawnState) thinkReturn(entity, inside);
+        else continue;
         lastState_[i] = entity.aiState;
     }
 }

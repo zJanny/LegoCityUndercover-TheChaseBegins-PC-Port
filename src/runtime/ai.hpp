@@ -61,6 +61,8 @@ enum class AiState : std::uint8_t {
     MillAbout = 9,
     FaceTarget = 10,
     GoToTarget = 11,
+    Patrol = 14,
+    ReturnToSpawn = 15,
     RunAway = 25,
     Stalk = 27,
     Takedown = 35,
@@ -188,6 +190,8 @@ public:
     void startMillAbout(const std::string& lowerCaseName) { requestMillAbout(at(lowerCaseName)); }
     // 0x21102c for a character that holds a side slot: AI state 2 with ctrl+0xc4 = `target` (goon_conduct.hpp).
     void startCombat(const std::string& lowerCaseName, const std::string& target);
+    // The requests of AI states 15 (0x2a9874) and 14 (0x2c5cac) of the idle conduct; the character stands (state 14 is not ported, SCRIPT-432).
+    void startConductState(const std::string& lowerCaseName, AiState state) { at(lowerCaseName).state = state; }
 
     // Position of a character that something else moves (the player node, PositionObject).
     void setPosition(const std::string& lowerCaseName, const float position[3]);

@@ -7,6 +7,7 @@
 // 0x1c6e84. No SDL dependency.
 #include "assets/assets.hpp"
 #include "runtime/fall_arrest_engaged.hpp"
+#include "runtime/goon_idle_return.hpp"
 
 #include <array>
 #include <cstddef>
@@ -49,7 +50,8 @@ struct AiConductParams {
     bool returnToSpawnPoint = true;                           // `ReturnToSpawnPoint`, ctrl+0xdc bit 5 (0x1c6e84)
     bool millAbout = false;                                   // `AIMillAbout`, ctrl+0x315 bit 7 (0x1c6e84)
     bool patrolPath = false;                                  // `AIPatrolPath` names an object: 0x1c6e84 requests AI state 14 instead of 0
-    bool sleepAnim = false;                                   // `AISleepAnim` is set and not empty (the sleep branch of 0x2a9874)
+    bool patrolAlertOnLos = false;                            // `AIPatrolAlertOnLOS`, ctrl+0xdb bit 5: the angle flag of the watch 0x1f5c3c
+    AiIdleReturnParams idleReturn;                            // the sleep clips and `Wait_Time` (goon_idle_return.hpp)
     bool badGuy = false;                                      // `AIBadGuy`, entity +0xc bit 2
     bool boss = false;                                        // `Boss_IsBoss`, entity +0xc bit 14
 };
@@ -79,9 +81,11 @@ struct AiConductEntity {
     std::uint32_t countdown = 0;            // ctrl+0x84, counted down by 0x2a9874
     bool cantGetThere = false;              // ctrl+0xd9 bit 2, set by 0x1f6c58 when the path search fails
     std::uint8_t seenBits = 0;              // ctrl+0xdc bits 3..4
+    bool clipEnded = kAiClipEndedStandIn;   // 0x22f560 of the current clip answers 6
+    bool waitObject = kAiWaitObjectStandIn; // ctrl+0xd4
 };
 
-enum class AiConductEventKind : std::uint8_t { Engaged, Released, Sighted, MillAbout };
+enum class AiConductEventKind : std::uint8_t { Engaged, Released, Sighted, MillAbout, SleepClip, ReturnToSpawn, Returned };
 struct AiConductEvent {
     AiConductEventKind kind = AiConductEventKind::Engaged;
     std::string character;
@@ -90,6 +94,8 @@ struct AiConductEvent {
     bool badSide = false;   // Engaged, Released: list 0x58deb0
     std::size_t slot = 0;   // Engaged, Released
     bool combat = false;    // Sighted: the character holds a slot and AI state 2 was requested
+    std::string clip;       // SleepClip: the clip name 0x2102b0 plays
+    bool loop = false;      // SleepClip: the sleep clip (r2 = 1), not the wake clip
 };
 
 // 0x22f650(point, bound, 0) of the host: the bound's switch +0xa and its shape around the centre.
@@ -120,6 +126,13 @@ public:
     const AiConductEntity* findTarget(const AiConductEntity& self, float limit, float second, const AiConductBoundTest& inside);
     // 0x2a9874 for one entity in state 0.
     void thinkIdle(AiConductEntity& self, const AiConductBoundTest& inside);
+    // The request of AI state 15 at 0x2a9d40 with its enter 0x2bba40, and the decision 0x2c5cac of state 15.
+    void requestReturn(AiConductEntity& self);
+    void thinkReturn(AiConductEntity& self, const AiConductBoundTest& inside);
+    // 0x21102c(self, target); `held` when the caller set ctrl+0xd8 bit 5 itself (the watch 0x1f5c3c), so the engage does nothing.
+    void sighted(AiConductEntity& self, const AiConductEntity& target, float distance, bool held = false);
+    // The clock 0x241098 the decision of state 0 tests.
+    void setClock(std::uint32_t clock) { clock_ = clock; }
 
     const std::array<std::string, kAiSideSlots>& badSide() const { return table_->list(true); }
     const std::array<std::string, kAiSideSlots>& goodSide() const { return table_->list(false); }
@@ -129,12 +142,13 @@ private:
     const AiConductEntity* entityNamed(const std::string& name) const;
     const AiConductEntity* player() const;
     const AiConductEntity* validTarget(const AiConductEntity& self) const;
-    void sighted(AiConductEntity& self, const AiConductEntity& target, float distance);
+    void enterReturn(AiConductEntity& self);
 
     std::vector<AiConductEntity> entities_;
     std::vector<std::uint8_t> lastState_;
     EngagedTable* table_ = nullptr;
     std::vector<AiConductEvent> events_;
+    std::uint32_t clock_ = 1;
 };
 
 // STAND-IN SCRIPT-S326: the spawn point is the position of the first update the character is present (the original stores its node position at

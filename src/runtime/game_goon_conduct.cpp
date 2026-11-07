@@ -1,6 +1,7 @@
 #include "game_level.hpp"
 
 #include "runtime/director_hold.hpp"
+#include "runtime/prop_rocking.hpp"
 
 #include <iostream>
 #include <map>
@@ -80,6 +81,8 @@ void LevelSession::updateAiConduct() {
             if (state->ignorePlayer) entity.params.ignorePlayer = *state->ignorePlayer;
         }
     }
+    // STAND-IN SCRIPT-S297: the clock of 0x241098 as the rocking props take it.
+    aiConduct.setClock(updates * runtime::kRockingClockUnitsPerUpdateStandIn);
     aiConduct.update([this](std::size_t bound, const std::array<float, 3>& point) {
         const std::vector<std::uint8_t>& enabled = levelScripts.boundsEnabled();
         return bound < level.bounds.size() && runtime::pointInFallArrestBound(level.bounds[bound], bound < enabled.size() && enabled[bound] != 0, point);
@@ -107,6 +110,17 @@ void LevelSession::updateAiConduct() {
         case runtime::AiConductEventKind::MillAbout:
             ai.run(runtime::AiNativeKind::AIMillAbout, {event.character}, {1.0f});
             std::cout << "mill about";
+            break;
+        case runtime::AiConductEventKind::SleepClip:
+            std::cout << (event.loop ? "sleep" : "wake") << " clip " << event.clip << " (not ported)";
+            break;
+        case runtime::AiConductEventKind::ReturnToSpawn:
+            ai.startConductState(event.character, runtime::AiState::ReturnToSpawn);
+            std::cout << "AI state 15 (return to spawn point)";
+            break;
+        case runtime::AiConductEventKind::Returned:
+            ai.startConductState(event.character, runtime::AiState::Patrol);
+            std::cout << "AI state 14 (not ported)";
             break;
         }
         std::cout << " at update " << updatesForLog << '\n';

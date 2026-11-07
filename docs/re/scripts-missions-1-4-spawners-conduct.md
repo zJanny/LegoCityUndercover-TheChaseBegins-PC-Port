@@ -1,12 +1,13 @@
 # Mission 1-4: what an idle AI character does next
 
-The decision of AI state 0 that every placed character runs: the two side lists and their slots, the target search, the sight test with `AIViewDistance` and `AIRangeBound`, the sighting into AI state 2, and CharacterInvulnerable in the hit receiver. Split from [scripts-missions-1-4-spawners.md](scripts-missions-1-4-spawners.md). Items: [script-system-missions-1-4-fight.md](../plans/features/script-system-missions-1-4-fight.md).
+The decision of AI state 0 that every placed character runs: the two side lists and their slots, the target search, the sight test with `AIViewDistance` and `AIRangeBound`, the sighting into AI state 2, and CharacterInvulnerable in the hit receiver. Split from [scripts-missions-1-4-spawners.md](scripts-missions-1-4-spawners.md). Items: [script-system-missions-1-4-conduct.md](../plans/features/script-system-missions-1-4-conduct.md).
 
 ## Current state
 
 - The side lists and the player slot are the port's shared `EngagedTable`, not a table of the conduct. [scripts-missions-1-4-roof.md §2026-11-07T11:38:35](scripts-missions-1-4-roof.md#ts-20261107-113835)
 - An idle AI character (state 0, decision 0x2a9874) searches a target (0x1f8d5c) among the engaged characters of the other side and the player, the player first; it sees one within `AIViewDistance` (3D distance) standing inside its `AIRangeBound` (0x1f6958), takes a slot of its side list (six per side, ctrl+0xd8 bit 5) and goes to AI state 2 (the fight, not read); without a target a shown character just takes a slot. Goons 03 and 06 see the player at `1-4_P1_GoTo`. Ported for every placed character. CharacterInvulnerable is the receiver's ctrl+0xd8 bit 6. [§2026-11-03T08:54:21](#ts-20261103-085421)
 - The search ends with none when the entity's own candidate (counted at most once) is not seen; the sight shortcut within the second distance is ctrl+0xdb bit 1 (0x21e798: ability 20 and the weapon's ability; a stand-in in the port), not `AIFriendly`; a friendly character takes a slot within 8 x ctrl+0x8c (`AIRunSpeed` x 0.23) of its spawn point. [§2026-11-07T11:11:03](#ts-20261107-111103)
+- The decision ends while the clock 0x241098 reads 0. A character with `AISleepAnim` sleeps (looped clip, no search) in its first decision, or wakes there when it sees the player (`AISleepAnimWake` once, then awake) or moves; from its second decision it searches. An engaged, shown character with `ReturnToSpawnPoint` at least 2.0 (x and z) from its spawn point asks for AI state 15: the enter releases its slot and sets 15 updates (`Wait_Time` with ctrl+0xd4), the decision counts down to the request of AI state 14 and watches: a target in sight raises PlayerCaught and starts the fight without a slot. State 14 is not read. [§2026-11-07T12:17:10](#ts-20261107-121710)
 
 <a id="ts-20261103-085421"></a>
 
@@ -73,3 +74,34 @@ The enter 0x289650 of state 0: 0x1fbad0 for a friendly character, the release 0x
 
 - The columns of the character row byte +0x18 and of the weapon entry's +0x16, and so which characters have ctrl+0xdb bit 1.
 - 0x20bf3c (which can clear `ReturnToSpawnPoint`), the move 0x1f6c58 back to the spawn point, and when the AI start 0x1c6e84 runs for a character a spawner holds.
+
+<a id="ts-20261107-121710"></a>
+
+## 2026-11-07T12:17:10+01:00 — The gate and the sleep branch of the idle decision, the request of AI state 15 and state 15 with its watch (llvm-objdump of artifacts/game/game.arm.elf, 20261107-traffic-E; no emulator, no REA session)
+
+Evidence: llvm-objdump (armv6k, vfp2) of `artifacts/game/game.arm.elf` at 0x2a9874..0x2a9d90, 0x241098, 0x22b62c, 0x1fbad0, 0x200c30, the state table builder 0x2a3c18..0x2a3f64 (record 15 at +240, record 14 at +224), 0x2bba40, 0x2c5cac and 0x1f5c3c; literal pools and strings read with a throwaway script. Round 20261107-traffic, agent 20261107-traffic-E. Fills in the unknowns of [§2026-11-03T08:54:21](#ts-20261103-085421) on the gate, the sleep branch, ctrl+0xd4, 0x1fbad0 and state 15. Pinned by CTest `goon-idle-return` (the rules on made-up characters).
+
+**The gate 0x241098** is the clock of the running process ([props-rocking.md §2026-10-26T22:49:07](props-rocking.md#ts-20261026-224907)); 0x2a9898 ends the decision when it answers 0. The port takes it from the clock of the rocking props (2 per update from the level start), so the decision does not run in the first update of a level.
+
+**The sleep branch (0x2a98b4..0x2a9acc).** `AISleepAnim` is read by 0x241624(entity, name, 0x1000010, 0) at each decision; a missing or empty string makes the character awake. Otherwise ctrl+0xdc bits 3..4 (the same field the sighting 0x21102c sets to 2) say where it is; r5 says whether the target search of step 1 runs (and, at the end, the 0x1fbad0 tail of a hidden engaged character):
+- 2 (awake) and 3 (asleep, 0x2a98fc): the decision goes on with the search.
+- 1 (waking): no search; when the current clip has ended (0x22f560(0x233900(entity + 0x40)) answers 6) the bits become 2.
+- 0 (not yet asleep): in a locomotion state ctrl+0x6c above 1 the bits become 2 and the search runs. Else no search; a character that is not friendly (ctrl+0xdb bit 2) runs the sight test 0x1f6958(entity, *0x3772b8 the player, no distance out, 0, -1.0, -1.0). Seen: the bits become 1 and, with `AISleepAnimWake` set and not empty, the clip of that name plays once (0x2102b0(entity, clip, 0, 0, blend 0.1, speed 1.0, 0xffff, 0)); without one the bits become 2 and the search runs. Not seen, or friendly: the `AISleepAnim` clip plays looped (the same call with r2 = 1) and the bits become 3. The clip name is the text after the last '/' (0x2541e4 with 47), looked up in the entity's loaded set by 0x21e8b4(entity + 0x40, name). The test of bits 3 and the clip end at 0x2a9a38 is reached only with bits 0 here, so it always plays the clip.
+So a sleeping character sleeps only in its first decision: from the next one (bits 3) it searches like an awake one, and its sighting sets the bits to 2.
+
+**The end of the decision (0x2a9c60..0x2a9d74).** After the not-engaged and hidden cases ([§2026-11-03T08:54:21](#ts-20261103-085421) step 5), an engaged and shown character asks for AI state 15 when ctrl+0xd4 is not 0, or, with `ReturnToSpawnPoint`, when 0x22b62c(node position, ctrl+0xac), the distance in x and z only, is not below 2.0 (literal 0x2a9d88, `vcmpe 2.0, d; bgt` ends it). The request runs 0x1fbad0 first and stores 15 to ctrl+0x15, printing "%s: new AI state %s(%u)" (0x3598c8, through 0x22dac8) when ctrl+0x14 is not already 15. 0x1fbad0: nothing when 0x1f5f68(ctrl) answers non-zero; else ctrl+0xe bit 9 when 0x2106d8(ctrl, 1), bit 10 when 0x2106d8(ctrl, 0), bit 11 when 0x2106d8(ctrl, 2) (the weapon press bits).
+
+**State 15** is record +240 of the table: {decision 0x2c5cac, enter 0x2bba40, no update, no exit}; state 14 is {0x2b68e8, 0x2a11a0, 0, 0}.
+- Enter 0x2bba40: the release 0x21decc, then ctrl+0x84 = 15, or with ctrl+0xd4 set the integer `Wait_Time` of the entity (0x2451d0, default 15, string at 0x2bba80).
+- Decision 0x2c5cac: with ctrl+0xd4 set or `ReturnToSpawnPoint` (ctrl+0xdc bit 5), ctrl+0x84 is lowered by one and, when it is then at or below 0 (signed), AI state 14 is requested (logged like the request of 15). Then always the watch 0x1f5c3c.
+- The watch 0x1f5c3c: target = 0x1f8d5c(entity, node position, ctrl+0xdb bit 5 (`AIPatrolAlertOnLOS`) as the angle flag, float(ctrl+0x7a), -1.0, 45.0). With a target: the event 0x23cee8(*0x3775f0, entity, the old ctrl+0xc4, 255, 0) — *0x3775f0 is registered at 0x16bbe8 with the name `PlayerCaught` (0x16bdc0) —, ctrl+0xd8 bit 5 set directly (no list entry) and the sighting 0x21102c(entity, target), whose engage then does nothing and whose request of AI state 2 follows because bit 5 is set.
+- The AI controller 0x200c30 engages (0x206d18) a character in a state above 1 without ctrl+0xd8 bit 5 before the decision and asks for idle (0x2246c0) when it still has no slot; so in the original a character in state 15 takes a slot again in the update after the enter released it.
+
+**The data.** A throwaway scan by 20261107-traffic-E (2026-11-07, the port's level loader and `aiConductParamsOf` over the 856 `.blvl` files of the archive, 738 `chars/*` objects; not committed): none sets `AISleepAnim`, `AISleepAnimWake`, `Wait_Time` or `AIPatrolAlertOnLOS`; 103 set `ReturnToSpawnPoint` 0. In chase-game no goon of mission 1-4 reaches state 15 in the runs of the CTests.
+
+**In the port** (`src/runtime/goon_idle_return.*`, applied by `src/runtime/goon_conduct.cpp`): the gate, the sleep branch with the clips as events (chase-game prints `ai conduct NAME: sleep|wake clip CLIP (not ported)`), the request of state 15 with its enter, the decision of state 15 and the watch's sighting. chase-game prints `ai conduct NAME: AI state 15 (return to spawn point)` and `AI state 14 (not ported)`; `AiCore` holds states 14 and 15 so the next update reads them back. STAND-IN SCRIPT-S329: the clips are not played and count as ended in the next update, ctrl+0xd4 is clear, the clock is that of the rocking props. STAND-IN SCRIPT-S330: state 14 is not ported, no PlayerCaught event, no angle test, the watch's bit 5 without a list entry is not kept, and the AI controller's engage before the decision is not run.
+
+### Unknowns
+
+- AI state 14 (0x2b68e8, 0x2a11a0), the angle test 0x15c1b0 and what PlayerCaught triggers.
+- The writer of ctrl+0xd4; other writers of ctrl+0xdc bits 3..4 than 0x2a9874 and 0x21102c; 0x1f5f68 and 0x2106d8 of the press bits.

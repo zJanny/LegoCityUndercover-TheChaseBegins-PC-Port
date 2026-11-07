@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
             friendly += p.friendly;
             bad += p.badGuy;
             millAbout += p.millAbout;
-            sleep += p.sleepAnim;
+            sleep += !p.idleReturn.sleepAnim.empty();
             patrol += p.patrolPath;
             if (p.runSpeed != runtime::kAiRunSpeedDefault * runtime::kAiRunSpeedScale || !p.returnToSpawnPoint) others.push_back(object.instance);
         }

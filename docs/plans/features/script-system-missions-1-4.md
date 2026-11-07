@@ -2,7 +2,7 @@
 
 ## 1. Scope
 
-Mission 1-4 ("Gone in 60 Minutes", Combat Mechanics) in `chase-game`: `1-4_MissionStart` (spawned by the end of mission 1-3), the waypoint `1-4_Waypoint_01`, `1-4_ShowroomArrival` and the rest of the 29 scripts named `1-4_*` (the fight chain of AI spawners, the roof, the chase, `1-4_MissionEnd`). This file is the gap list of the mission and ranks the gaps for the next rounds; the showroom fight (AI spawners, StartState, the goons' conduct) is in [script-system-missions-1-4-fight](script-system-missions-1-4-fight.md), the roof scene and the natives of the roof and the chase in [script-system-missions-1-4-roof](script-system-missions-1-4-roof.md). The player's attack on characters and the characters' hit reaction are other features (PLAYER-26 to PLAYER-29, COMBAT-1 to COMBAT-6).
+Mission 1-4 ("Gone in 60 Minutes", Combat Mechanics) in `chase-game`: `1-4_MissionStart` (spawned by the end of mission 1-3), the waypoint `1-4_Waypoint_01`, `1-4_ShowroomArrival` and the rest of the 29 scripts named `1-4_*` (the fight chain of AI spawners, the roof, the chase, `1-4_MissionEnd`). This file is the gap list of the mission and ranks the gaps for the next rounds; the showroom fight (AI spawners, StartState) is in [script-system-missions-1-4-fight](script-system-missions-1-4-fight.md), the goons' conduct in [script-system-missions-1-4-conduct](script-system-missions-1-4-conduct.md), the roof scene and the natives of the roof and the chase in [script-system-missions-1-4-roof](script-system-missions-1-4-roof.md). The player's attack on characters and the characters' hit reaction are other features (PLAYER-26 to PLAYER-29, COMBAT-1 to COMBAT-6).
 
 ## 2. Status
 
