@@ -16,6 +16,7 @@
 #include "game_characters.hpp"
 #include "game_pedestrians.hpp"
 #include "game_traffic.hpp"
+#include "game_traffic_lights.hpp"
 #include "game_cutscene.hpp"
 #include "game_hand_items.hpp"
 #include "game_doors.hpp"
@@ -506,6 +507,7 @@ private:
     std::optional<chase::frontend::AwardViewer> awardViewer;
     std::size_t pauseStickDirection = chase::runtime::kNoStickDirection;
     game_prop_parts::PropParts propParts;
+    game_traffic_lights::TrafficLightLooks trafficLights;
     chase::runtime::CarrySet carry;
     game_carry::HeldObjects heldObjects;
     chase::runtime::DetectiveSet detective;

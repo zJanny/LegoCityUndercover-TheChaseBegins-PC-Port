@@ -327,6 +327,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     buildits.load(archive, level, classOf);
     std::cout << "build-its: " << buildits.objects().size() << '\n';
     propParts.loadBuildits(scene, archive, buildits, placedObjects, placedSceneIndex);
+    trafficLights.load(scene, archive, level, placedObjects, placedSceneIndex);
     loadPushables(archive);
     loadSuperBuildits();
     loadFastTravel();
@@ -490,6 +491,7 @@ void LevelSession::draw(int width, int height) {
     for (std::size_t i = 0; i < waypointObjects.size(); ++i)
         shownWaypoints[i] = objectives.waypointActive(game_doors::lowerCase(waypointObjects[i].instance)) && roomShown(runtime::roomNumber(waypointObjects[i].room));
     propParts.apply(scene, buildits, placedObjects, placedSceneIndex, shownPlaced, shownWaypoints, badgeFades);
+    trafficLights.apply(scene, shownPlaced);
     logDrawnPositions();
     effects.apply(scene);
     fallApart.apply(scene);

@@ -277,6 +277,8 @@ TrafficJunctionFill fillTrafficJunction(const TrafficJunctionSource& source, std
     markTrafficJunctionSides(fill.outputEnds);
     if (source.lights.size() > kTrafficJunctionLightSlots) throw std::runtime_error("traffic junction: more than 8 light pairs");
     fill.record.lightPairs = source.lights;
+    fill.lightSlots = source.lightSlots;
+    fill.lightInstances = source.lightInstances;
     fill.record.passPair = 0;
     fill.record.lightPhase = kTrafficLightGreen;
     fill.record.lightTimer = kTrafficLightGreenTime;
@@ -318,8 +320,14 @@ std::vector<TrafficJunctionFill> trafficJunctionFills(const std::vector<const as
                 const assets::LevelObject* light = index.linked(object, name);
                 if (light == nullptr) continue;
                 std::array<std::optional<TrafficLight>, 2> pair{index.light(*light), std::nullopt};
-                if (const assets::LevelObject* slave = index.linked(*light, "SlaveLight")) pair[1] = index.light(*slave);
+                std::array<std::string, 2> instances{light->instance, std::string()};
+                if (const assets::LevelObject* slave = index.linked(*light, "SlaveLight")) {
+                    pair[1] = index.light(*slave);
+                    instances[1] = slave->instance;
+                }
                 source.lights.push_back(pair);
+                source.lightSlots.push_back(slot - 1);
+                source.lightInstances.push_back(instances);
             }
             fills.push_back(fillTrafficJunction(source, nextLaneId));
             nextLaneId += static_cast<std::uint32_t>(fills.back().lanePaths.size());

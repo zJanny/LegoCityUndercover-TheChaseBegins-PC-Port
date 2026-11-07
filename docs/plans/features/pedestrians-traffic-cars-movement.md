@@ -15,10 +15,11 @@ Not covered:
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-11-07T12:13:15+01:00.
+IN_PROGRESS, updated 2026-11-07T12:14:46+01:00.
 - The four movement functions are ported as `src/runtime/traffic_route_mover.*`: pure steps on the driver record, the junction records and the route functions.
 - The leave call 0x21d6b8 and the ground probe 0x20ae2c (the mover's hooks `leaveTraffic` and `snapTarget`) are ported as `src/runtime/traffic_leave_snap.*`; its ground ray cast and colour message are ported as `src/runtime/traffic_ground_world.*`.
 - The junction records are filled from the level at the scene enter and kept by the traffic system (`src/runtime/traffic_junction_update.*`). The light cycle of every junction runs in the object phase of `chase-game` (after the runner, as the entity pass 0x1a3f80 runs it), and each light change prints a line.
+- The traffic lights show the look of their set-up in `chase-game` (pair 0 green, the slot quirk), node by node (`src/runtime/traffic_light_parts.*`, glue `src/game_traffic_lights.*`); the cycle's part changes are ported but nothing delivers them yet (TRAFFIC-25).
 - The route functions `evaluate`, `length` and `signal` read the junctions' route paths (level roads and lanes); `ahead` and `nearest` are not ported (TRAFFIC-23).
 - The AI driver is not connected to the spawned cars (TRAFFIC-2 in [pedestrians-traffic-cars-driver.md](pedestrians-traffic-cars-driver.md)), so the cars still stand still and no car is ever queued.
 
@@ -59,12 +60,15 @@ Read from the code and wired (tests `traffic-junction-update`, `traffic-junction
 - TRAFFIC-S17 Every junction of the level data runs its light cycle at every update, in object order, in the object phase; the original runs the junction entities of its update list (room placement, skip bits, filter) in the list's sorted order. needs: TRAFFIC-24. evidence: [traffic-junction.md §2026-11-07T12:09:40](../../re/traffic-junction.md#ts-20261107-120940)
 - TRAFFIC-S23 The ground cast tries the collision entries in the order of the world, not in the order of the grid cells, and without its cap of 100 entries; composite box owners (flag 0x800) and a slanted segment are not modelled (the probe's segment is vertical). needs: TRAFFIC-29. evidence: [traffic-ground-cast.md §2026-11-07T12:11:38](../../re/traffic-ground-cast.md#ts-20261107-121138)
 - TRAFFIC-S24 The colour message is sent to the mesh nodes the caller names; the port keeps the three bytes (+0x118..+0x11a) and does not paint the white vertex colours of the layers, and no draw reads the bytes. A colour table (item flag word set) is refused; no shipped item sets it. needs: TRAFFIC-30, TRAFFIC-2. evidence: [traffic-ground-cast.md §2026-11-07T12:11:38](../../re/traffic-ground-cast.md#ts-20261107-121138)
+- TRAFFIC-S19 The cycle's part changes reach the look only through `TrafficLightLooks::applyChange`, which nothing calls yet, so every light keeps the look of the set-up (pair 0 green, the others as the slot quirk leaves them). needs: TRAFFIC-25. evidence: [traffic-junction.md §2026-11-07T12:14:46](../../re/traffic-junction.md#ts-20261107-121446)
+- TRAFFIC-S20 The junction set-up is taken to run after all light creates (the order is not read), and `TrafficLightLooks` computes its own junction fills of the level; a light listed by two junctions is drawn from the last one. evidence: [traffic-junction.md §2026-11-07T12:14:46](../../re/traffic-junction.md#ts-20261107-121446)
 
 ## 5. Open items
 
 - [ ] TRAFFIC-23 — The route functions `ahead` and `nearest` of the route type table for the traffic routes and lanes; `trafficRouteFunctions` leaves them unset. blocks: TRAFFIC-2. evidence: [traffic-junction.md §2026-11-07T12:09:40](../../re/traffic-junction.md#ts-20261107-120940)
 - [ ] TRAFFIC-24 — Which junctions are in the update list (the rooms of the shipped junctions, room type 16, the writers of entity hword +0x10 bits 0x24) and the priority byte +0x19 of the junction and car entities (whether the cars update before the junctions). blocks: TRAFFIC-S17. evidence: [traffic-junction.md §2026-11-07T12:09:40](../../re/traffic-junction.md#ts-20261107-120940)
-- [ ] TRAFFIC-20 — The look of the traffic lights: the parts green, yellow and red of `props/prop_trafficlight`, the part changes of the set-up (with its slot index quirk) and of the cycle, and the light class's own update are not ported. evidence: [traffic-junction.md §2026-11-03T08:53:43](../../re/traffic-junction.md#ts-20261103-085343)
+- [ ] TRAFFIC-25 — Call `TrafficLightLooks::applyChange` with the result of `runTrafficJunctionLights` for each junction of the level in the junction update, so the lights change colour. blocks: TRAFFIC-S19. evidence: [traffic-junction.md §2026-11-07T12:14:46](../../re/traffic-junction.md#ts-20261107-121446)
+- [ ] TRAFFIC-26 — Read what the physical prop update of the traffic light does for a traffic light and port it with the prop's Mass and Buoyancy attributes. evidence: [traffic-junction.md §2026-11-07T12:14:46](../../re/traffic-junction.md#ts-20261107-121446)
 - [ ] TRAFFIC-29 — Read the order in which the grid gathers the entries and its cap of 100, the composite box owners and the walk for a slanted segment, and give `castTrafficGround` the original order. blocks: TRAFFIC-S23. evidence: [traffic-ground-cast.md §2026-11-07T12:11:38](../../re/traffic-ground-cast.md#ts-20261107-121138)
 - [ ] TRAFFIC-30 — Read the node tree of a car, the draw's use of the node's tint bytes and the vertex paint of the colour message, and send the message to the car's mesh nodes after the probe. needs: TRAFFIC-2. blocks: TRAFFIC-S24. evidence: [traffic-ground-cast.md §2026-11-07T12:11:38](../../re/traffic-ground-cast.md#ts-20261107-121138)
 
@@ -74,10 +78,13 @@ Read from the code and wired (tests `traffic-junction-update`, `traffic-junction
 - [traffic-ai-driver.md §2026-11-03T08:37:32](../../re/traffic-ai-driver.md#ts-20261103-083732): the leave call 0x21d6b8, the ground probe 0x20ae2c with the triangle weights 0x2b51b8 and the colour 0x221064.
 - [traffic-ai-driver.md §2026-11-02T23:44:38](../../re/traffic-ai-driver.md#ts-20261102-234438): the route mover 0x2613ac step by step, the junction choice 0x2cb1e8 with the choice table and the lanes, the stop test 0x2ca504 with the lights 0x2786a8, the junction queue 0x22a080 and its callers.
 - [traffic-ground-cast.md §2026-11-07T12:11:38](../../re/traffic-ground-cast.md#ts-20261107-121138): the vertical ground ray cast, the colour message on mesh nodes and the path name lookup 0x23895c.
+- [traffic-junction.md §2026-11-07T12:14:46](../../re/traffic-junction.md#ts-20261107-121446): the node part flags 0x2363d4, 0x20b19c, the set-up slot index quirk, and the light class update being the physical prop update.
 - [traffic-junction.md §2026-11-07T11:05:36](../../re/traffic-junction.md#ts-20261107-110536): the conflict test compares same-index segments (0x1cad58), the re-pinned conflict counts, and the path name split 0x23895c.
 - [traffic-junction.md §2026-11-03T08:53:43](../../re/traffic-junction.md#ts-20261103-085343): the junction and light classes, the set-up 0x1ca5a4 (ends, sides 0x159ab8, choices, Hermite lanes 0x20b0c0, conflicts 0x20af64, light pairs), the light set-up 0x19ff70, the light cycle 0x1d8924 and its times, the shipped junctions.
 
 ## 7. Code and tests
+
+`src/runtime/traffic_light_parts.{hpp,cpp}` (`trafficLightSetupOps`, `trafficLightPhaseOps`, `TrafficJunctionLightParts`, `trafficLightPartNode`, no SDL); CTest `traffic-light-parts`, `traffic-light-parts-real-data` (`tests/traffic_light_parts_test.cpp`, the second skips with 77 without the RomFS). Glue `src/game_traffic_lights.{hpp,cpp}` (`TrafficLightLooks`).
 
 `src/runtime/traffic_route_mover.{hpp,cpp}` (`runTrafficRouteMover`, `chooseTrafficJunction`, `trafficStopAtLights`, `trafficLightControls`, `leaveTrafficJunctionQueue`, `TrafficJunctionRecord`, `TrafficJunctionWorld`, no SDL); CTest `traffic-route-mover` (`tests/traffic_route_mover_test.cpp`). `src/runtime/traffic_junction_fill.{hpp,cpp}` (`trafficJunctionFills`, `fillTrafficJunction`, `trafficJunctionChoices`, `trafficJunctionLanePath`, `trafficLanesCross`, `runTrafficJunctionLights`, no SDL); CTest `traffic-junction-fill`, `traffic-junction-fill-real-data` (`tests/traffic_junction_fill_test.cpp`, the second skips with 77 without the RomFS).
 

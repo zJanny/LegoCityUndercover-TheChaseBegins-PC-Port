@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace chase::runtime {
@@ -82,6 +83,8 @@ struct TrafficJunctionSource {
     std::vector<const assets::LevelPath*> inputs;
     std::vector<const assets::LevelPath*> outputs;
     std::vector<std::array<std::optional<TrafficLight>, 2>> lights;
+    std::vector<std::size_t> lightSlots;                       // per pair: the 0-based slot n of the TrafficLight%02u (n + 1) that made it
+    std::vector<std::array<std::string, 2>> lightInstances;    // per pair: the instance names of the light and its slave ("" for none)
 };
 
 struct TrafficJunctionFill {
@@ -89,6 +92,8 @@ struct TrafficJunctionFill {
     std::vector<TrafficJunctionEnd> inputEnds;
     std::vector<TrafficJunctionEnd> outputEnds;
     std::vector<assets::LevelPath> lanePaths;  // per lane of record.layout.lanes, nameHash = its id
+    std::vector<std::size_t> lightSlots;
+    std::vector<std::array<std::string, 2>> lightInstances;
 };
 
 // 0x1ca5a4 on one junction. Lanes get the ids firstLaneId, firstLaneId + 1, ... The light cycle starts at pair 0, green, timer 6.
