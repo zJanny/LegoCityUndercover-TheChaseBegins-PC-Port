@@ -257,6 +257,7 @@ private:
     void loadTraffic();
     void enterTrafficScene();
     void updateTrafficSystem();
+    void updateTrafficJunctions(float dt);
     void applyTrafficFades();
     game_traffic::SystemInputs trafficInputs();
     bool placeTrafficCar(const chase::runtime::TrafficCarPlacement& placement);

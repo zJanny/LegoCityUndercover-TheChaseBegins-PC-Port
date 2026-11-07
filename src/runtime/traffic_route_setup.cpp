@@ -2,6 +2,8 @@
 
 #include "runtime/traffic_junction_fill.hpp"
 
+#include <utility>
+
 namespace chase::runtime {
 
 std::vector<TrafficJunction> trafficJunctions(const std::vector<const assets::Level*>& levels) {
@@ -11,8 +13,12 @@ std::vector<TrafficJunction> trafficJunctions(const std::vector<const assets::Le
 }
 
 TrafficRoutes setUpTrafficRoutes(TrafficRouteTable& table, const std::vector<const assets::Level*>& levels) {
+    return setUpTrafficJunctionRoutes(table, trafficJunctions(levels));
+}
+
+TrafficRoutes setUpTrafficJunctionRoutes(TrafficRouteTable& table, std::vector<TrafficJunction> junctions) {
     TrafficRoutes routes;
-    routes.junctions = trafficJunctions(levels);
+    routes.junctions = std::move(junctions);
     routes.junctionsInReach = collectTrafficRoutes(table, routes.junctions);
     routes.signals = linkTrafficRouteSignals(table, routes.junctions);
     return routes;

@@ -166,7 +166,9 @@ std::vector<TrafficEvent> TrafficSystem::enterScene(const TrafficSceneEnter& ent
     spawns_ = {};
     points_.clear();
     TrafficRouteTable& table = manager_.routeTable();
-    routes_ = setUpTrafficRoutes(table, enter.loadedLevels);
+    std::vector<TrafficJunctionFill> fills = trafficJunctionFills(enter.loadedLevels);
+    routes_ = setUpTrafficJunctionRoutes(table, trafficJunctionLayouts(fills));
+    junctions_ = keepTrafficJunctions(std::move(fills), enter.loadedLevels, routes_.signals);
     if (routes_.junctionsInReach > 0 && enter.pregenFile) {
         spawns_ = assets::parsePregenSpawns(*enter.pregenFile, assets::PregenSpawnKind::Traffic);
         const std::vector<PregenDerivedFields> fields = deriveSpawnFields(spawns_, enter.loadedLevels, enter.rooms);
@@ -205,6 +207,11 @@ std::vector<TrafficEvent> TrafficSystem::update(const TrafficSystemStep& step, G
     manager_.update(frame, random, &events);
     advanceDrivers(random);
     return events;
+}
+
+std::vector<TrafficJunctionLightEvent> TrafficSystem::updateJunctions(float dt) {
+    junctions_.world.routes = manager_.routeTable();
+    return runTrafficJunctionUpdates(junctions_.world, dt);
 }
 
 }

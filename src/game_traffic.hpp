@@ -44,6 +44,8 @@ public:
                     assets::PlacedObjectState& state);
     // Slot +0x48 of the system list: spawns enable a car's entity, removals disable it.
     void updateSystem(const SystemInputs& inputs, assets::PlacedObjectState& state);
+    // The junction class update of the entity pass: one line per light change of a junction (not for red waiting over red).
+    void updateJunctions(float dt, std::uint32_t update);
 
     std::size_t carCount() const { return system_.slots().size(); }
     const std::string& instance(std::size_t car) const { return system_.slots()[car].instance; }

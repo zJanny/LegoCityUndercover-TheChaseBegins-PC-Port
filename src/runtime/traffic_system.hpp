@@ -9,6 +9,7 @@
 #include "runtime/pedestrian_manager.hpp"
 #include "runtime/pregen_derive.hpp"
 #include "runtime/room_layers.hpp"
+#include "runtime/traffic_junction_update.hpp"
 #include "runtime/traffic_manager.hpp"
 #include "runtime/traffic_route_setup.hpp"
 
@@ -103,6 +104,8 @@ public:
 
     // Slot +0x48, the manager update 0x2dfe88, then the stand-in driver steps (TRAFFIC-S7).
     std::vector<TrafficEvent> update(const TrafficSystemStep& step, GameRandom& random);
+    // The junction class update 0x1d8924 of the entity pass, after the runner (runTrafficJunctionUpdates), with the manager's route bits.
+    std::vector<TrafficJunctionLightEvent> updateJunctions(float dt);
 
     const std::vector<TrafficCarSlot>& slots() const { return slots_; }
     const TrafficManager& manager() const { return manager_; }
@@ -110,6 +113,8 @@ public:
     std::size_t routeCount() const { return manager_.routeTable().routes.size(); }
     // The junctions and the route -> junction pairs of the last scene enter (TRAFFIC-2 reads them).
     const TrafficRoutes& routes() const { return routes_; }
+    // The junction records kept from the last scene enter and their route paths.
+    const TrafficJunctions& junctions() const { return junctions_; }
     // EnableTrafficPath (0x27bc30 -> 0x2dece4): before the scene enter a disable is queued and replayed by it.
     void enablePath(const std::string& name, bool on) { runEnableTrafficPath(manager_.routeTable(), name, on); }
     std::size_t floorCellsFound() const;
@@ -140,6 +145,7 @@ private:
     std::vector<SpawnPoint> points_;
     std::vector<std::size_t> cellPoints_;
     TrafficRoutes routes_;
+    TrafficJunctions junctions_;
 };
 
 }

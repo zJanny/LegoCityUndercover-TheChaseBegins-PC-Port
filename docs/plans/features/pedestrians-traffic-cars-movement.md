@@ -15,11 +15,12 @@ Not covered:
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-11-07T11:05:36+01:00.
+IN_PROGRESS, updated 2026-11-07T12:09:40+01:00.
 - The four movement functions are ported as `src/runtime/traffic_route_mover.*`: pure steps on the driver record, the junction records and the route functions.
 - The leave call 0x21d6b8 and the ground probe 0x20ae2c (the mover's hooks `leaveTraffic` and `snapTarget`) are ported as `src/runtime/traffic_leave_snap.*`.
-- The junction records are filled from the level and the light cycle is ported as a pure step (`src/runtime/traffic_junction_fill.*`).
-- None of this is connected to the AI driver or the spawned cars yet (TRAFFIC-19, TRAFFIC-2 in [pedestrians-traffic-cars-driver.md](pedestrians-traffic-cars-driver.md)), so the cars still stand still in `chase-game`.
+- The junction records are filled from the level at the scene enter and kept by the traffic system (`src/runtime/traffic_junction_update.*`). The light cycle of every junction runs in the object phase of `chase-game` (after the runner, as the entity pass 0x1a3f80 runs it), and each light change prints a line.
+- The route functions `evaluate`, `length` and `signal` read the junctions' route paths (level roads and lanes); `ahead` and `nearest` are not ported (TRAFFIC-23).
+- The AI driver is not connected to the spawned cars (TRAFFIC-2 in [pedestrians-traffic-cars-driver.md](pedestrians-traffic-cars-driver.md)), so the cars still stand still and no car is ever queued.
 
 ## 3. Verified behaviour
 
@@ -45,21 +46,29 @@ Read from the code (tests `traffic-junction-fill`, `traffic-junction-fill-real-d
 - The light cycle: green 6 s, yellow 2 s, red 3 s, the next pair green once the queue is empty; nothing with one pair.
 - Shipped levels: lanes, conflicts, light pairs and sided ends per level, and lvl_01 `Junction1` in detail; names without a level path are skipped (the route list lost one bogus route per level).
 
+Read from the code and wired (tests `traffic-junction-update`, `traffic-junction-update-real-data`, `game-traffic`), all from [traffic-junction.md §2026-11-07T12:09:40](../../re/traffic-junction.md#ts-20261107-120940):
+- The junction update 0x1d8924 is the class's slot +0xc and runs in the entity pass 0x1a3f80 with its dt: after the traffic manager (system phase) and the runner, after the cars' vehicle update when the priority bytes are equal.
+- The records of the scene enter keep their light state; the route set-up and the records use the same fills, so the junction index of the route → junction pairs is the record's index.
+- The route paths: the level path of each junction input and output, and each lane's own 4-point path.
+
 ## 4. Stand-ins
 
 - TRAFFIC-S11 Four cases where the original loops for ever, wraps a count or reads garbage throw instead: no enabled output among an input's choices, no lane joining the input and the chosen output, a 53rd queue entry, and leaving an empty queue (the count byte would wrap to 255). evidence: [traffic-ai-driver.md §2026-11-02T23:44:38](../../re/traffic-ai-driver.md#ts-20261102-234438)
-- TRAFFIC-S13 The junction fill refuses a junction path of fewer than two points, a 65th conflict pair (the original writes over its stack) and a lane id equal to a level path's name; lanes are named by port ids, not record addresses; paths and lights are searched in all loaded levels, not in the object's scene; path names are hashed whole, not after the last `.`; a lane tested against one with fewer points is refused (the original reads past its points). needs: TRAFFIC-19, TRAFFIC-21. evidence: [traffic-junction.md §2026-11-07T11:05:36](../../re/traffic-junction.md#ts-20261107-110536)
+- TRAFFIC-S13 The junction fill refuses a junction path of fewer than two points, a 65th conflict pair (the original writes over its stack) and a lane id equal to a level path's name; lanes are named by port ids, not record addresses; paths and lights are searched in all loaded levels, not in the object's scene; path names are hashed whole, not after the last `.`; a lane tested against one with fewer points is refused (the original reads past its points). needs: TRAFFIC-21. evidence: [traffic-junction.md §2026-11-07T11:05:36](../../re/traffic-junction.md#ts-20261107-110536)
+- TRAFFIC-S17 Every junction of the level data runs its light cycle at every update, in object order, in the object phase; the original runs the junction entities of its update list (room placement, skip bits, filter) in the list's sorted order. needs: TRAFFIC-24. evidence: [traffic-junction.md §2026-11-07T12:09:40](../../re/traffic-junction.md#ts-20261107-120940)
 - TRAFFIC-S16 The ground probe's ray cast, the triangle data and the receiver of the colour message are supplied by the caller; the port has no ground ray cast and does not know what command 1 does to the node. needs: TRAFFIC-22. evidence: [traffic-ai-driver.md §2026-11-03T08:37:32](../../re/traffic-ai-driver.md#ts-20261103-083732)
 
 ## 5. Open items
 
-- [ ] TRAFFIC-19 — Wire the junction records into the traffic system: keep the fills at the scene enter, run the light cycle for each junction every update, give the route functions the lane paths; which junctions update and in what order against the traffic update is not read. blocks: TRAFFIC-2, TRAFFIC-S13. evidence: [traffic-junction.md §2026-11-03T08:53:43](../../re/traffic-junction.md#ts-20261103-085343)
+- [ ] TRAFFIC-23 — The route functions `ahead` and `nearest` of the route type table for the traffic routes and lanes; `trafficRouteFunctions` leaves them unset. blocks: TRAFFIC-2. evidence: [traffic-junction.md §2026-11-07T12:09:40](../../re/traffic-junction.md#ts-20261107-120940)
+- [ ] TRAFFIC-24 — Which junctions are in the update list (the rooms of the shipped junctions, room type 16, the writers of entity hword +0x10 bits 0x24) and the priority byte +0x19 of the junction and car entities (whether the cars update before the junctions). blocks: TRAFFIC-S17. evidence: [traffic-junction.md §2026-11-07T12:09:40](../../re/traffic-junction.md#ts-20261107-120940)
 - [ ] TRAFFIC-20 — The look of the traffic lights: the parts green, yellow and red of `props/prop_trafficlight`, the part changes of the set-up (with its slot index quirk) and of the cycle, and the light class's own update are not ported. evidence: [traffic-junction.md §2026-11-03T08:53:43](../../re/traffic-junction.md#ts-20261103-085343)
 - [ ] TRAFFIC-21 — The original looks a path up by the part of its name after the last `.`, but the port hashes the whole name in its three users: the junction fill (`traffic_junction_fill.cpp`), the DCam paths (`dcam.cpp`) and the pedestrian path count (`pedestrian_system.cpp`); one shared helper in `chase_assets` would close all three. blocks: TRAFFIC-S13. evidence: [traffic-junction.md §2026-11-07T11:05:36](../../re/traffic-junction.md#ts-20261107-110536)
 - [ ] TRAFFIC-22 — Read the ground ray cast and the colour message on the car's node, and supply them to `TrafficGroundWorld`. blocks: TRAFFIC-2, TRAFFIC-S16. evidence: [traffic-ai-driver.md §2026-11-03T08:37:32](../../re/traffic-ai-driver.md#ts-20261103-083732)
 
 ## 6. Findings summary
 
+- [traffic-junction.md §2026-11-07T12:09:40](../../re/traffic-junction.md#ts-20261107-120940): the caller of the junction update (entity pass 0x1a3f80, slot +0xc), which junctions are in the update list (0x173534, layer class 2), the sort by priority and class type, the order against the traffic manager, the runner and the cars.
 - [traffic-ai-driver.md §2026-11-03T08:37:32](../../re/traffic-ai-driver.md#ts-20261103-083732): the leave call 0x21d6b8, the ground probe 0x20ae2c with the triangle weights 0x2b51b8 and the colour 0x221064.
 - [traffic-ai-driver.md §2026-11-02T23:44:38](../../re/traffic-ai-driver.md#ts-20261102-234438): the route mover 0x2613ac step by step, the junction choice 0x2cb1e8 with the choice table and the lanes, the stop test 0x2ca504 with the lights 0x2786a8, the junction queue 0x22a080 and its callers.
 - [traffic-junction.md §2026-11-07T11:05:36](../../re/traffic-junction.md#ts-20261107-110536): the conflict test compares same-index segments (0x1cad58), the re-pinned conflict counts, and the path name split 0x23895c.
@@ -70,5 +79,7 @@ Read from the code (tests `traffic-junction-fill`, `traffic-junction-fill-real-d
 `src/runtime/traffic_route_mover.{hpp,cpp}` (`runTrafficRouteMover`, `chooseTrafficJunction`, `trafficStopAtLights`, `trafficLightControls`, `leaveTrafficJunctionQueue`, `TrafficJunctionRecord`, `TrafficJunctionWorld`, no SDL); CTest `traffic-route-mover` (`tests/traffic_route_mover_test.cpp`). `src/runtime/traffic_junction_fill.{hpp,cpp}` (`trafficJunctionFills`, `fillTrafficJunction`, `trafficJunctionChoices`, `trafficJunctionLanePath`, `trafficLanesCross`, `runTrafficJunctionLights`, no SDL); CTest `traffic-junction-fill`, `traffic-junction-fill-real-data` (`tests/traffic_junction_fill_test.cpp`, the second skips with 77 without the RomFS).
 
 `src/runtime/traffic_route_mover.{hpp,cpp}` (`runTrafficRouteMover`, `chooseTrafficJunction`, `trafficStopAtLights`, `trafficLightControls`, `leaveTrafficJunctionQueue`, `TrafficJunctionRecord`, `TrafficJunctionWorld`, no SDL); CTest `traffic-route-mover` (`tests/traffic_route_mover_test.cpp`).
+
+`src/runtime/traffic_junction_update.{hpp,cpp}` (`TrafficRoutePaths`, `TrafficJunctions`, `trafficJunctionLayouts`, `keepTrafficJunctions`, `runTrafficJunctionUpdates`, `trafficRouteFunctions`, no SDL); CTest `traffic-junction-update`, `traffic-junction-update-real-data` (`tests/traffic_junction_update_test.cpp`, the second skips with 77 without the RomFS). Kept by `TrafficSystem` (`junctions()`, `updateJunctions`); glue `LevelTraffic::updateJunctions` and `LevelSession::updateTrafficJunctions` in `src/game_traffic.cpp`, one line in the object phase of `src/game_level_update.cpp`; CTest `game-traffic` (slow) pins the first light changes.
 
 `src/runtime/traffic_leave_snap.{hpp,cpp}` (`leaveTraffic`, `trafficGroundSegment`, `trafficTriangleWeights`, `trafficGroundColour`, `snapTrafficTarget`, `TrafficGroundWorld`, no SDL); CTest `traffic-leave-snap` (`tests/traffic_leave_snap_test.cpp`). `leaveTraffic` of the leave call 0x21d6b8 is a public method of `TrafficManager` (`src/runtime/traffic_manager.*`), because the fade bytes and `despawnCar` are private; `traffic_leave_snap` calls it.

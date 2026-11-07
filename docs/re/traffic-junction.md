@@ -7,7 +7,8 @@ Subtopic of [traffic.md](traffic.md): the `props/traffic_junction` objects (type
 - A junction's inputs and outputs are the level paths named by `InputPath01..08` / `OutputPath01..08`; an empty name or a name without a path is skipped (0x22a3b0 returns 0). An input ends at its last point, an output starts at its first; each keeps the x and z of its unit travel direction there. Two parallel ends (direction dot at least 0.9) get the sides 1 and 2 (0x159ab8). [§2026-11-03T08:53:43](#ts-20261103-085343)
 - Each input may leave by every output that does not turn back (dot above -0.85); with sides, a sided input keeps to its side and turns only to its side's direction; with one input and one output they always join. Every choice is a lane: a 4-point type 0 path whose inner points are a cubic Hermite curve (0x20b0c0) between the two ends. Two lanes with different ends conflict when segment i of one and segment i of the other (the same index) come within 0.1 in x and z. [§2026-11-03T08:53:43](#ts-20261103-085343), [§2026-11-07T11:05:36](#ts-20261107-110536)
 - `TrafficLight01..08` name `props/prop_trafficlight` objects; each found one makes a light pair with its `SlaveLight`. A light lists the roads of its `Path01..04`. The cycle starts with pair 0 green: green 6 s, yellow 2 s, all red 3 s, and the next pair turns green once no car is queued in the junction. A car waits at a light that lists its road unless that light's pair is the current one in green or yellow. [§2026-11-03T08:53:43](#ts-20261103-085343)
-- The port fills the junction records from the level (`traffic_junction_fill.*`) and runs the light cycle as a pure step; neither is wired into the traffic system yet. The route list now skips path names without a level path, so every listed route is a pregen point path. [§2026-11-03T08:53:43](#ts-20261103-085343) A path name is looked up by its part after the last `.` (0x23895c); the port hashes the whole name here, in the DCam paths and in the pedestrian path count (TRAFFIC-21). [§2026-11-07T11:05:36](#ts-20261107-110536)
+- The port fills the junction records from the level (`traffic_junction_fill.*`) and runs the light cycle as a pure step. The route list now skips path names without a level path, so every listed route is a pregen point path. [§2026-11-03T08:53:43](#ts-20261103-085343) A path name is looked up by its part after the last `.` (0x23895c); the port hashes the whole name here, in the DCam paths and in the pedestrian path count (TRAFFIC-21). [§2026-11-07T11:05:36](#ts-20261107-110536)
+- The junction update 0x1d8924 is class slot +0xc, called only by the entity pass 0x1a3f80 with its dt: after the traffic manager update and the runner, and (with equal priority bytes) after the cars' vehicle update. A junction is in the pass's list while it is placed, enabled, in a room of type below 16 (layer class 2). The port keeps the records from the scene enter and runs every junction's cycle in the object phase (stand-in TRAFFIC-S17); the route functions read the junctions' road and lane paths. [§2026-11-07T12:09:40](#ts-20261107-120940)
 
 <a id="ts-20261103-085343"></a>
 
@@ -95,3 +96,33 @@ Method: `llvm-objdump -d --triple=armv6k-none-eabi --mattr=+vfp2` on `artifacts/
 
 Unknowns:
 - None new; the unknowns of the entry above stay open.
+
+<a id="ts-20261107-120940"></a>
+
+## 2026-11-07T12:09:40+01:00 — Which junctions update and when: the entity pass 0x1a3f80 runs the light cycle after the runner, the traffic manager runs before it (llvm-objdump only, no REA session, no emulator)
+
+Method: `llvm-objdump -d --triple=armv6k-none-eabi --mattr=+vfp2` on `artifacts/game/game.arm.elf`, worker 20261107-traffic-A, 2026-11-07. Functions read: the descriptor builder 0x1bc31c, the class registration 0x246240, the junction create 0x1d889c, the entity pass 0x1a3f80 and its comparator 0x1cf7e4, the update list add 0x173534 (callers 0x18a068 and the tail call at 0x23c2b4), the vehicle descriptor builder 0x155b5c. The frame order is that of [scripts-runtime.md §2026-10-20T09:22:38](scripts-runtime.md#ts-20261020-092238); the room placement 0x23c1a8 and its layer table are those of [cutscene-actors-props.md](cutscene-actors-props.md). Port: `src/runtime/traffic_junction_update.*`, test `traffic-junction-update`, `traffic-junction-update-real-data`, `game-traffic`.
+
+**The caller.** 0x1bc31c fills the 40-byte descriptor of class 192 (`mov r0,#192; bl 0x246240`), and 0x246240 copies it to the class table 0x583124 + 40 × type. No code calls 0x1d8924 directly: its only reference is the literal at 0x1bc384, slot +0xc. That slot is called by the entity pass 0x1a3f80(dt) (call at 0x1a40e0, `ldr r1,[r0,#0xc]; blx r1` with s0 = the pass's dt kept in s16), which the gameplay step 0x2e5158 calls at 0x2e5530 after the runner and the timers and skips while the game state 0x235f08 is 3.
+
+**Which junctions.** The pass walks the update list 0x580564 (8-byte records {entity, priority byte}, count 0x376aa0). 0x173534(entity) appends an entity whose class has an update slot (+0xc not 0) unless its slot hword +0x1a is already set (not 0xffff, then only the priority byte is refreshed), and sends it message 0x80000004. Every junction entity has the update 0x1d8924, so a junction is in the list once 0x23c1a8 places it, enabled, with byte +0x13 = 0 in a room whose layer-table entry has bit 1. The create 0x1d889c copies the 136-byte entity from its argument, makes the node `trafficjunction`, sets +0x13 = 0 and the layer class +0x18 = 2, and allocates the 0x428-byte record +0x7c. Layer class 2 has bit 1 for the room types 0..15 and nothing for type 16, so junctions in rooms of type 16 and up are removed from the list (0x22d480) and their lights stop. In the pass an entity with bits 0x24 of hword +0x10 is skipped, and the optional filter at 0x376a9c + 8 can skip it.
+
+**Order.** When the list's dirty byte 0x376a9c is set, 0x259ebc sorts it with 0x1cf7e4: the priority byte (record +4, copied from entity +0x19), then the class type +0x12, both ascending. Neither the junction create nor the vehicle create 0x156ee4 writes +0x19, so both keep the byte of the entity they copy. With equal bytes the traffic cars' vehicle update 0x1571dc (class 183, descriptor 0x155b5c) runs before the junctions (class 192), and the characters (priority 254) run after both. So in one update:
+1. the traffic manager update (system slot +0x48 of 0x169374) spawns and removes cars;
+2. the runner runs the scripts;
+3. the entity pass runs, in list order, the cars' vehicle update (AI driver 0x26d934 and its post step with the route mover) and then 0x1d8924 for each listed junction;
+4. the characters, the player last.
+
+The light cycle of one junction reads only its own record and the queue that the cars' post step fills, so the order among junctions changes nothing.
+
+**Port.**
+- `keepTrafficJunctions` keeps the records of `trafficJunctionFills` from the scene enter in object order, with the route → junction pairs. The route set-up now runs on the same fills (`setUpTrafficJunctionRoutes` over `trafficJunctionLayouts`), so the junction indices of the pairs and of the records agree.
+- `runTrafficJunctionUpdates(world, dt)` runs 0x1d8924 for each junction. `chase-game` calls it in the object phase (after the runner, where the doors update) with the update's dt, through `TrafficSystem::updateJunctions`, which first copies the manager's route bits into the junction world. It prints `traffic junction N: pair P <green|yellow|red> at update U` for each change, not for red over red.
+- `trafficRouteFunctions` gives the route type functions the paths of the routes: the level path of each junction input and output and each lane's own path. `evaluate` is `sampleTrafficRoute`, `length` the point count and `signal` 0x20ff40.
+- lvl_01: 16 junctions, 57 + 97 route paths. With dt 1/30 the first changes come at update 181 in the 13 junctions with two or more light pairs (`traffic-junction-update-real-data`). In `chase-game` the first ones are at update 181 and red follows at update 242 (`game-traffic`).
+- STAND-IN TRAFFIC-S17: every junction of the level data runs every update. The room placement, the skip bits, the filter and the sort by priority are not modelled (TRAFFIC-24).
+
+Unknowns:
+- The priority byte +0x19 of the junction and of the traffic car entities (the template the creates copy), so whether the cars really update before the junctions (TRAFFIC-24).
+- In which rooms the shipped junctions sit (room type 16 stops their lights) and what writes bits 0x24 of hword +0x10 for them (TRAFFIC-24).
+- The route functions `ahead` (+8) and `nearest` (+0xc) of the type table 0x3581d4 are not ported for routes (TRAFFIC-23).

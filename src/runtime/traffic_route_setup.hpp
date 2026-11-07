@@ -29,6 +29,8 @@ struct TrafficRoutes {
 // The route part of the room set-up: 0x2df574 (route list of the junctions within 9000) into `table`, then the pairs 0x2dfc84. The caller loads
 // the pregen data when `junctionsInReach` is not 0 (bit 0 of the table) and replays the pending list.
 TrafficRoutes setUpTrafficRoutes(TrafficRouteTable& table, const std::vector<const assets::Level*>& levels);
+// The same over the junctions of trafficJunctions.
+TrafficRoutes setUpTrafficJunctionRoutes(TrafficRouteTable& table, std::vector<TrafficJunction> junctions);
 
 // The route index of a pregen point: the +0x24 word of its path record that 0x2df574 wrote, the index in the route list. A path outside the list
 // has none (STAND-IN TRAFFIC-S3: the original reads the stored word of the record).

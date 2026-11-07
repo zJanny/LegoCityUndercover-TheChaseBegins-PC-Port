@@ -94,6 +94,15 @@ void LevelTraffic::updateSystem(const SystemInputs& inputs, assets::PlacedObject
     report(system_.update(makeStep(inputs, state), random_), inputs, state);
 }
 
+void LevelTraffic::updateJunctions(float dt, std::uint32_t update) {
+    static const char* const phases[] = {"red", "yellow", "green"};
+    for (const runtime::TrafficJunctionLightEvent& event : system_.updateJunctions(dt)) {
+        if (event.change.phase == event.change.previous) continue;
+        std::cout << "traffic junction " << event.junction << ": pair " << event.change.pair << ' '
+                  << phases[event.change.phase] << " at update " << update << '\n';
+    }
+}
+
 std::optional<std::size_t> LevelTraffic::carOf(const std::string& lowerInstance) const {
     for (std::size_t i = 0; i < system_.slots().size(); ++i)
         if (lower(system_.slots()[i].instance) == lowerInstance) return i;
@@ -149,6 +158,11 @@ void LevelSession::enterTrafficScene() {
 void LevelSession::updateTrafficSystem() {
     if (!player || !follow) return;
     traffic.updateSystem(trafficInputs(), objectState);
+}
+
+void LevelSession::updateTrafficJunctions(float dt) {
+    if (!player || !follow) return;
+    traffic.updateJunctions(dt, updatesForLog);
 }
 
 bool LevelSession::placeTrafficCar(const chase::runtime::TrafficCarPlacement& placement) {
