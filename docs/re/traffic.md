@@ -2,7 +2,7 @@
 
 The traffic manager 0x527410 spawns and removes the level's `Traffic%02u` vehicles. The AI driver input 0x26d934 steers the spawned cars. The pedestrian manager 0x51b33c is in [pedestrians.md](pedestrians.md); the manager swap is corrected in [pedestrians.md §2026-10-20T11:17:42](pedestrians.md#ts-20261020-111742). The earlier entry [script-natives-audio.md §2026-10-15T15:10:38](script-natives-audio.md#ts-20261015-151038) gave the two manager addresses the wrong way round. Feature file: [pedestrians-traffic-cars.md](../plans/features/pedestrians-traffic-cars.md).
 
-Subtopics: [traffic-ai-driver.md](traffic-ai-driver.md), [traffic-junction.md](traffic-junction.md)
+Subtopics: [traffic-ai-driver.md](traffic-ai-driver.md), [traffic-junction.md](traffic-junction.md), [traffic-ai-driver-steering.md](traffic-ai-driver-steering.md)
 
 ## Current state
 
@@ -13,8 +13,9 @@ Subtopics: [traffic-ai-driver.md](traffic-ai-driver.md), [traffic-junction.md](t
 - The vehicle update 0x1571dc picks its input provider as follows: 0x26d934 (AI driver) when the driver record (vehicle record +0x2a4) has +0xaf bit 0 set; 0x29cd9c for the player's vehicle; otherwise 0x1d8df0, which is an empty function (`bx lr`). [§2026-10-20T11:18:14](#ts-20261020-111814)
 - Port: `src/runtime/traffic_manager.*` (test `traffic-manager`), `src/runtime/traffic_route.*` (tests `traffic-route`, `traffic-route-real-data`) and `src/runtime/ai_driver_input.*` (the record, 0x26d934, 0x1cb148 and 0x1bc79c; test `ai-driver-input`); the manager is wired into `chase-game` by `TrafficSystem` (`src/runtime/traffic_system.*`, glue `src/game_traffic.*`): cars spawn at pregen points and leave again without driving, the route port and the AI driver are not connected to them. [§2026-10-25T12:35:43](#ts-20261025-123543)
 - The spawn places the car at the point (y raised by `TrafficHeightOffRoad` minus the centre of mass y) with the point's direction. The LOD table is the pedestrian distance fade table, the cars are LOD class 1 (band 50.4 to 133, prefill 0 to 76), and the removal radius is 50 for the ten cars of lvl_01. [§2026-10-25T12:35:43](#ts-20261025-123543)
-- Open: the route mover 0x2613ac, the steering controller 0x27872c, the junction choice 0x2cb1e8, the writer of record +0x20 (the removal radius row), the junction lanes and lights, who moves a car's route onto a lane, connecting the route port and the AI driver to the cars, and the cars of the other levels. [§2026-10-25T12:35:43](#ts-20261025-123543)
+- Open: the route mover 0x2613ac, the junction choice 0x2cb1e8, the writer of record +0x20 (the removal radius row), the junction lanes and lights, who moves a car's route onto a lane, connecting the route port and the AI driver to the cars, and the cars of the other levels. [§2026-10-25T12:35:43](#ts-20261025-123543)
 - The routes of the junctions and the AI driver (record, input provider, state change, post step, kinematic bodies) are in [traffic-ai-driver.md](traffic-ai-driver.md); its Current state lists them.
+- The steering of states 5 and 8 (the controller 0x27872c, the contact step 0x29cc38, the gear speed 0x20362c) is in [traffic-ai-driver-steering.md](traffic-ai-driver-steering.md); its Current state lists it.
 
 <a id="ts-20261020-111814"></a>
 

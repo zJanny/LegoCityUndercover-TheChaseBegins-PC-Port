@@ -82,7 +82,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [pedestrians-traffic-pedestrians](pedestrians-traffic-pedestrians.md) | IN_PROGRESS | run in chase-game with room moves; PED-5 message slot; PED-27 fade point cameras |
 | [pedestrians-traffic-pedestrians-fade](pedestrians-traffic-pedestrians-fade.md) | IN_PROGRESS | PED-21 faded-out pedestrians not removed; PED-22 node radius source; PED-23 node draw pass |
 | [pedestrians-traffic-pedestrians-vehicles](pedestrians-traffic-pedestrians-vehicles.md) | IN_PROGRESS | vehicle test and set-up layer table run in chase-game; PED-18 cutscene layer table; PED-19 vehicle list filter |
-| [pedestrians-traffic-cars-driver](pedestrians-traffic-cars-driver.md) | IN_PROGRESS | AI driver ported, not connected; TRAFFIC-2 connect it; TRAFFIC-8 steering; TRAFFIC-9 other calls |
+| [pedestrians-traffic-cars-driver](pedestrians-traffic-cars-driver.md) | IN_PROGRESS | AI driver and its steering ported, not connected; TRAFFIC-2 connect it; TRAFFIC-9 other calls; TRAFFIC-27 steering calls |
 | [pedestrians-traffic-cars](pedestrians-traffic-cars.md) | IN_PROGRESS | cars spawn and leave in chase-game on the junction routes, standing still; TRAFFIC-14 path record index; TRAFFIC-12 other levels |
 | [pedestrians-traffic-cars-movement](pedestrians-traffic-cars-movement.md) | IN_PROGRESS | route mover, stop test, junction choice and queue ported, not connected; TRAFFIC-18 junction record from the level; TRAFFIC-22 ground ray cast and colour message |
 | [level-transitions](level-transitions.md) | IN_PROGRESS | station exit and entry switch at run time; TRANS-3 master level (needs SCRIPT-1), TRANS-8 loading page code and look; TRANS-15 same-level entry timing, TRANS-16 oracle check of lift entries |
