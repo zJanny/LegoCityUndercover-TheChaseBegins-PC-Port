@@ -67,6 +67,21 @@ bool TrafficJunctionLightParts::shown(std::size_t pair, std::size_t member, std:
     return (hidden_.at(pair).at(member) & (1u << part)) == 0;
 }
 
+void TrafficLightPartStates::add(const TrafficJunctionFill& fill) {
+    TrafficJunctionLightParts parts(fill.record.lightPairs.size());
+    parts.apply(trafficLightSetupOps(fill.record.lightPairs, fill.lightSlots));
+    junctions_.push_back({fill.record.lightPairs, std::move(parts)});
+}
+
+void TrafficLightPartStates::applyChange(std::size_t junction, const TrafficLightChange& change) {
+    Junction& target = junctions_.at(junction);
+    target.parts.apply(trafficLightPhaseOps(target.pairs, change.pair, change.phase, change.previous));
+}
+
+bool TrafficLightPartStates::shown(std::size_t junction, std::size_t pair, std::size_t member, std::uint8_t part) const {
+    return junctions_.at(junction).parts.shown(pair, member, part);
+}
+
 std::ptrdiff_t trafficLightPartNode(const std::vector<std::string>& names, std::uint8_t part) {
     if (part >= kTrafficLightPartCount) return -1;
     for (std::size_t i = 0; i < names.size(); ++i)

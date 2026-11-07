@@ -19,19 +19,15 @@ public:
     void applyChange(std::size_t junction, const chase::runtime::TrafficLightChange& change);
     void apply(chase::render::Scene& scene, const std::vector<bool>& shownPlaced) const;
     std::size_t lights() const { return lights_.size(); }
-    std::size_t junctions() const { return junctions_.size(); }
+    std::size_t junctions() const { return states_.junctions(); }
 
 private:
-    struct Junction {
-        std::vector<std::array<std::optional<chase::runtime::TrafficLight>, 2>> pairs;
-        chase::runtime::TrafficJunctionLightParts parts;
-    };
     struct Light {
         std::size_t junction, pair, member, placedIndex, sceneInstance;
         std::vector<std::ptrdiff_t> nodeInstance;
         std::array<std::ptrdiff_t, chase::runtime::kTrafficLightPartCount> partNode;
     };
-    std::vector<Junction> junctions_;
+    chase::runtime::TrafficLightPartStates states_;
     std::vector<Light> lights_;
 };
 

@@ -49,6 +49,23 @@ private:
     std::vector<std::array<std::uint8_t, 2>> hidden_;
 };
 
+// The part flags of all junctions of a level in object order (the index of `TrafficJunctionLightEvent`): the set-up ops of every fill, then the
+// ops of each change of the cycle.
+class TrafficLightPartStates {
+public:
+    void add(const TrafficJunctionFill& fill);
+    void applyChange(std::size_t junction, const TrafficLightChange& change);
+    bool shown(std::size_t junction, std::size_t pair, std::size_t member, std::uint8_t part) const;
+    std::size_t junctions() const { return junctions_.size(); }
+
+private:
+    struct Junction {
+        std::vector<std::array<std::optional<TrafficLight>, 2>> pairs;
+        TrafficJunctionLightParts parts;
+    };
+    std::vector<Junction> junctions_;
+};
+
 // The index of the node of `names` that 0x23645c finds for `part` (case-insensitive, first match), or -1.
 std::ptrdiff_t trafficLightPartNode(const std::vector<std::string>& names, std::uint8_t part);
 

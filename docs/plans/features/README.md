@@ -85,7 +85,8 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [pedestrians-traffic-pedestrians-vehicles](pedestrians-traffic-pedestrians-vehicles.md) | IN_PROGRESS | vehicle test and set-up layer table run in chase-game; PED-18 cutscene layer table; PED-19 vehicle list filter |
 | [pedestrians-traffic-cars-driver](pedestrians-traffic-cars-driver.md) | IN_PROGRESS | AI driver and its steering ported, not connected; TRAFFIC-2 connect it; TRAFFIC-9 other calls; TRAFFIC-27 steering calls |
 | [pedestrians-traffic-cars](pedestrians-traffic-cars.md) | IN_PROGRESS | cars spawn and leave in chase-game on the junction routes, standing still; TRAFFIC-14 path record index; TRAFFIC-12 other levels |
-| [pedestrians-traffic-cars-movement](pedestrians-traffic-cars-movement.md) | IN_PROGRESS | route mover, stop test, junction choice and queue ported, not connected; traffic light look ported, cycle changes not delivered (TRAFFIC-25); TRAFFIC-22 ground ray cast and colour message ported |
+| [pedestrians-traffic-cars-movement](pedestrians-traffic-cars-movement.md) | IN_PROGRESS | route mover, stop test, junction choice and queue ported, not connected; TRAFFIC-22 ground ray cast and colour message ported; TRAFFIC-23 route functions ahead and nearest |
+| [pedestrians-traffic-cars-junction](pedestrians-traffic-cars-junction.md) | IN_PROGRESS | junction records, light cycle and traffic light looks ported and wired (TRAFFIC-25 done); TRAFFIC-31 room type of the junction rooms, TRAFFIC-26 light prop update |
 | [level-transitions](level-transitions.md) | IN_PROGRESS | station exit and entry switch at run time; TRANS-3 master level (needs SCRIPT-1), TRANS-8 loading page code and look; TRANS-15 same-level entry timing, TRANS-16 oracle check of lift entries |
 
 ## Front end, HUD, saves

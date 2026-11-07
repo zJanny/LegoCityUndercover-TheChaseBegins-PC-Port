@@ -94,13 +94,15 @@ void LevelTraffic::updateSystem(const SystemInputs& inputs, assets::PlacedObject
     report(system_.update(makeStep(inputs, state), random_), inputs, state);
 }
 
-void LevelTraffic::updateJunctions(float dt, std::uint32_t update) {
+std::vector<chase::runtime::TrafficJunctionLightEvent> LevelTraffic::updateJunctions(float dt, std::uint32_t update) {
     static const char* const phases[] = {"red", "yellow", "green"};
-    for (const runtime::TrafficJunctionLightEvent& event : system_.updateJunctions(dt)) {
+    std::vector<runtime::TrafficJunctionLightEvent> events = system_.updateJunctions(dt);
+    for (const runtime::TrafficJunctionLightEvent& event : events) {
         if (event.change.phase == event.change.previous) continue;
         std::cout << "traffic junction " << event.junction << ": pair " << event.change.pair << ' '
                   << phases[event.change.phase] << " at update " << update << '\n';
     }
+    return events;
 }
 
 std::optional<std::size_t> LevelTraffic::carOf(const std::string& lowerInstance) const {
@@ -162,7 +164,8 @@ void LevelSession::updateTrafficSystem() {
 
 void LevelSession::updateTrafficJunctions(float dt) {
     if (!player || !follow) return;
-    traffic.updateJunctions(dt, updatesForLog);
+    for (const chase::runtime::TrafficJunctionLightEvent& event : traffic.updateJunctions(dt, updatesForLog))
+        trafficLights.applyChange(event.junction, event.change);
 }
 
 bool LevelSession::placeTrafficCar(const chase::runtime::TrafficCarPlacement& placement) {

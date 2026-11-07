@@ -5,6 +5,7 @@
 #include "runtime/traffic_junction_update.hpp"
 
 #include "assets/assets.hpp"
+#include "runtime/traffic_light_parts.hpp"
 #include "runtime/traffic_route_setup.hpp"
 
 #include <array>
@@ -127,6 +128,8 @@ int shipped(const std::string& fib, const std::string& csv) {
     require(entry != nullptr, "lvl_01 not found");
     const assets::Level level = assets::parseLevel(archive.read(*entry));
     std::vector<TrafficJunctionFill> fills = trafficJunctionFills({&level});
+    TrafficLightPartStates states;
+    for (const TrafficJunctionFill& fill : fills) states.add(fill);
     TrafficRouteTable table;
     const TrafficRoutes routes = setUpTrafficJunctionRoutes(table, trafficJunctionLayouts(fills));
     TrafficJunctions junctions = keepTrafficJunctions(std::move(fills), {&level}, routes.signals);
@@ -134,14 +137,22 @@ int shipped(const std::string& fib, const std::string& csv) {
     // and the 97 lanes of traffic-junction-fill-real-data each have a path.
     require(junctions.world.junctions.size() == 16 && junctions.paths.size() == 57 + 97, "lvl_01: 16 junctions, 154 route paths");
     for (const std::uint32_t route : table.routes) require(junctions.paths.find(route) != nullptr, "lvl_01: every listed route has a path");
+    require(states.junctions() == 16 && states.shown(1, 0, 0, kTrafficLightGreen) && !states.shown(1, 0, 0, kTrafficLightYellow),
+            "lvl_01: junction 1 pair 0 starts green");
     std::size_t first = 0, cycling = 0;
-    for (std::size_t update = 1; update <= 200 && cycling == 0; ++update) {
+    for (std::size_t update = 1; update <= 242; ++update) {
         const std::vector<TrafficJunctionLightEvent> events = runTrafficJunctionUpdates(junctions.world, 1.0f / 30.0f);
-        if (!events.empty()) {
+        for (const TrafficJunctionLightEvent& event : events) states.applyChange(event.junction, event.change);
+        if (!events.empty() && cycling == 0) {
             first = update;
             cycling = events.size();
         }
+        if (update == 181)
+            require(states.shown(1, 0, 0, kTrafficLightYellow) && !states.shown(1, 0, 0, kTrafficLightGreen) && !states.shown(1, 0, 0, kTrafficLightRed),
+                    "lvl_01: junction 1 pair 0 shows yellow at update 181");
     }
+    // Reference: 20261107-traffic2-A, 2026-11-07, chase-game log of lvl_01 (game-traffic): junction 1 pair 0 yellow at update 181, red at update 242.
+    require(states.shown(1, 0, 0, kTrafficLightRed) && !states.shown(1, 0, 0, kTrafficLightYellow), "lvl_01: junction 1 pair 0 shows red at update 242");
     // Same run: the timer 6.0 minus 1/30 per update reaches 0 at update 181 (float steps); 13 of the 16 junctions have two or more light pairs.
     require(first == 181 && cycling == 13, "lvl_01: first light change at update " + std::to_string(first) + " in " + std::to_string(cycling) + " junctions");
     std::cout << "traffic-junction-update: lvl_01 ok\n";

@@ -48,7 +48,8 @@ struct TrafficJunctionLightEvent {
 // 0x20b19c change (a red light that waits for an empty queue repeats red over red at each update).
 // STAND-IN TRAFFIC-S17: every junction of the level data updates at every update; the original updates the junction entities of its update
 // list 0x580564 (added by 0x173534 when 0x23c1a8 places an enabled one in a room of type below 16, layer class 2; skipped with entity
-// +0x10 bits 0x24), in the order of the list sorted by the priority byte +0x19 and then the class type (TRAFFIC-24).
+// +0x10 bits 0x24), in the order of the list sorted by the priority byte +0x19 (128 for junctions and cars) and then the class type; the
+// room type and bit 0x04 are not read (TRAFFIC-31).
 std::vector<TrafficJunctionLightEvent> runTrafficJunctionUpdates(TrafficJunctionWorld& world, float dt);
 
 // The route type functions over the junctions' paths: evaluate is slot 0 of the route's type (sampleTrafficRoute), length the point count
