@@ -25,6 +25,9 @@ Maximum raised (2026-11-02, mid-round 20261102-qolmore): the user said "increase
 
 Room and traffic loading (2026-11-02, relayed by the lead): scope "Next round", they are not part of the x20 slider package; room cap "No cap, measure": when rooms are scaled, every room in range is loaded and the worker measures memory and frame time at x20 and reports (QOLVD-5, QOLVD-6, QOLFS-20).
 
+Room loading rule (2026-11-03, asked by 20261103-large-E, relayed by the lead): "Radial (Recommended)": above x1.0 every room whose box comes within the scaled far plane (260 m x factor) of the camera, in every direction, is requested in addition to the original's rooms (the current room, its neighbours and up to three preloads), with no cap; at x1.0 the original rule alone. With the widened view on as well, its strip rooms ([qol-screen-layout.md §2026-11-02T15:42:07](qol-screen-layout.md#ts-20261102-154207)) are added too.
+
+Extra rooms active (2026-11-07, relayed by the lead): asked "with View distance above x1.0 or the widened view on, the extra rooms also become active (traffic, pedestrians, attack characters and scripts), not only drawn; at x20 all 43 rooms. Keep it that way?": "Keep: load fully". The rooms the View distance and the widened view add behave like rooms the game loads itself: they are drawn, reported loaded to the level scripts, and used by the traffic, the pedestrians and the attack characters.
+
 Open (not decided by the user):
 - The help text of the row: none is shown until the user approves a wording (QOLVD-4 in the feature file).
-- The room loading rule itself: the port loads rooms by the room graph (the current room, its neighbours and up to three preloads), not by a distance; the user wants every room in range loaded with no cap (above), the rule that picks "in range" is the next round's work (QOLVD-5).

@@ -23,7 +23,7 @@ if(TARGET chase_render)
   target_compile_options(chase_qol_window PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
-target_sources(chase_qol PRIVATE ui_page_game.cpp ui_page_display.cpp ui_page_display_view.cpp view_distance.cpp)
+target_sources(chase_qol PRIVATE ui_page_game.cpp ui_page_display.cpp ui_page_display_view.cpp view_distance.cpp room_request_hook.cpp)
 if(TARGET chase_qol_paint)
   target_sources(chase_qol_paint PRIVATE ui_menu.cpp)
 endif()

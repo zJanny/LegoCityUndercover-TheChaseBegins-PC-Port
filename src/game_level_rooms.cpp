@@ -1,4 +1,5 @@
 #include "game_level.hpp"
+#include "qol/room_request_hook.hpp"
 #include "qol/view_distance.hpp"
 #include "runtime/fog.hpp"
 #include "runtime/room_locator.hpp"
@@ -95,7 +96,7 @@ void LevelSession::updateRoomStreaming() {
     const std::set<int> loadedBefore = roomStreamer->loadedRooms();
     moveVehicleRooms();
     movePedestrianRooms();
-    roomStreamer->update(player->position(), viewDirection(follow->yaw(), follow->pitch()), scriptedRooms);
+    roomStreamer->update(player->position(), viewDirection(follow->yaw(), follow->pitch()), qol::withViewRooms(scriptedRooms, roomStreamer->boxes(), follow->eye(), viewDirection(follow->yaw(), follow->pitch()), follow->verticalFieldOfView(), runtime::kFollowFarPlane));
     if (roomStreamer->currentRoom() != before) std::cout << "room " << before << " -> " << roomStreamer->currentRoom() << " at update " << updatesForLog << '\n';
     if (roomStreamer->loadedRooms() != loadedBefore) {
         showLoadedRooms();

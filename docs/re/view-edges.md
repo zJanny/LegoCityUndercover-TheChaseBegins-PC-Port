@@ -11,8 +11,9 @@ Findings from the port's draw path and the recorded findings of the original abo
 - The largest camera record FOV over all levels is 43 (every Bound setup; two Room setups hold 0 and are never a pose), so the pedestrian spawn cone holds the 16:9 view in every shipped record pose (limit 52.2 degrees). [§2026-11-02T15:16:57](#ts-20261102-151657)
 - Rooms that only the 16:9 strip reaches and that are not loaded exist in every world level (follow camera, sampled), but in each level the 5:3 view already reaches an unloaded room nearer than any of them: the strip adds more of the same far, fogged pop-in, no new kind. [§2026-11-02T15:16:57](#ts-20261102-151657)
 - At x20 the hooks scale by the same rule as at x4 with no overflow; the depth buffer resolves coarser far away (QOLVD-7). [§20261102-221857](#ts-20261102-221857)
-- Distances of drawing and loading and what a view distance factor reaches: the far planes, the fog and the pedestrian fade words are scaled; room loading has no distance (it follows the room graph); the traffic removal radius 50 is not an input of the traffic step. [§2026-11-02T21:25:47](#ts-20261102-212547)
-- Left open as items: the cutscene and scanner cameras, and loading the strip's rooms with the widened view on (QOLFS-20, the user said yes on 2026-11-02, [qol-screen-layout.md §2026-11-02T15:42:07](../design/qol-screen-layout.md#ts-20261102-154207)). [§2026-10-30T14:03:24](#ts-20261030-140324), [§2026-11-02T15:16:57](#ts-20261102-151657)
+- Distances of drawing and loading and what a view distance factor reaches: the far planes, the fog and the pedestrian fade words are scaled; room loading has no distance in the original rule (it follows the room graph); the traffic removal radius 50 is now an input of the traffic step (`TrafficSystemStep::despawnRadius`, [traffic-ai-driver.md §2026-11-03T08:37:32](traffic-ai-driver.md#ts-20261103-083732)) and not yet scaled. [§2026-11-02T21:25:47](#ts-20261102-212547)
+- Left open as items: the cutscene and scanner cameras. [§2026-10-30T14:03:24](#ts-20261030-140324), [§2026-11-02T15:16:57](#ts-20261102-151657)
+- The room request adds the rooms of the 16:9 strip (widened view on) and above x1.0 every room within 260 m times the factor (the user's rules of 2026-11-03) through the scripted-request set; at x20 all 43 rooms of Cherry Tree Hills load, the draw calls triple and memory and frame time stay level, because the port keeps every room model from the level start. [§2026-11-03T08:48:54](#ts-20261103-084854)
 
 <a id="ts-20261030-140324"></a>
 
@@ -105,3 +106,26 @@ Method: code reading of `src/game_level.cpp`, `src/runtime/fog.cpp`, `src/render
 **Unknowns, last**
 
 - Whether the flicker is visible in play at x20 and how far out; needs a picture check.
+
+<a id="ts-20261103-084854"></a>
+
+## 2026-11-03T08:48:54+01:00 — Rooms requested by the widened view and the View distance factor, and their cost at x20 (20261103-large-E)
+
+Method: the rule of the user's answers of 2026-11-03 ([qol-view-distance.md §2026-11-02T18:43:07](../design/qol-view-distance.md#ts-20261102-184307), [qol-screen-layout.md §2026-11-02T15:42:07](../design/qol-screen-layout.md#ts-20261102-154207)) implemented in `src/qol/room_request_hook.*`; Graphify queries on the room request (`RoomStreamer`, `planRoomStreaming`), then `src/runtime/room_streamer.cpp`, `src/runtime/room_streaming.cpp` and `src/game_level_rooms.cpp`; short runs of `chase-game` in Cherry Tree Hills at the police station entrance after mission 1-1 (start of the CTest `game-room-streaming`, 960x540 window, offscreen video driver, 150 updates, values read from the debug overlay of the last frame). Code reading and port runs only, no emulator.
+
+**Where the extra rooms enter the room request**
+- The room request takes a set of extra wanted rooms each update: the rooms the scripts asked for (`StreamRoomIn`), which `planRoomStreaming` adds to the wanted set at priority 0 after the current room, its neighbours and the preloads. The hook adds its rooms to that set, so they are loaded by the same rule (9 updates of loading, unloaded when no longer wanted) and the original's own requests are kept. The level-start settle does not take that set, so the extra rooms finish loading 9 updates after the start.
+- Camera of the rule: the follow camera, the camera the room request already uses (its eye, view direction, vertical field of view and the far plane 260); a cutscene or scanner camera does not change the request.
+- Strip rule (widened view on): a room is added when its whole-model box meets the 16:9 frustum and not the 5:3 frustum (exact separating-axis test of box and pyramid), up to the far plane times the factor.
+- Radial rule (factor above x1.0): a room is added when the nearest point of its box lies within 260 m times the factor of the camera eye, in every direction.
+
+**What a loaded room changes in the port**
+- Every room model is read and kept from the level start; loading a room makes its instances visible, marks the room loaded for the level scripts, and lets the traffic, the pedestrians and the attack characters use it (`LevelSession::roomShown`). More loaded rooms therefore also means more of the world active, by the port's own rules.
+
+**Runs (Cherry Tree Hills, police station entrance)**
+- Original (no `config/qol.cfg`), heading 100: 7 rooms loaded, no request beyond them in 12 updates. Improved at x1.0, same pose: Room20 is added by the strip (nearest box point 164.98 m from the camera) and finishes loading at update 9. Improved at x20.0, heading 11.3: all 43 rooms of the level are loaded at update 9 (the nearest new room 114.8 m from the camera).
+- Cost at x20 (heading 100, Improved x1.0 against x20.0): draw calls 1862 against 5983, GPU time of the level draw 0.46 against 0.55 ms, resident memory 288.2 against 286.1 MB (peak 288.2 and 286.1), frame time average 25.5 against 26.2 ms over the last second (heading 11.3: Original 2164 draws, 0.21 ms, 281.9 MB, 24.9 ms; x20 5983 draws, 0.61 ms, 285.0 MB, 25.1 ms). Memory does not grow because every room model is already in memory; the draw calls triple; the frame time stays within the noise of the runs (other builds shared the CPU, frame time 17 to 43 ms within one second in every run).
+
+**Unknowns, last**
+- The cost on a slower GPU or with the whole level in view (the measured poses face a wall or a sign; the port has no frustum culling, so the draw count is the same in every direction).
+- Whether the original's streaming could hold 43 rooms at once is not relevant to the port, which keeps every room model; it is not measured.

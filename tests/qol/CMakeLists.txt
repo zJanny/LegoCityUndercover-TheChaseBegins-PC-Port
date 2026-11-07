@@ -339,3 +339,41 @@ if(TARGET chase_qol_window)
     "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
   set_tests_properties(qol-slot-page-entry-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)
 endif()
+
+if(TARGET chase_runtime)
+  add_executable(qol-room-request-hook-test room_request_hook_test.cpp)
+  target_link_libraries(qol-room-request-hook-test PRIVATE chase_qol chase_runtime)
+  target_compile_options(qol-room-request-hook-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME qol-room-request-hook COMMAND qol-room-request-hook-test)
+endif()
+
+if(TARGET chase-game)
+  # Room requests of the widened view and the View distance slider (QOLFS-20, QOLVD-5) in Cherry Tree Hills at the start position of
+  # game-room-streaming (the police station entrance after mission 1-1). Original first: the default config (no qol.cfg) loads the
+  # original 7 rooms and nothing more. Improved at x1.0, heading 100: the 16:9 strip adds Room20 (nearest box point 164.98 from the
+  # camera). Improved at x20.0, heading 11.3: every room of the level (43) is requested at update 0 and finishes loading at update 9
+  # (kRoomLoadUpdates). Runs of the port by 20261103-large-E on 2026-11-03.
+  set(ROOM_REQUEST_START --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+    --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
+    --start "903.71875 16.573267 1113.328247" --window 960x540 --script "0 0 12")
+  foreach(variant strip x20)
+    set(ROOM_REQUEST_CONFIG_DIR "${CMAKE_BINARY_DIR}/config-room-request-${variant}")
+    configure_file(${CMAKE_SOURCE_DIR}/config/controls.cfg ${ROOM_REQUEST_CONFIG_DIR}/controls.cfg COPYONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/config/controls.default.cfg ${ROOM_REQUEST_CONFIG_DIR}/controls.default.cfg COPYONLY)
+  endforeach()
+  file(WRITE ${CMAKE_BINARY_DIR}/config-room-request-strip/qol.cfg "window_mode windowed\nresolution 960x540\nmaster Improved\n")
+  file(WRITE ${CMAKE_BINARY_DIR}/config-room-request-x20/qol.cfg "window_mode windowed\nresolution 960x540\nmaster Improved\nview_distance 20.0\n")
+  add_test(NAME qol-room-request-game-original COMMAND chase-game ${ROOM_REQUEST_START} --facing 100
+    --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --save-out "${CMAKE_BINARY_DIR}/qol-room-request-original.dat")
+  set_tests_properties(qol-room-request-game-original PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+    LABELS needs-game-data PASS_REGULAR_EXPRESSION "room streaming: 43 rooms, start Room7, 7 loaded" FAIL_REGULAR_EXPRESSION "rooms loaded:")
+  add_test(NAME qol-room-request-game-strip COMMAND chase-game ${ROOM_REQUEST_START} --facing 100
+    --config "${CMAKE_BINARY_DIR}/config-room-request-strip/controls.cfg" --save-out "${CMAKE_BINARY_DIR}/qol-room-request-strip.dat")
+  set_tests_properties(qol-room-request-game-strip PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+    LABELS needs-game-data
+    PASS_REGULAR_EXPRESSION "room streaming: 43 rooms, start Room7, 7 loaded.*rooms loaded: 8 at update 9\nroom 20 loaded at update 9: nearest box point 164\\.9")
+  add_test(NAME qol-room-request-game-x20 COMMAND chase-game ${ROOM_REQUEST_START} --facing 11.3
+    --config "${CMAKE_BINARY_DIR}/config-room-request-x20/controls.cfg" --save-out "${CMAKE_BINARY_DIR}/qol-room-request-x20.dat")
+  set_tests_properties(qol-room-request-game-x20 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+    LABELS needs-game-data PASS_REGULAR_EXPRESSION "room streaming: 43 rooms, start Room7, 9 loaded.*rooms loaded: 43 at update 9")
+endif()
