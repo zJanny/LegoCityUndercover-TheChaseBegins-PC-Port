@@ -13,10 +13,10 @@ Not covered:
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-11-07T18:12:03+01:00.
+IN_PROGRESS, updated 2026-11-08T12:02:22+01:00.
 - The junction records are filled from the level at the scene enter and kept by the traffic system (`src/runtime/traffic_junction_update.*`). The light cycle of every junction runs in the object phase of `chase-game` (after the runner, as the entity pass 0x1a3f80 runs it), prints a line per light change and delivers the change to the lights' looks.
 - The traffic lights show the look of their set-up first (pair 0 green, the slot quirk) and then follow the cycle, node by node (`src/runtime/traffic_light_parts.*`, glue `src/game_traffic_lights.*`).
-- Which junctions are in the update list depends on the room type of their room, which is not read (TRAFFIC-31). The priority bytes are read: cars update before junctions.
+- Which junctions are in the update list depends on the room type of their room, whose source is known (the room-state update) but whose values are not (TRAFFIC-31, TRAFFIC-38). The traffic light has no physical update of its own (TRAFFIC-26). The priority bytes are read: cars update before junctions.
 
 ## 3. Verified behaviour
 
@@ -47,11 +47,12 @@ Read from the code and wired (tests `traffic-light-parts`, `traffic-junction-upd
 
 ## 5. Open items
 
-- [ ] TRAFFIC-26 — Read what the physical prop update of the traffic light does for a traffic light and port it with the prop's Mass and Buoyancy attributes. evidence: [traffic-junction.md §2026-11-07T12:14:46](../../re/traffic-junction.md#ts-20261107-121446)
-- [ ] TRAFFIC-31 — Read the writer of the room object's type byte +0x3a (the types of the rooms that hold shipped junctions) and the writers of bit 0x04 of entity hword +0x10, so the junction update list can be modelled. blocks: TRAFFIC-S17. evidence: [traffic-junction.md §2026-11-07T18:12:03](../../re/traffic-junction.md#ts-20261107-181203)
+- [ ] TRAFFIC-31 — Bit 0x04 of entity hword +0x10 is read (destroyed or removed; a junction never has it). The room type byte +0x3a is set by a per-frame room-state update (the current room gets 0); the processing of its list is not read. needs: TRAFFIC-38. blocks: TRAFFIC-S17. evidence: [traffic-junction.md §2026-11-08T12:01:44](../../re/traffic-junction.md#ts-20261108-120144)
+- [ ] TRAFFIC-38 — Measure the room type byte of each lvl_01 junction entity (and whether it is in the update list) from a save state in the city, and read how the room-state list is processed. blocks: TRAFFIC-31. evidence: [traffic-junction.md §2026-11-08T12:01:44](../../re/traffic-junction.md#ts-20261108-120144)
 
 ## 6. Findings summary
 
+- [traffic-junction.md §2026-11-08T12:01:44](../../re/traffic-junction.md#ts-20261108-120144): the light's attributes are inert, bit 0x04 means destroyed, the room type quartet and its per-frame update.
 - [traffic-junction.md §2026-11-07T18:12:03](../../re/traffic-junction.md#ts-20261107-181203): the priority byte 128 of junctions and cars, the skip bits, the rooms of the shipped junctions and the delivery of the light changes to the looks.
 - [traffic-junction.md §2026-11-07T12:09:40](../../re/traffic-junction.md#ts-20261107-120940): the caller of the junction update (entity pass 0x1a3f80, slot +0xc), which junctions are in the update list (0x173534, layer class 2), the sort by priority and class type, the order against the traffic manager, the runner and the cars.
 - [traffic-junction.md §2026-11-07T12:14:46](../../re/traffic-junction.md#ts-20261107-121446): the node part flags 0x2363d4, 0x20b19c, the set-up slot index quirk, and the light class update being the physical prop update.

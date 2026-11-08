@@ -236,7 +236,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [movies-cutscenes.md](features/movies-cutscenes.md): MOVIE-22 (+1), MOVIE-24 (+1), MOVIE-36 (+1), MOVIE-37 (+1), MOVIE-S33 (+1), MOVIE-1, MOVIE-12, MOVIE-20, MOVIE-21, MOVIE-3, MOVIE-35, MOVIE-4, MOVIE-40, MOVIE-41, MOVIE-S10, MOVIE-S11, MOVIE-S2, MOVIE-S21, MOVIE-S3, MOVIE-S30, MOVIE-S31, MOVIE-S32, MOVIE-S34, MOVIE-S36
 - [particles.md](features/particles.md): PART-4 (+1), PART-6 (+1), PART-5, PART-7, PART-S1, PART-S2, PART-S3, PART-S4
 - [pedestrians-traffic-cars-driver.md](features/pedestrians-traffic-cars-driver.md): TRAFFIC-27 (+28), TRAFFIC-9 (+28), TRAFFIC-2 (+27), TRAFFIC-11 (+1), TRAFFIC-S5, TRAFFIC-S7
-- [pedestrians-traffic-cars-junction.md](features/pedestrians-traffic-cars-junction.md): TRAFFIC-31 (+1), TRAFFIC-26, TRAFFIC-S13, TRAFFIC-S17, TRAFFIC-S20
+- [pedestrians-traffic-cars-junction.md](features/pedestrians-traffic-cars-junction.md): TRAFFIC-38 (+2), TRAFFIC-31 (+1), TRAFFIC-S13, TRAFFIC-S17, TRAFFIC-S20
 - [pedestrians-traffic-cars-movement.md](features/pedestrians-traffic-cars-movement.md): TRAFFIC-29 (+1), TRAFFIC-30 (+1), TRAFFIC-S11, TRAFFIC-S23, TRAFFIC-S24
 - [pedestrians-traffic-cars.md](features/pedestrians-traffic-cars.md): TRAFFIC-12 (+2), TRAFFIC-14 (+1), TRAFFIC-3 (+1), TRAFFIC-S1, TRAFFIC-S2, TRAFFIC-S3, TRAFFIC-S4, TRAFFIC-S8
 - [pedestrians-traffic-pedestrians-fade.md](features/pedestrians-traffic-pedestrians-fade.md): PED-22 (+1), PED-21, PED-S11, PED-S12
