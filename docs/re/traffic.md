@@ -2,7 +2,7 @@
 
 The traffic manager 0x527410 spawns and removes the level's `Traffic%02u` vehicles. The AI driver input 0x26d934 steers the spawned cars. The pedestrian manager 0x51b33c is in [pedestrians.md](pedestrians.md); the manager swap is corrected in [pedestrians.md §2026-10-20T11:17:42](pedestrians.md#ts-20261020-111742). The earlier entry [script-natives-audio.md §2026-10-15T15:10:38](script-natives-audio.md#ts-20261015-151038) gave the two manager addresses the wrong way round. Feature file: [pedestrians-traffic-cars.md](../plans/features/pedestrians-traffic-cars.md).
 
-Subtopics: [traffic-ai-driver.md](traffic-ai-driver.md), [traffic-junction.md](traffic-junction.md), [traffic-ai-driver-steering.md](traffic-ai-driver-steering.md), [traffic-ground-cast.md](traffic-ground-cast.md), [traffic-route-functions.md](traffic-route-functions.md), [traffic-ai-driver-calls.md](traffic-ai-driver-calls.md), [traffic-driver-connect.md](traffic-driver-connect.md)
+Subtopics: [traffic-ai-driver.md](traffic-ai-driver.md), [traffic-junction.md](traffic-junction.md), [traffic-ai-driver-steering.md](traffic-ai-driver-steering.md), [traffic-ground-cast.md](traffic-ground-cast.md), [traffic-route-functions.md](traffic-route-functions.md), [traffic-ai-driver-calls.md](traffic-ai-driver-calls.md), [traffic-driver-connect.md](traffic-driver-connect.md), [traffic-ai-driver-chase-end.md](traffic-ai-driver-chase-end.md)
 
 ## Current state
 
@@ -18,6 +18,7 @@ Subtopics: [traffic-ai-driver.md](traffic-ai-driver.md), [traffic-junction.md](t
 - The steering of states 5 and 8 (the controller 0x27872c, the contact step 0x29cc38, the gear speed 0x20362c) is in [traffic-ai-driver-steering.md](traffic-ai-driver-steering.md); its Current state lists it.
 - The calls of states 5 and 8 (VehicleSetRaceTrim and the launch byte, the body placement 0x23091c, the contact slide, the chase markers, the whistle stop, the brake lights) are in [traffic-ai-driver-calls.md](traffic-ai-driver-calls.md); its Current state lists them.
 - The route functions `ahead` and `nearest` of the route type table 0x3581d4 are in [traffic-route-functions.md](traffic-route-functions.md); its Current state lists them.
+- The end of a car chase (the vehicle handler 0x19293c, the request of driver state 6, VehicleChaseEnded) is in [traffic-ai-driver-chase-end.md](traffic-ai-driver-chase-end.md); its Current state lists it.
 
 <a id="ts-20261020-111814"></a>
 

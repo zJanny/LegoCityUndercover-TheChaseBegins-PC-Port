@@ -187,7 +187,7 @@ if(EPOXY_FOUND)
   target_link_libraries(chase-viewer PRIVATE chase_render chase_audio chase_input chase_pad_events)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
   if(FFMPEG_FOUND)
-    add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_traffic_lights.cpp src/game_level.cpp src/game_pause_menu.cpp src/game_award_viewer.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_pedestrians.cpp src/game_pedestrian_fade.cpp src/game_semi_trans.cpp src/game_pedestrian_rooms.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_shadows.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_ladder.cpp src/game_fence_vault.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp src/game_fast_travel.cpp src/game_key_pickup.cpp)
+    add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_traffic_lights.cpp src/game_level.cpp src/game_pause_menu.cpp src/game_award_viewer.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_chase.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_pedestrians.cpp src/game_pedestrian_fade.cpp src/game_semi_trans.cpp src/game_pedestrian_rooms.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_shadows.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_ladder.cpp src/game_fence_vault.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp src/game_fast_travel.cpp src/game_key_pickup.cpp)
     target_sources(chase-game PRIVATE src/game_pedestrian_blocking.cpp src/game_traffic.cpp)
     target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/runtime/game_character_hit.cpp src/runtime/game_character_takedown.cpp src/runtime/game_character_arrest.cpp src/runtime/game_fall_arrest.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
     target_sources(chase-game PRIVATE src/game_debris_pickup.cpp)
@@ -1661,7 +1661,7 @@ if(BUILD_TESTING)
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
       --call-script 1-2_HouseArrival --script "0 0 40")
     set_tests_properties(game-cutscene-glass-hidden PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
-      PASS_REGULAR_EXPRESSION "cutscene 1_2_a started at update 0.*cutscene 1_2_a: 0 level figures drawn beside their cast copies, 0 models of their own drawn")
+      PASS_REGULAR_EXPRESSION "cutscene 1_2_a started at update 5.*cutscene 1_2_a: 0 level figures drawn beside their cast copies, 0 models of their own drawn")
     # The dog of cutscene 1_2_c is the level prop 1-2_Dog (CSCharacter "dog", builder 0x2d1ddc, LEVOBJ-100): the cutscene poses the prop, no model of its own.
     add_test(NAME game-cutscene-dog-prop COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
@@ -2108,7 +2108,7 @@ if(BUILD_TESTING)
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl
       --script "0 0 2600")
     set_tests_properties(game-mission-1-1-start PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 900
-      PASS_REGULAR_EXPRESSION "movie 01_GameIntro started at update 0.*movie 01_GameIntro ended at update 2066.*cutscene 1_1_a started at update 2066.*cutscene 1_1_a ended at update 2525.*script 1-1_MissionStart ended at update 2556")
+      PASS_REGULAR_EXPRESSION "movie 01_GameIntro started at update 0.*movie 01_GameIntro ended at update 2066.*cutscene 1_1_a started at update 2070.*cutscene 1_1_a ended at update 2529.*script 1-1_MissionStart ended at update 2560")
     # Walk into Police_Station_Transition_Lower after 1-1_MissionSkip enabled it (the dev option --call-script): the script
     # Police_ExtToInt opens WarningDialogBox, A answers it and PositionObject puts the player on
     # Enter_Police_Station_Position_Lower (yaw 45.4542 deg = heading 8275, height 16.5773 as in the oracle); the AIMove that follows
@@ -2573,11 +2573,17 @@ if(TARGET chase-game)
   set_property(TEST game-traffic game-traffic-natives game-traffic-path APPEND PROPERTY LABELS needs-game-data slow)
 endif()
 
-target_sources(chase_runtime PRIVATE src/runtime/ai_driver_input.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/ai_driver_input.cpp src/runtime/vehicle_chase_events.cpp)
 add_executable(ai-driver-input-test tests/ai_driver_input_test.cpp)
 target_link_libraries(ai-driver-input-test PRIVATE chase_runtime)
 target_compile_options(ai-driver-input-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME ai-driver-input COMMAND ai-driver-input-test)
+add_executable(vehicle-chase-events-test tests/vehicle_chase_events_test.cpp)
+target_link_libraries(vehicle-chase-events-test PRIVATE chase_runtime chase_assets)
+target_compile_options(vehicle-chase-events-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME vehicle-chase-events COMMAND vehicle-chase-events-test)
+add_test(NAME vehicle-chase-events-real-data COMMAND vehicle-chase-events-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+set_tests_properties(vehicle-chase-events-real-data PROPERTIES SKIP_RETURN_CODE 77)
 target_sources(chase_runtime PRIVATE src/runtime/traffic_route_mover.cpp)
 add_executable(traffic-route-mover-test tests/traffic_route_mover_test.cpp)
 target_link_libraries(traffic-route-mover-test PRIVATE chase_runtime chase_assets)
@@ -2713,7 +2719,7 @@ if(TARGET chase-game)
     --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
     --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
     --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
-    --call-script 1-4_ShowroomArrival --script "0 0 560")
+    --call-script 1-4_ShowroomArrival --script "0 0 600")
   set_tests_properties(game-goon-conduct-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
     PASS_REGULAR_EXPRESSION "ai conduct: [0-9]+ characters, 36 with AIRangeBound\n.*cutscene 1_4_a ended at update [0-9]+\n.*ai conduct 1-4_ai_goon_03: engaged \\(bad slot 0\\) at update [0-9]+\nai conduct 1-4_ai_goon_03: sees player1 at 12\\.387[0-9]*, AI state 2 \\(not ported\\) at update [0-9]+\nai conduct 1-4_ai_goon_06: engaged \\(bad slot 1\\) at update [0-9]+\nai conduct 1-4_ai_goon_06: sees player1 at 13\\.762[0-9]*, AI state 2 \\(not ported\\) at update [0-9]+")
   set_property(TEST game-goon-conduct-1-4 APPEND PROPERTY LABELS needs-game-data)
@@ -2767,7 +2773,7 @@ foreach(slow_test game-script-takedown-goon game-script-takedown-arrestable game
 endforeach()
 
 foreach(game_data_test
-  frontend-real-data draw-order-real-data script-text-pages-real-data hud-real-data hud-parts-real-data audio-real-data voice-params-real-data pedestrian-fade-real-data pedestrian-system-real-data cutscene-cast
+  vehicle-chase-events-real-data frontend-real-data draw-order-real-data script-text-pages-real-data hud-real-data hud-parts-real-data audio-real-data voice-params-real-data pedestrian-fade-real-data pedestrian-system-real-data cutscene-cast
   node-draw-matrix-real-data script-text-real-data waypoint-global-real-data waypoints-real-data hand-item-real-data detective-real-data
   use-spot-real-data use-marker-real-data script-starters-real-data carry-real-data scanner-real-data scanner-overlay-data zipline-real-data
   nested-props-real-data entity-ids-real-data zipline-pole-real-data zipline-rope-real-data brick-grab-real-data climb-bar-real-data acrobat-pole-real-data pole-real-data

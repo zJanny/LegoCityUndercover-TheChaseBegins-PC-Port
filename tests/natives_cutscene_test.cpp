@@ -67,7 +67,7 @@ void endFadesAreReadFromTheCode() {
     CutsceneNativeState state;
     state.setLengthSource(lengths());
     state.play("long", {true, true, true, true});
-    state.update(chase::runtime::kCutsceneFadeSeconds + 0.001f, false);
+    state.update(chase::runtime::kCutsceneFadeSeconds + chase::runtime::kCutsceneModeSwitchSeconds + 0.001f, false);
     require(state.shown() && state.takeModeEntered() && !state.takeModeEntered(), "the cutscene mode is entered once, at the end of the fade");
     require(state.takeFadeRequest() == CutsceneFadeRequest::None, "no fade request while the cutscene plays");
     state.update(4.9f, false);
@@ -160,6 +160,8 @@ void flagAFadesTheScreenOut() {
     runner.update(0.25f);
     require(std::fabs(runner.fadeLevel() - 0.5f) < 1e-4f, "half way to black");
     runner.update(0.251f);
+    require(!runner.cutscenes().shown() && runner.fadeLevel() == 0.0f, "black after the fade while the mode switch waits");
+    runner.update(0.1f);
     require(runner.cutscenes().shown() && runner.fadeLevel() == 0.0f, "the mode is entered at black");
     runner.update(0.5f);
     require(runner.fadeLevel() == 1.0f, "and fades in");
@@ -187,7 +189,9 @@ void waitBlocksForTheLength() {
     ScriptRunner runner(level, state);
     runner.cutscenes().setLengthSource(lengths());
     require(runner.start("s"), "start");
-    require(runner.cutscenes().busy("long") && runner.variable("Done") == 0, "Play does not block; Wait does");
+    require(!runner.cutscenes().busy("long"), "Play waits for the load time after the Load");
+    for (int i = 0; i < 7; ++i) runner.update(1.0f / 30.0f);
+    require(runner.cutscenes().busy("long") && runner.variable("Done") == 0, "Play does not block once loaded; Wait does");
     for (int i = 0; i < 148; ++i) runner.update(1.0f / 30.0f);
     require(runner.variable("Done") == 0, "still waiting before 5 s");
     for (int i = 0; i < 5; ++i) runner.update(1.0f / 30.0f);

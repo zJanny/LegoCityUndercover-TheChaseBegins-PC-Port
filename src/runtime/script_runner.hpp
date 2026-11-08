@@ -258,6 +258,7 @@ public:
     const BulletTimeSystem& bulletTime() const { return bulletTime_; }
     BulletTimeSystem& bulletTime() { return bulletTime_; }
     const VehicleAiNatives& vehicleAi() const { return vehicleAi_; }
+    VehicleAiNatives& vehicleAi() { return vehicleAi_; }
     std::vector<ScriptDebrisRequest> takeDebrisRequests();
     // The rocking props (SetPropRocking) and the platform records (WaitForPlatform) of the level (script_runner_generator_natives.cpp).
     void loadGeneratorNatives(const assets::ClassLookup& classOf);

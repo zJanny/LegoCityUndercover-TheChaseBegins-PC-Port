@@ -120,6 +120,8 @@ void LevelSession::driveVehicles(float dt) {
         body.controls.driver = driven;
         body.destroyed = record.destroyed;
         if (driven) body.impact = [this, i](float speed, const runtime::ContactOther& other, const runtime::Vector3& point) { vehicleImpact(i, speed, other, point); };
+        else if (const runtime::VehicleAiRecord* ai = levelScripts.vehicleAi().find(vehicle.instance); ai && ai->chased)
+            body.impact = [this, i](float speed, const runtime::ContactOther& other, const runtime::Vector3&) { chasedCarImpact(i, speed, other); };
         runtime::tickVehicleDamage(record, dt);
         bodies.push_back(body);
         members.push_back(i);

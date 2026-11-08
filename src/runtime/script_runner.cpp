@@ -754,6 +754,7 @@ ScriptRunner::Result ScriptRunner::cutsceneNative(ScriptThread& thread, const Sc
     switch (*kind) {
     case CutsceneNativeKind::Load: cutscenes_.load(name); break;
     case CutsceneNativeKind::Play:
+        if (!cutscenes_.loadFinished(name)) return Result::Block;
         if (cutscenes_.play(name, {read(args[1]) != 0.0f, read(args[2]) != 0.0f, read(args[3]) != 0.0f, read(args[4]) != 0.0f}))
             screenFade_.fadeOut(read(args[1]) != 0.0f ? kCutsceneModeFadeSeconds : kCutscenePlayFadeWithoutFlagA, kCutsceneFadeScreens);
         break;

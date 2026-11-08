@@ -37,6 +37,11 @@ constexpr float kCutsceneFadeSeconds = 0.5f;
 // for two ticks of the render counter at 0x529e30 + 0x3d4; the port takes the two ticks as 2 / 30 s (the 4 vblanks of black
 // measured in the oracle) and the sleep as 0.
 constexpr float kCutsceneExitWaitSeconds = 2.0f / kCutsceneFramesPerSecond;
+// STAND-IN SCRIPT-S337: the free run of 1-4_ShowroomArrival (20261108-traffic-C-1) has DCamCutSceneLoad write the slot name 0.03 s after the script start and
+// DCamCutScenePlay run 0.23 s after it, 12 vblanks of 59.8 per second later (6 updates); the port waits 0.19 s, which is 6 updates of 0.033 s, between a Load and the Play of the same
+// cutscene, taken from this one cutscene for all. Likewise the mode switch needs 0.60 s from Play to the mode enter, the fade of 0.5 s plus 0.1 s.
+constexpr float kCutsceneLoadSeconds = 0.19f;
+constexpr float kCutsceneModeSwitchSeconds = 0.1f;
 const char* const kCutsceneWithoutExitFade = "7_9_a";
 
 enum class CutsceneFadeRequest { None, Out, In };
@@ -67,6 +72,8 @@ public:
     void free(const std::string& name);
     // 0x2297b0: a loaded slot (named `name`; any slot for an empty name) holds the active object.
     bool busy(const std::string& name) const;
+    // False while a slot named `name` was loaded less than kCutsceneLoadSeconds ago (SCRIPT-S337).
+    bool loadFinished(const std::string& name) const;
     void update(float dt, bool screenFadeRunning);
 
     const CutscenePlaying* playing() const { return playing_ ? &*playing_ : nullptr; }
@@ -95,6 +102,7 @@ private:
     struct Slot {
         std::string name;
         float length = 0;
+        float age = 0;
         bool used = false;
     };
     int find(const std::string& lowerCaseName) const;

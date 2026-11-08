@@ -91,7 +91,7 @@ void stepVehicleBodies(std::vector<VehicleWorldBody>& bodies, VehiclePairManifol
                 if (!bodies[i].floor || !bodies[i].floor->boxes || !bodies[j].floor || !bodies[j].floor->boxes) continue;
                 if (!*bodies[i].awake && !*bodies[j].awake) continue;
                 std::optional<ContactManifold>& manifold = pairs[{bodies[i].id, bodies[j].id}];
-                const auto otherOf = [&](const VehicleWorldBody& entry) { return ContactOther{true, entry.destroyed, true, false}; };
+                const auto otherOf = [&](const VehicleWorldBody& entry) { return ContactOther{true, entry.destroyed, true, false, entry.controls.driver}; };
                 const ManifoldPointObserver observer = [&](ManifoldPoint& point) {
                     applyPairContactRule(point, bodies[j], bodies[i]);
                     if (bodies[j].impact) bodies[j].impact(manifoldImpactSpeed(*bodies[j].body, true, point, bodies[i].body), otherOf(bodies[i]), point.worldA);

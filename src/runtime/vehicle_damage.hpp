@@ -51,6 +51,7 @@ struct ContactOther {
     bool destroyed = false;     // its entity word +0xc bit 0x10
     bool hasBody = false;
     bool noDamageBody = false;  // its body flag +0xc4 bit 0x40000
+    bool playerVehicle = false; // its entity is the vehicle the player drives (0x24255c of the player)
 };
 
 struct ContactReply {

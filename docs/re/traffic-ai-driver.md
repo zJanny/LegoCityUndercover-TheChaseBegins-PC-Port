@@ -1,6 +1,7 @@
 # Traffic: the junction routes and the AI driver
 
-Subtopic of [traffic.md](traffic.md); the junction class itself is in [traffic-junction.md](traffic-junction.md). This file: the junction routes (route list, EnableTrafficPath, path follower, route type function, junction test) and the AI driver (record, input provider 0x26d934, state change 0x1cb148, post step 0x1bc79c, kinematic traffic cars). Feature file: [pedestrians-traffic-cars.md](../plans/features/pedestrians-traffic-cars.md).
+Subtopic of [traffic.md](traffic.md); the junction class itself is in [traffic-junction.md](traffic-junction.md). Here: the junction routes (route list, EnableTrafficPath, path follower, junction test) and the AI driver (record, input provider 0x26d934, state change 0x1cb148, post step 0x1bc79c, kinematic traffic cars). Feature file: [pedestrians-traffic-cars.md](../plans/features/pedestrians-traffic-cars.md).
+Subtopics: [traffic-ai-driver-chase-end.md](traffic-ai-driver-chase-end.md)
 
 ## Current state
 

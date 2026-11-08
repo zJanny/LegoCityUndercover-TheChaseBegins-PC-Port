@@ -53,7 +53,7 @@ void CutsceneNativeState::load(const std::string& name) {
     if (free == slots_.end() || !lengthSource_) return;
     const std::optional<float> length = lengthSource_(name);
     if (!length) return;
-    *free = {name, *length, true};
+    *free = {name, *length, 0.0f, true};
     requests_.push_back({CutsceneRequest::Kind::Load, name});
 }
 
@@ -65,7 +65,7 @@ bool CutsceneNativeState::play(const std::string& name, const std::array<bool, 4
     started.name = name;
     started.length = slots_[std::size_t(index)].length;
     started.flags = flags;
-    started.startFadeLeft = flags[0] ? kCutsceneFadeSeconds : 0.0f;
+    started.startFadeLeft = flags[0] ? kCutsceneFadeSeconds + kCutsceneModeSwitchSeconds : 0.0f;
     modeEntered_ = !flags[0];
     endPhase_ = EndPhase::None;
     fadeRequest_ = CutsceneFadeRequest::None;
@@ -94,7 +94,14 @@ bool CutsceneNativeState::busy(const std::string& name) const {
     return name.empty() || slots_[std::size_t(index)].name == name;
 }
 
+bool CutsceneNativeState::loadFinished(const std::string& name) const {
+    const int index = find(name);
+    return index < 0 || slots_[std::size_t(index)].age >= kCutsceneLoadSeconds;
+}
+
 void CutsceneNativeState::update(float dt, bool screenFadeRunning) {
+    for (Slot& slot : slots_)
+        if (slot.used) slot.age += dt;
     if (!playing_) return;
     if (playing_->startFadeLeft > 0) {
         playing_->startFadeLeft -= dt;
