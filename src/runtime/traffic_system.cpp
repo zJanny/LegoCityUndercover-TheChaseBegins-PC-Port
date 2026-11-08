@@ -76,7 +76,9 @@ const std::vector<TrafficCarSlot>& TrafficSystem::loadLevel(const assets::Level&
     for (std::size_t number = 1; number <= kTrafficFadeBoundNames; ++number)
         if (const assets::LevelBound* bound = findBound(level, trafficFadeBoundName(number))) fadeBounds_.push_back(fadeBoundOf(level, *bound));
     carRooms_.assign(slots_.size(), 0);
-    grace_.assign(slots_.size(), 0);
+    std::vector<float> heightOffsets;
+    for (const TrafficCarSlot& slot : slots_) heightOffsets.push_back(slot.heightOffset);
+    drivers_.load(heightOffsets);
     return slots_;
 }
 
@@ -135,31 +137,15 @@ TrafficFrame TrafficSystem::makeFrame(const TrafficSystemStep& step) {
         placement.floorCell = source.floorCell;
         placement.point = cellPoints_[cellIndex];
         placement.route = source.route.value_or(0);
+        const std::uint32_t route = manager_.routeTable().routes.at(placement.route);
+        drivers_.start(car, route, trafficSignalId(trafficSignalForRoute(routes_.signals, route)), placement.pathParameter,
+                       pedestrianPlacement(placement.position, placement.direction));
         if (!step.place(placement)) return false;
         manager_.cars()[car].position = placement.position;
         carRooms_[car] = placement.room;
         return true;
     };
     return frame;
-}
-
-void TrafficSystem::advanceDrivers(GameRandom& random) {
-    std::vector<TrafficCar>& cars = manager_.cars();
-    for (std::size_t i = 0; i < cars.size(); ++i) {
-        TrafficCar& car = cars[i];
-        if (car.disabled) continue;
-        if (car.driveState == 1 && car.driveStage == 2) {
-            car.driveState = 2;
-        } else if (car.driveState == 0 && car.driveStage == 1) {
-            car.driveState = 1;
-            car.driveStage = 2;
-            grace_[i] = static_cast<std::uint8_t>(random.next() % kTrafficGraceRange + kTrafficGraceBase);
-            car.driveValue = kTrafficStandInDriveValue;
-            continue;
-        }
-        if (grace_[i] > 0) --grace_[i];
-        car.keepWhenFar = grace_[i] > 0;
-    }
 }
 
 std::vector<TrafficEvent> TrafficSystem::enterScene(const TrafficSceneEnter& enter, const TrafficSystemStep& step, GameRandom& random) {
@@ -190,7 +176,7 @@ std::vector<TrafficEvent> TrafficSystem::enterScene(const TrafficSceneEnter& ent
     TrafficFrame frame = makeFrame(step);
     std::vector<TrafficEvent> events;
     manager_.startRoom(frame, random, &events);
-    advanceDrivers(random);
+    drivers_.removed(events, junctions_.world);
     return events;
 }
 
@@ -205,8 +191,16 @@ std::vector<TrafficEvent> TrafficSystem::update(const TrafficSystemStep& step, G
     TrafficFrame frame = makeFrame(step);
     std::vector<TrafficEvent> events;
     manager_.update(frame, random, &events);
-    advanceDrivers(random);
+    drivers_.removed(events, junctions_.world);
     return events;
+}
+
+TrafficDriveResult TrafficSystem::driveCars(const TrafficDriveStep& step, GameRandom& random) {
+    junctions_.world.routes = manager_.routeTable();
+    const AiRouteFunctions routes = trafficDriverRouteFunctions(junctions_, spawns_, manager_.routeTable());
+    TrafficDriveResult result = drivers_.drive(manager_, junctions_.world, routes, step, random);
+    drivers_.removed(result.traffic, junctions_.world);
+    return result;
 }
 
 std::vector<TrafficJunctionLightEvent> TrafficSystem::updateJunctions(float dt) {

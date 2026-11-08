@@ -2,11 +2,13 @@
 // load 0x2dfa78, room set-up 0x2dedbc (pregen loader 0x2e02d4), update 0x2dfe88, spawn 0x2def8c (point +0x20 is the path parameter and
 // driver +0x64, 0x2df380), the height offset 0x20af24 (driver +0x74 = the class value TrafficHeightOffRoad, 0x1796e8). The measured values come
 // from the Azahar oracle: 20261025-traffic-C-1 and 20261025-traffic-C-2 (servant RPC), recorded from a save state (mission 1-1 done, in the
-// street), 2026-10-25. With <fib> <csv> it also runs lvl_01's shipped traffic file (traffic-system-real-data, 77 without the RomFS).
+// street), 2026-10-25. With <fib> <csv> it also runs lvl_01's shipped traffic file (traffic-system-real-data, 77 without the RomFS). The cars'
+// vehicle update (TrafficSystem::driveCars) gets made-up vehicles: half extents (1, 0.75, 2), gear speed 40, no ground under the probe.
 #include "assets/assets.hpp"
 #include "assets/pregen_traffic.hpp"
 #include "runtime/dcam.hpp"
 #include "runtime/game_random.hpp"
+#include "runtime/pedestrian_manager.hpp"
 #include "runtime/pedestrian_system.hpp"
 #include "runtime/room_streaming.hpp"
 #include "runtime/traffic_system.hpp"
@@ -73,23 +75,27 @@ assets::LevelParam bytesParameter(const std::string& name, std::vector<std::uint
     return param;
 }
 
-assets::LevelObject junction(const std::string& input) {
+assets::LevelObject junction(const std::string& input, const std::string& output) {
     assets::LevelObject result;
     result.className = "props/traffic_junction";
     result.instance = "Junction01";
     result.params.push_back(bytesParameter("initialposition", std::vector<std::uint8_t>(12, 0)));
     result.params.push_back(bytesParameter("InputPath01", std::vector<std::uint8_t>(input.begin(), input.end())));
+    result.params.push_back(bytesParameter("OutputPath01", std::vector<std::uint8_t>(output.begin(), output.end())));
     return result;
 }
 
 assets::Level syntheticLevel() {
     assets::Level level;
-    level.objects.push_back(junction("RouteA"));
+    level.objects.push_back(junction("RouteA", "RouteB"));
     for (const char* name : {"Traffic01", "Traffic02", "Traffic03"}) level.objects.push_back(car(name));
     level.defaults.push_back(floatParameter("Traffic_MaxVehicles", 2.0f));
     assets::LevelPath path;
     path.nameHash = assets::nameHash("RouteA");
     path.points = {{0, 0, 0}, {10, 0, 0}, {20, 0, 0}, {30, 0, 0}};
+    level.paths.push_back(path);
+    path.nameHash = assets::nameHash("RouteB");
+    path.points = {{40, 0, 0}, {50, 0, 0}, {60, 0, 0}, {70, 0, 0}};
     level.paths.push_back(path);
     return level;
 }
@@ -121,6 +127,7 @@ struct World {
     std::vector<bool> enabled;
     std::set<int> loadedRooms{1};
     std::vector<TrafficCarPlacement> placements;
+    std::vector<AiMatrix> nodes;
     bool refuse = false;
 };
 
@@ -135,6 +142,8 @@ TrafficSystemStep stepAt(World& world, const TrafficVec3& player) {
         if (world.refuse) return false;
         world.placements.push_back(placement);
         world.enabled[placement.car] = true;
+        if (world.nodes.size() <= placement.car) world.nodes.resize(placement.car + 1);
+        world.nodes[placement.car] = pedestrianPlacement(placement.position, placement.direction);
         return true;
     };
     return step;
@@ -143,6 +152,26 @@ TrafficSystemStep stepAt(World& world, const TrafficVec3& player) {
 void applyEvents(const std::vector<TrafficEvent>& events, World& world) {
     for (const TrafficEvent& event : events)
         if (event.kind == TrafficEventKind::Despawn) world.enabled[event.car] = false;
+}
+
+std::vector<TrafficEvent> drive(TrafficSystem& system, World& world, GameRandom& random) {
+    TrafficDriveStep step;
+    step.dt = 1.0f / 30.0f;
+    step.ground.cast = [](const TrafficGroundSegment&) { return std::optional<TrafficGroundHit>(); };
+    step.ground.sendColour = [](std::uint32_t) {};
+    step.body = [&world](std::size_t car) {
+        if (car >= world.nodes.size()) return std::optional<TrafficCarBody>();
+        TrafficCarBody body;
+        body.node = world.nodes[car];
+        body.halfExtents = {1.0f, 0.75f, 2.0f};
+        body.radius = std::sqrt(1.0f + 0.75f * 0.75f + 4.0f);
+        body.gearSpeed = 40.0f;
+        return std::optional<TrafficCarBody>(body);
+    };
+    const TrafficDriveResult result = system.driveCars(step, random);
+    for (const TrafficCarMove& move : result.moves) world.nodes[move.car] = move.node;
+    applyEvents(result.traffic, world);
+    return result.traffic;
 }
 
 std::size_t count(const std::vector<TrafficEvent>& events, TrafficEventKind kind) {
@@ -191,7 +220,7 @@ void synthetic() {
 
     enter.pregenFile = &file;
     const std::vector<TrafficEvent> prefill = system.enterScene(enter, step, random);
-    require(system.manager().routesLoaded() && system.spawnPointCount() == 2 && system.routeCount() == 1, "one route for the one path");
+    require(system.manager().routesLoaded() && system.spawnPointCount() == 2 && system.routeCount() == 2, "the junction's input and output routes");
     require(count(prefill, TrafficEventKind::Spawn) == 2 && world.placements.size() == 2, "the prefill spawns up to the limit");
     for (const TrafficCarPlacement& placement : world.placements) {
         float position[3];
@@ -207,11 +236,15 @@ void synthetic() {
     for (const TrafficCar& entry : cars) {
         if (entry.disabled) continue;
         ++live;
-        require(entry.driveStage == 2 && entry.driveState == 1, "the driver steps 0/1 -> 1/2 in the spawn update");
+        require(entry.driveStage == 1 && entry.driveState == 0, "the spawn writes the driver bytes 0/1");
     }
     require(live == 2, "two cars live");
+    require(drive(system, world, random).empty(), "no car leaves");
+    for (const TrafficCar& entry : cars)
+        if (!entry.disabled) require(entry.driveStage == 2 && entry.driveState == 1, "the vehicle update steps them 0/1 -> 1/2");
 
     applyEvents(system.update(step, random), world);
+    drive(system, world, random);
     for (const TrafficCar& entry : cars)
         if (!entry.disabled) require(entry.driveState == 2 && entry.driveStage == 2 && entry.keepWhenFar, "then 2/2 with the grace counter");
 
@@ -220,6 +253,7 @@ void synthetic() {
         const std::vector<TrafficEvent> events = system.update(step, random);
         removed += count(events, TrafficEventKind::Despawn);
         applyEvents(events, world);
+        drive(system, world, random);
     }
     require(removed == 1, "a car beyond the removal radius leaves when its grace counter ran out (one per update)");
 
@@ -312,6 +346,7 @@ void removalRadiusInput() {
             const std::vector<TrafficEvent> events = system.update(step, random);
             removed += count(events, TrafficEventKind::Despawn);
             applyEvents(events, world);
+            drive(system, world, random);
         }
         require((radius == 50.0f) == (removed > 0), "a larger removal radius keeps the cars the default radius removes");
     }
@@ -397,6 +432,7 @@ int shipped(const char* fib, const char* csv) {
         spawns2 += count(events, TrafficEventKind::Spawn);
         removals += count(events, TrafficEventKind::Despawn);
         applyEvents(events, world);
+        removals += count(drive(system, world, random), TrafficEventKind::Despawn);
     }
     require(spawns2 > 0 && removals > 0, "cars spawn and leave around the player");
     std::cout << "traffic-system-test: lvl_01 prefill spawns " << count(prefill, TrafficEventKind::Spawn) << ", then " << spawns2 << " spawns and "

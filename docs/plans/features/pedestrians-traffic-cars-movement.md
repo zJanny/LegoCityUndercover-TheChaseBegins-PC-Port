@@ -15,12 +15,12 @@ Not covered:
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-11-07T18:12:03+01:00.
+IN_PROGRESS, updated 2026-11-08T12:21:05+01:00.
 - The four movement functions are ported as `src/runtime/traffic_route_mover.*`: pure steps on the driver record, the junction records and the route functions.
 - The leave call 0x21d6b8 and the ground probe 0x20ae2c (the mover's hooks `leaveTraffic` and `snapTarget`) are ported as `src/runtime/traffic_leave_snap.*`; its ground ray cast and colour message are ported as `src/runtime/traffic_ground_world.*`.
 - The junction records, their light cycle and the traffic lights: [pedestrians-traffic-cars-junction.md](pedestrians-traffic-cars-junction.md).
 - The route functions `evaluate`, `ahead`, `nearest`, `length` and `signal` read the junctions' route paths (level roads and lanes); `ahead` and `nearest` are `src/runtime/traffic_route_functions.*` ([pedestrians-traffic-cars-driver.md](pedestrians-traffic-cars-driver.md)).
-- The AI driver is not connected to the spawned cars (TRAFFIC-2 in [pedestrians-traffic-cars-driver.md](pedestrians-traffic-cars-driver.md)), so the cars still stand still and no car is ever queued.
+- The AI driver runs these functions on the spawned cars ([pedestrians-traffic-cars-driver.md](pedestrians-traffic-cars-driver.md)): the cars move, stop at lights and queue at the junctions; a removed car leaves its queue.
 
 ## 3. Verified behaviour
 
@@ -43,12 +43,12 @@ Read from the code (test `traffic-route-mover`), all from [traffic-ai-driver.md 
 
 - TRAFFIC-S11 Four cases where the original loops for ever, wraps a count or reads garbage throw instead: no enabled output among an input's choices, no lane joining the input and the chosen output, a 53rd queue entry, and leaving an empty queue (the count byte would wrap to 255). evidence: [traffic-ai-driver.md §2026-11-02T23:44:38](../../re/traffic-ai-driver.md#ts-20261102-234438)
 - TRAFFIC-S23 The ground cast tries the collision entries in the order of the world, not in the order of the grid cells, and without its cap of 100 entries; composite box owners (flag 0x800) and a slanted segment are not modelled (the probe's segment is vertical). needs: TRAFFIC-29. evidence: [traffic-ground-cast.md §2026-11-07T12:11:38](../../re/traffic-ground-cast.md#ts-20261107-121138)
-- TRAFFIC-S24 The colour message is sent to the mesh nodes the caller names; the port keeps the three bytes (+0x118..+0x11a) and does not paint the white vertex colours of the layers, and no draw reads the bytes. A colour table (item flag word set) is refused; no shipped item sets it. needs: TRAFFIC-30, TRAFFIC-2. evidence: [traffic-ground-cast.md §2026-11-07T12:11:38](../../re/traffic-ground-cast.md#ts-20261107-121138)
+- TRAFFIC-S24 The colour message is sent to the mesh nodes the caller names; the port keeps the three bytes (+0x118..+0x11a) and does not paint the white vertex colours of the layers, and no draw reads the bytes. A colour table (item flag word set) is refused; no shipped item sets it. needs: TRAFFIC-30. evidence: [traffic-ground-cast.md §2026-11-07T12:11:38](../../re/traffic-ground-cast.md#ts-20261107-121138)
 
 ## 5. Open items
 
 - [ ] TRAFFIC-29 — Read the order in which the grid gathers the entries and its cap of 100, the composite box owners and the walk for a slanted segment, and give `castTrafficGround` the original order. blocks: TRAFFIC-S23. evidence: [traffic-ground-cast.md §2026-11-07T12:11:38](../../re/traffic-ground-cast.md#ts-20261107-121138)
-- [ ] TRAFFIC-30 — Read the node tree of a car, the draw's use of the node's tint bytes and the vertex paint of the colour message, and send the message to the car's mesh nodes after the probe. needs: TRAFFIC-2. blocks: TRAFFIC-S24. evidence: [traffic-ground-cast.md §2026-11-07T12:11:38](../../re/traffic-ground-cast.md#ts-20261107-121138)
+- [ ] TRAFFIC-30 — Read the node tree of a car, the draw's use of the node's tint bytes and the vertex paint of the colour message, and send the message to the car's mesh nodes after the probe (the connected probe drops the colour). blocks: TRAFFIC-S24. evidence: [traffic-ground-cast.md §2026-11-07T12:11:38](../../re/traffic-ground-cast.md#ts-20261107-121138)
 
 ## 6. Findings summary
 

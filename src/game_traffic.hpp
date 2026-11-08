@@ -46,6 +46,9 @@ public:
     void updateSystem(const SystemInputs& inputs, assets::PlacedObjectState& state);
     // The junction class update of the entity pass: one line per light change of a junction (not for red waiting over red).
     std::vector<runtime::TrafficJunctionLightEvent> updateJunctions(float dt, std::uint32_t update);
+    // The vehicle update of the live cars: one line per stop at and start from the lights and per junction lane taken or left; a leave
+    // call disables the car's entity. Returns the node matrices to set.
+    std::vector<runtime::TrafficCarMove> driveCars(const runtime::TrafficDriveStep& step, std::uint32_t update, assets::PlacedObjectState& state);
 
     std::size_t carCount() const { return system_.slots().size(); }
     const std::string& instance(std::size_t car) const { return system_.slots()[car].instance; }
@@ -56,7 +59,7 @@ public:
 private:
     void applyPathRequests(const SystemInputs& inputs);
     runtime::TrafficSystemStep makeStep(const SystemInputs& inputs, assets::PlacedObjectState& state);
-    void report(const std::vector<runtime::TrafficEvent>& events, const SystemInputs& inputs, assets::PlacedObjectState& state);
+    void report(const std::vector<runtime::TrafficEvent>& events, std::uint32_t update, assets::PlacedObjectState& state);
 
     runtime::TrafficSystem system_;
     std::vector<std::uint8_t> pregenFile_;

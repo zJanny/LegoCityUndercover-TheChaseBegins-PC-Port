@@ -9,7 +9,7 @@ Subtopic of [traffic.md](traffic.md); the AI driver that calls it is in [traffic
 - The contact step 0x29cc38 updates driver +0x58 to the node position, gathers the characters in a box around the car (half size entity +0x5c plus the move when it is below 20) and runs the wall slide 0x21a73c on them with the move; its result is not used. [§2026-11-07T12:12:03](#ts-20261107-121203)
 - 0x20362c(body) is the speed at MaxRPM in the last gear, which is TopSpeed for the final drive 0x2435d0 sets. [§2026-11-07T12:12:03](#ts-20261107-121203)
 - The writer of the launch byte +0x7a (VehicleSetRaceTrim), the slide 0x21a73c of the contact step and the placement 0x23091c: [traffic-ai-driver-calls.md §2026-11-08T12:12:24](traffic-ai-driver-calls.md#ts-20261108-121224).
-- Port: `src/runtime/traffic_driver_steering.*` (test `traffic-driver-steering`), not connected to `ai_driver_input` yet (TRAFFIC-2).
+- Port: `src/runtime/traffic_driver_steering.*` (test `traffic-driver-steering`), not connected: the cars reach no state that steers (TRAFFIC-36, [traffic-driver-connect.md](traffic-driver-connect.md)).
 
 <a id="ts-20261107-121203"></a>
 

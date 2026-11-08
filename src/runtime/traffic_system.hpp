@@ -9,6 +9,7 @@
 #include "runtime/pedestrian_manager.hpp"
 #include "runtime/pregen_derive.hpp"
 #include "runtime/room_layers.hpp"
+#include "runtime/traffic_driver_connect.hpp"
 #include "runtime/traffic_junction_update.hpp"
 #include "runtime/traffic_manager.hpp"
 #include "runtime/traffic_route_setup.hpp"
@@ -39,13 +40,6 @@ PedestrianNode trafficCarNode();
 // STAND-IN TRAFFIC-S1: the removal radius 0x26e130 of every car (byte +0xb of the row record +0x20 of the table *0x375f40; 50 for all ten
 // cars of lvl_01, 20261025-traffic-C-1) and the room-type byte of the cars' rooms (0, as PED-S2).
 constexpr float kTrafficStandInDespawnRadius = 50.0f;
-// STAND-IN TRAFFIC-S7: the AI driver 0x26d934 is not connected. After a spawn the driver bytes +0x78 / +0x79 go 0/1 -> 1/2 -> 2/2 one step per
-// update (state change 0x1cb148, docs/re/traffic.md). The grace byte +0xad is set by the 0 -> 1 step to random % 60 + 30 and counts down one
-// per update as if the car's node were always hidden (0x23de70 taken as true: the original counts down only then and keeps the byte at 30 or
-// more otherwise); the speed +0x68 (8.6 .. 11.3 measured) is a fixed positive value.
-constexpr std::uint32_t kTrafficGraceRange = 60;
-constexpr std::uint32_t kTrafficGraceBase = 30;
-constexpr float kTrafficStandInDriveValue = 10.0f;
 
 // One Traffic%02u car as the level load 0x2dfa78 collects it.
 struct TrafficCarSlot {
@@ -102,8 +96,11 @@ public:
     // 0x2a6d70 (SetTrafficMaxVehicles); throws unless exactly one number is given.
     void setMaxVehicles(const std::vector<float>& values) { runSetTrafficMaxVehicles(manager_, values); }
 
-    // Slot +0x48, the manager update 0x2dfe88, then the stand-in driver steps (TRAFFIC-S7).
+    // Slot +0x48, the manager update 0x2dfe88.
     std::vector<TrafficEvent> update(const TrafficSystemStep& step, GameRandom& random);
+    // The vehicle update of the live cars (TrafficDrivers::drive) over the junctions with the manager's route bits.
+    // STAND-IN TRAFFIC-S27: the caller runs it after the junction update of the entity pass.
+    TrafficDriveResult driveCars(const TrafficDriveStep& step, GameRandom& random);
     // The junction class update 0x1d8924 of the entity pass, after the runner (runTrafficJunctionUpdates), with the manager's route bits.
     std::vector<TrafficJunctionLightEvent> updateJunctions(float dt);
 
@@ -121,6 +118,7 @@ public:
     // The point of the loaded file that a spawn event's cell index names.
     std::size_t pointOfCell(std::size_t cellIndex) const { return cellPoints_.at(cellIndex); }
     TrafficVec3 carPosition(std::size_t car) const { return manager_.cars().at(car).position; }
+    const TrafficDrivers& drivers() const { return drivers_; }
 
 private:
     struct SpawnPoint {
@@ -134,13 +132,12 @@ private:
 
     TrafficFrame makeFrame(const TrafficSystemStep& step);
     void syncCars(const TrafficSystemStep& step);
-    void advanceDrivers(GameRandom& random);
 
     TrafficManager manager_;
     std::vector<TrafficCarSlot> slots_;
     std::vector<TrafficFadeBound> fadeBounds_;
     std::vector<int> carRooms_;
-    std::vector<std::uint8_t> grace_;
+    TrafficDrivers drivers_;
     assets::PregenSpawns spawns_;
     std::vector<SpawnPoint> points_;
     std::vector<std::size_t> cellPoints_;

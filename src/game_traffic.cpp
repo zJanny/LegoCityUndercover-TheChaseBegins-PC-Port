@@ -2,9 +2,14 @@
 #include "game_level.hpp"
 #include "runtime/pedestrian_system.hpp"
 
+#include "runtime/collision.hpp"
+#include "runtime/traffic_ground_world.hpp"
+
 #include <algorithm>
 #include <cctype>
+#include <cmath>
 #include <iostream>
+#include <utility>
 
 namespace game_traffic {
 
@@ -46,21 +51,21 @@ void LevelTraffic::applyPathRequests(const SystemInputs& inputs) {
     }
 }
 
-void LevelTraffic::report(const std::vector<runtime::TrafficEvent>& events, const SystemInputs& inputs, assets::PlacedObjectState& state) {
+void LevelTraffic::report(const std::vector<runtime::TrafficEvent>& events, std::uint32_t update, assets::PlacedObjectState& state) {
     for (const runtime::TrafficEvent& event : events) {
         const std::string& name = system_.slots()[event.car].instance;
         switch (event.kind) {
         case runtime::TrafficEventKind::Spawn: {
             const runtime::TrafficVec3 position = system_.carPosition(event.car);
             std::cout << "traffic car " << name << ": spawned at point " << system_.pointOfCell(event.point) << " (" << position[0] << ' ' << position[1]
-                      << ' ' << position[2] << "), fade " << int(event.fade) << " at update " << inputs.update << '\n';
+                      << ' ' << position[2] << "), fade " << int(event.fade) << " at update " << update << '\n';
             break;
         }
         case runtime::TrafficEventKind::Despawn:
             state.disabled.insert(lower(name));
-            std::cout << "traffic car " << name << ": removed at update " << inputs.update << '\n';
+            std::cout << "traffic car " << name << ": removed at update " << update << '\n';
             break;
-        case runtime::TrafficEventKind::Fade: std::cout << "traffic car " << name << ": fade " << int(event.fade) << " at update " << inputs.update << '\n'; break;
+        case runtime::TrafficEventKind::Fade: std::cout << "traffic car " << name << ": fade " << int(event.fade) << " at update " << update << '\n'; break;
         }
     }
 }
@@ -81,7 +86,7 @@ void LevelTraffic::enterScene(assets::FuseArchive& archive, const assets::Level&
     std::cout << "traffic: " << system_.slots().size() << " cars, limit " << system_.manager().maxVehicles() << ", " << system_.spawnPointCount()
               << " spawn points, " << system_.routeCount() << " routes, " << system_.floorCellsFound() << " floor cells, spawn data "
               << (system_.manager().routesLoaded() ? "loaded" : "not loaded") << '\n';
-    report(events, inputs, state);
+    report(events, inputs.update, state);
 }
 
 void LevelTraffic::updateSystem(const SystemInputs& inputs, assets::PlacedObjectState& state) {
@@ -91,7 +96,7 @@ void LevelTraffic::updateSystem(const SystemInputs& inputs, assets::PlacedObject
         for (const float value : inputs.maxVehicles) system_.setMaxVehicles({value});
         std::cout << "traffic: limit " << system_.manager().maxVehicles() << " at update " << inputs.update << '\n';
     }
-    report(system_.update(makeStep(inputs, state), random_), inputs, state);
+    report(system_.update(makeStep(inputs, state), random_), inputs.update, state);
 }
 
 std::vector<chase::runtime::TrafficJunctionLightEvent> LevelTraffic::updateJunctions(float dt, std::uint32_t update) {
@@ -103,6 +108,22 @@ std::vector<chase::runtime::TrafficJunctionLightEvent> LevelTraffic::updateJunct
                   << phases[event.change.phase] << " at update " << update << '\n';
     }
     return events;
+}
+
+std::vector<runtime::TrafficCarMove> LevelTraffic::driveCars(const runtime::TrafficDriveStep& step, std::uint32_t update, assets::PlacedObjectState& state) {
+    runtime::TrafficDriveResult result = system_.driveCars(step, random_);
+    for (const runtime::TrafficDriveEvent& event : result.events) {
+        std::cout << "traffic car " << system_.slots()[event.car].instance << ": ";
+        switch (event.kind) {
+        case runtime::TrafficDriveEventKind::Stop: std::cout << "stopped at junction " << event.signal - 1; break;
+        case runtime::TrafficDriveEventKind::Go: std::cout << "goes on at junction " << event.signal - 1; break;
+        case runtime::TrafficDriveEventKind::Junction: std::cout << "lane of junction " << event.signal - 1; break;
+        case runtime::TrafficDriveEventKind::Road: std::cout << "left the junction lane"; break;
+        }
+        std::cout << " at update " << update << '\n';
+    }
+    report(result.traffic, update, state);
+    return std::move(result.moves);
 }
 
 std::optional<std::size_t> LevelTraffic::carOf(const std::string& lowerInstance) const {
@@ -166,6 +187,52 @@ void LevelSession::updateTrafficJunctions(float dt) {
     if (!player || !follow) return;
     for (const chase::runtime::TrafficJunctionLightEvent& event : traffic.updateJunctions(dt, updatesForLog))
         trafficLights.applyChange(event.junction, event.change);
+}
+
+void LevelSession::driveTrafficCars(float dt) {
+    if (!player || !follow) return;
+    const auto rows = [](const chase::render::Mat4& matrix) {
+        chase::runtime::AiMatrix node{};
+        for (std::size_t row = 0; row < 4; ++row)
+            for (std::size_t axis = 0; axis < 3; ++axis) node[row][axis] = matrix[row * 4 + axis];
+        return node;
+    };
+    chase::runtime::TrafficDriveStep step;
+    step.dt = dt;
+    std::vector<std::optional<std::size_t>> carOfVehicle(boardingVehicles.size());
+    for (std::size_t car = 0; car < trafficBoarding.size(); ++car)
+        if (trafficBoarding[car]) carOfVehicle[*trafficBoarding[car]] = car;
+    for (std::size_t i = 0; i < boardingVehicles.size(); ++i) {
+        const chase::runtime::BoardingVehicle& vehicle = boardingVehicles[i];
+        if (objectState.isDisabled(vehicle.instance)) continue;
+        step.obstacles.push_back({{rows(vehicle.matrix), {vehicle.boxHalf[0], vehicle.boxHalf[1], vehicle.boxHalf[2]}}, carOfVehicle[i]});
+    }
+    const float heading = chase::runtime::headingRadians(player->motion.facing);
+    const chase::runtime::PlayerBox box;
+    step.obstacles.push_back({{chase::runtime::pedestrianPlacement({player->position()[0], player->position()[1], player->position()[2]}, {std::sin(heading), 0.0f, std::cos(heading)}),
+                               {box.half[0], box.half[1], box.half[2]}},
+                              std::nullopt});
+    step.ground = chase::runtime::trafficGroundWorld(collision, [](std::uint32_t) {});
+    step.body = [this, &rows](std::size_t car) -> std::optional<chase::runtime::TrafficCarBody> {
+        const std::optional<std::size_t> index = trafficBoarding[car];
+        if (!index) return std::nullopt;
+        const chase::runtime::BoardingVehicle& vehicle = boardingVehicles[*index];
+        chase::runtime::TrafficCarBody body;
+        body.node = rows(vehicle.matrix);
+        body.halfExtents = {vehicle.boxHalf[0], vehicle.boxHalf[1], vehicle.boxHalf[2]};
+        body.radius = std::sqrt(body.halfExtents[0] * body.halfExtents[0] + body.halfExtents[1] * body.halfExtents[1] + body.halfExtents[2] * body.halfExtents[2]);
+        body.gearSpeed = levelScripts.vehicles().records()[boardingRecords[*index]].topSpeed;
+        return body;
+    };
+    for (const chase::runtime::TrafficCarMove& move : traffic.driveCars(step, updatesForLog, objectState)) {
+        const std::optional<std::size_t> index = trafficBoarding[move.car];
+        if (!index) continue;
+        chase::render::Mat4 matrix{};
+        for (std::size_t row = 0; row < 4; ++row)
+            for (std::size_t axis = 0; axis < 3; ++axis) matrix[row * 4 + axis] = move.node[row][axis];
+        matrix[15] = 1.0f;
+        placeVehicleAt(*index, matrix);
+    }
 }
 
 bool LevelSession::placeTrafficCar(const chase::runtime::TrafficCarPlacement& placement) {

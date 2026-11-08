@@ -2538,8 +2538,9 @@ set_tests_properties(traffic-system-real-data PROPERTIES SKIP_RETURN_CODE 77)
 set_property(TEST traffic-system-real-data APPEND PROPERTY LABELS needs-game-data)
 if(TARGET chase-game)
   # TRAFFIC-1: the traffic manager in the port's run from the level start (`chase-game ... --no-start-cutscenes --script "0 0 300"`): the room set-up
-  # spawns cars at pregen points around the player (prefill band 0 .. 76), the cars stand still, and one leaves per update after its grace counter ran
-  # out beyond the removal radius 50. The update numbers and points are the port's own run (stand-in rules TRAFFIC-S1, TRAFFIC-S7).
+  # spawns cars at pregen points around the player (prefill band 0 .. 76), the cars drive along their roads (the AI driver, TRAFFIC-2) and stop at
+  # red lights, and one leaves per update after its grace counter ran out beyond the removal radius 50. The update numbers and points are the
+  # port's own run (stand-in rules TRAFFIC-S1, TRAFFIC-S7, TRAFFIC-S27; the removal at 68 and the stop at 208 since the cars drive, 20261108-traffic-B, 2026-11-08).
   # 57 routes: the level paths the junctions name, names without a path skipped as 0x22a3b0 returns 0 (docs/re/traffic-junction.md, 20261103-large-A,
   # 2026-11-03); the spawn and remove lines of this run are the same as with the 58 routes before (20261103-large-A, 2026-11-07).
   # TRAFFIC-19: the 13 lvl_01 junctions with two or more light pairs turn yellow 6 s after the scene enter and red 2 s later (20261107-traffic-A, 2026-11-07,
@@ -2550,15 +2551,16 @@ if(TARGET chase-game)
     --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
     --script "0 0 300")
   set_tests_properties(game-traffic PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
-    PASS_REGULAR_EXPRESSION "traffic: 10 cars, limit 10, 649 spawn points, 57 routes, 648 floor cells, spawn data loaded\n.*traffic car Traffic05: spawned at point 419 \\(902.337 18.5559 1061.92\\), fade 255 at update 0\n.*traffic car Traffic09: removed at update 67\n.*traffic junction 1: pair 0 yellow at update 181\n.*traffic junction 15: pair 0 yellow at update 181\n.*traffic junction 1: pair 0 red at update 242")
+    PASS_REGULAR_EXPRESSION "traffic: 10 cars, limit 10, 649 spawn points, 57 routes, 648 floor cells, spawn data loaded\n.*traffic car Traffic05: spawned at point 419 \\(902.337 18.5559 1061.92\\), fade 255 at update 0\n.*traffic car Traffic03: removed at update 68\n.*traffic junction 1: pair 0 yellow at update 181\n.*traffic junction 15: pair 0 yellow at update 181\n.*traffic car Traffic03: stopped at junction 15 at update 208\n.*traffic junction 1: pair 0 red at update 242")
   # SCRIPT-230: 1-4_RobberCaught calls EnableTrafficAndPedestrians(0) at its start (every live car leaves in one update) and SetTrafficMaxVehicles(10) later.
+  # The three cars left at update 99 since the cars drive (Traffic02 on a junction lane, taken out of the queue), 20261108-traffic-B, 2026-11-08.
   add_test(NAME game-traffic-natives COMMAND chase-game
     --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
     --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
     --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
     --call-script 1-4_RobberCaught --script "0 0 420")
   set_tests_properties(game-traffic-natives PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
-    PASS_REGULAR_EXPRESSION "traffic car Traffic01: removed at update 99\n.*traffic car Traffic08: removed at update 99\n.*traffic: limit 10 at update 402")
+    PASS_REGULAR_EXPRESSION "traffic car Traffic02: lane of junction 14 at update 90\n.*traffic car Traffic01: removed at update 99\n.*traffic car Traffic02: removed at update 99\n.*traffic car Traffic05: removed at update 99\n.*traffic: limit 10 at update 402")
   # TRAFFIC-5: 3-7_MissionStart of lvl_03 calls EnableTrafficPath(RoadPath27..30, 0); the calls reach the traffic route table (before the room set-up
   # they are queued and replayed by it). 30 routes: the level paths the junctions name, as for game-traffic (20261103-large-A, 2026-11-07).
   add_test(NAME game-traffic-path COMMAND chase-game
@@ -2631,6 +2633,12 @@ add_executable(traffic-leave-snap-test tests/traffic_leave_snap_test.cpp)
 target_link_libraries(traffic-leave-snap-test PRIVATE chase_runtime)
 target_compile_options(traffic-leave-snap-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME traffic-leave-snap COMMAND traffic-leave-snap-test)
+
+target_sources(chase_runtime PRIVATE src/runtime/traffic_driver_connect.cpp)
+add_executable(traffic-driver-connect-test tests/traffic_driver_connect_test.cpp)
+target_link_libraries(traffic-driver-connect-test PRIVATE chase_runtime chase_assets)
+target_compile_options(traffic-driver-connect-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME traffic-driver-connect COMMAND traffic-driver-connect-test)
 
 target_sources(chase_runtime PRIVATE src/runtime/traffic_ground_world.cpp)
 add_executable(traffic-ground-world-test tests/traffic_ground_world_test.cpp)
