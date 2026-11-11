@@ -458,6 +458,7 @@ void LevelSession::draw(int width, int height) {
         nearPlane = game_cutscene::kNearPlane;
         farPlane = game_cutscene::kFarPlane;
     }
+    cullTrafficCars(viewMatrix, shownFieldOfView, chase::render::viewAspect(chase::render::originalViewRegion(topView.rect)), nearPlane, farPlane);
     farPlane = qol::viewDistance(farPlane);
     Mat4 mvp = chase::render::multiply(
         perspective(shownFieldOfView, chase::render::viewAspect(topView), nearPlane, farPlane), viewMatrix);

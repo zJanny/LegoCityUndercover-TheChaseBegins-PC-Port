@@ -6,11 +6,14 @@ Subtopic of [traffic.md](traffic.md); the driver's states, the route mover and t
 
 - The vehicle message handler 0x1797c4 first calls 0x19293c for a car whose driver record has +0xaf bit 0. For the removal message 0x80000006, 0x19293c calls the junction queue 0x22a080 with the driver's junction (+0) when that is set, then returns 0 and the vehicle handler goes on with its own part (with the release 0x22a1f4). A car removed on a junction lane therefore leaves the junction's queue. [§2026-11-08T12:18:49](#ts-20261108-121849)
 - The port runs the AI driver on every live traffic car once per update: the input provider 0x26d934, the state change 0x1cb148 and the post step 0x1bc79c, with the ported route functions, path follower, stop test, junction choice and queue, route mover, leave call and ground probe. The cars drive along their roads, stop at red lights, take the junction lanes and leave at the end of a road that leads into no junction. States 4 to 8 are not reached. [§2026-11-08T12:18:49](#ts-20261108-121849)
+- The keep counter reads the culling bit 18 of the car's node (0x23de70) through `TrafficDriveStep::lights`; the draw sets it from the camera's view volume ([traffic-car-culling.md §2026-11-12T00:12:13](traffic-car-culling.md#ts-20261112-001213)), and the post step's brake lights 0x278b78 run on the car's brake light parts ([traffic-car-lights.md §2026-11-12T00:10:29](traffic-car-lights.md#ts-20261112-001029)).
 - Port: `src/runtime/traffic_driver_connect.*` (test `traffic-driver-connect`), `TrafficSystem::driveCars`, glue `LevelSession::driveTrafficCars` in `src/game_traffic.cpp`. [§2026-11-08T12:18:49](#ts-20261108-121849)
 
 <a id="ts-20261108-121849"></a>
 
 ## 2026-11-08T12:18:49+01:00 — The AI driver connected to the traffic cars, and the queue leave of the removal message (llvm-objdump, no REA session, no emulator)
+
+Corrected by [traffic-car-culling.md §2026-11-12T00:12:13](traffic-car-culling.md#ts-20261112-001213): the culling bit 18 of the car's node is set by the port from the camera's view volume, so the stand-in TRAFFIC-S7 below is replaced by TRAFFIC-S35.
 
 Method: `llvm-objdump -d --triple=armv6k-none-eabi --mattr=+vfp2` on `artifacts/game/game.arm.elf` (worker 20261108-traffic-B, 2026-11-08), read at 0x1797c4..0x179808 and 0x19293c..0x192d54. Port: `src/runtime/traffic_driver_connect.*`, test `traffic-driver-connect` (made-up roads, junction and light), `traffic-system` and `traffic-system-real-data` (the cars driven in the made-up level and on lvl_01), CTest `game-traffic`. No emulator was used.
 

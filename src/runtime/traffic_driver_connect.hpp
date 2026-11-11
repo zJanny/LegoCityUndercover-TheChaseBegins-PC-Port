@@ -9,6 +9,7 @@
 #include "assets/pregen_traffic.hpp"
 #include "runtime/ai_driver_input.hpp"
 #include "runtime/game_random.hpp"
+#include "runtime/traffic_car_lights.hpp"
 #include "runtime/traffic_driver_calls.hpp"
 #include "runtime/traffic_driver_steering.hpp"
 #include "runtime/traffic_junction_update.hpp"
@@ -63,6 +64,9 @@ struct TrafficDriveStep {
     std::uint32_t clock = 0;
     // The vehicle of a car; none for a car without a vehicle, which is not updated.
     std::function<std::optional<TrafficCarBody>(std::size_t car)> body;
+    // The brake lights and the node culling bits of the cars (TRAFFIC-33, TRAFFIC-37); without it the lights are not set up and the node is
+    // taken as hidden (STAND-IN TRAFFIC-S35).
+    TrafficCarLights* lights = nullptr;
 };
 
 enum class TrafficDriveEventKind {

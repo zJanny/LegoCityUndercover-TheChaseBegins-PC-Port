@@ -107,6 +107,10 @@ TrafficDriveResult TrafficDrivers::drive(TrafficManager& manager, TrafficJunctio
         hooks.leaveTraffic = [&] { leaveTraffic(manager, index, &result.traffic); };
         hooks.stopAll = [&] { return trafficWhistleStops(whistle_, step.clock); };
         hooks.lights = [&](bool stopped, float dt) {
+            if (step.lights) {
+                step.lights->run(index, stopped ? 1.0f : 0.0f, dt);
+                return;
+            }
             TrafficBrakeLightFrame frame;
             frame.brake = stopped ? 1.0f : 0.0f;
             frame.dt = dt;
@@ -117,8 +121,8 @@ TrafficDriveResult TrafficDrivers::drive(TrafficManager& manager, TrafficJunctio
             node = matrix;
             moved = true;
         };
-        // STAND-IN TRAFFIC-S7: 0x23de70 taken as true; the port sets no culling bit 18 on a car's node.
-        hooks.nodeHidden = [] { return true; };
+        // STAND-IN TRAFFIC-S35: without the lights object (the drivers' own tests) 0x23de70 is taken as true.
+        hooks.nodeHidden = [&step, index] { return step.lights ? step.lights->nodeCulled(index) : true; };
         hooks.moveAlongRoute = [&](AiDriverRecord& driver) {
             TrafficMoverFrame frame;
             frame.car = entity;

@@ -110,6 +110,9 @@ public:
     // below 1 puts every part into the blended list (0x10bbe8). STAND-IN PED-S12: such a part blends with (1, 1 - source alpha), or (1, 1) for a
     // destination of one, where 0x188778 uses source alpha.
     void setInstanceFade(std::size_t instance, float fade);
+    // 0x2363d4 and 0x23f124: a node of the instance's model is hidden (the node's hidden bit +0x114), or shown with a part alpha 0..255 that scales the
+    // instance's fade for that node's parts. A model without the node is not changed.
+    void setInstanceNodeShown(std::size_t instance, int node, bool shown, std::uint8_t alpha = 255);
     float instanceFade(std::size_t instance) const;
     // The archive path of the model the instance draws.
     const std::string& instanceModel(std::size_t instance) const;

@@ -188,7 +188,7 @@ if(EPOXY_FOUND)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
   if(FFMPEG_FOUND)
     add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_traffic_lights.cpp src/game_level.cpp src/game_pause_menu.cpp src/game_award_viewer.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_chase.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_pedestrians.cpp src/game_pedestrian_fade.cpp src/game_semi_trans.cpp src/game_pedestrian_rooms.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_shadows.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_ladder.cpp src/game_fence_vault.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp src/game_fast_travel.cpp src/game_key_pickup.cpp)
-    target_sources(chase-game PRIVATE src/game_pedestrian_blocking.cpp src/game_traffic.cpp)
+    target_sources(chase-game PRIVATE src/game_pedestrian_blocking.cpp src/game_traffic.cpp src/game_traffic_car_lights.cpp)
     target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/runtime/game_character_hit.cpp src/runtime/game_character_takedown.cpp src/runtime/game_character_arrest.cpp src/runtime/game_fall_arrest.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
     target_sources(chase-game PRIVATE src/game_debris_pickup.cpp)
     target_sources(chase-game PRIVATE src/game_switch.cpp src/game_switch_use.cpp)
@@ -2540,7 +2540,7 @@ if(TARGET chase-game)
   # TRAFFIC-1: the traffic manager in the port's run from the level start (`chase-game ... --no-start-cutscenes --script "0 0 300"`): the room set-up
   # spawns cars at pregen points around the player (prefill band 0 .. 76), the cars drive along their roads (the AI driver, TRAFFIC-2) and stop at
   # red lights, and one leaves per update after its grace counter ran out beyond the removal radius 50. The update numbers and points are the
-  # port's own run (stand-in rules TRAFFIC-S1, TRAFFIC-S7, TRAFFIC-S27; the removal at 68 and the stop at 208 since the cars drive, 20261108-traffic-B, 2026-11-08).
+  # port's own run (stand-in rules TRAFFIC-S1, TRAFFIC-S27, TRAFFIC-S35; the removal at 69 and the stop at 209 since the node is hidden only outside the camera's view volume, TRAFFIC-S35, 20261111-chase-G, 2026-11-12, this command; 68 and 208 before with the stand-in TRAFFIC-S7).
   # 57 routes: the level paths the junctions name, names without a path skipped as 0x22a3b0 returns 0 (docs/re/traffic-junction.md, 20261103-large-A,
   # 2026-11-03); the spawn and remove lines of this run are the same as with the 58 routes before (20261103-large-A, 2026-11-07).
   # TRAFFIC-19: the 13 lvl_01 junctions with two or more light pairs turn yellow 6 s after the scene enter and red 2 s later (20261107-traffic-A, 2026-11-07,
@@ -2551,7 +2551,7 @@ if(TARGET chase-game)
     --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
     --script "0 0 300")
   set_tests_properties(game-traffic PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
-    PASS_REGULAR_EXPRESSION "traffic: 10 cars, limit 10, 649 spawn points, 57 routes, 648 floor cells, spawn data loaded\n.*traffic car Traffic05: spawned at point 419 \\(902.337 18.5559 1061.92\\), fade 255 at update 0\n.*traffic car Traffic03: removed at update 68\n.*traffic junction 1: pair 0 yellow at update 181\n.*traffic junction 15: pair 0 yellow at update 181\n.*traffic car Traffic03: stopped at junction 15 at update 208\n.*traffic junction 1: pair 0 red at update 242")
+    PASS_REGULAR_EXPRESSION "traffic: 10 cars, limit 10, 649 spawn points, 57 routes, 648 floor cells, spawn data loaded\n.*traffic car Traffic05: spawned at point 419 \\(902.337 18.5559 1061.92\\), fade 255 at update 0\n.*traffic car Traffic03: removed at update 69\n.*traffic junction 1: pair 0 yellow at update 181\n.*traffic junction 15: pair 0 yellow at update 181\n.*traffic car Traffic03: stopped at junction 15 at update 209\n.*traffic junction 1: pair 0 red at update 242")
   # SCRIPT-230: 1-4_RobberCaught calls EnableTrafficAndPedestrians(0) at its start (every live car leaves in one update) and SetTrafficMaxVehicles(10) later.
   # The three cars left at update 99 since the cars drive (Traffic02 on a junction lane, taken out of the queue), 20261108-traffic-B, 2026-11-08.
   add_test(NAME game-traffic-natives COMMAND chase-game
@@ -2594,11 +2594,22 @@ add_executable(traffic-driver-steering-test tests/traffic_driver_steering_test.c
 target_link_libraries(traffic-driver-steering-test PRIVATE chase_runtime)
 target_compile_options(traffic-driver-steering-test PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 add_test(NAME traffic-driver-steering COMMAND traffic-driver-steering-test)
-target_sources(chase_runtime PRIVATE src/runtime/traffic_driver_calls.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/traffic_driver_calls.cpp src/runtime/traffic_car_lights.cpp src/runtime/node_view_cull.cpp)
 add_executable(traffic-driver-calls-test tests/traffic_driver_calls_test.cpp)
 target_link_libraries(traffic-driver-calls-test PRIVATE chase_runtime)
 target_compile_options(traffic-driver-calls-test PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 add_test(NAME traffic-driver-calls COMMAND traffic-driver-calls-test)
+add_executable(node-view-cull-test tests/node_view_cull_test.cpp)
+target_link_libraries(node-view-cull-test PRIVATE chase_runtime)
+target_compile_options(node-view-cull-test PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
+add_test(NAME node-view-cull COMMAND node-view-cull-test)
+add_executable(traffic-car-lights-test tests/traffic_car_lights_test.cpp)
+target_link_libraries(traffic-car-lights-test PRIVATE chase_runtime)
+target_compile_options(traffic-car-lights-test PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
+add_test(NAME traffic-car-lights COMMAND traffic-car-lights-test)
+add_test(NAME traffic-car-lights-real-data COMMAND traffic-car-lights-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+set_tests_properties(traffic-car-lights-real-data PROPERTIES SKIP_RETURN_CODE 77)
+set_property(TEST traffic-car-lights-real-data APPEND PROPERTY LABELS needs-game-data)
 target_sources(chase_runtime PRIVATE src/runtime/traffic_junction_fill.cpp)
 add_executable(traffic-junction-fill-test tests/traffic_junction_fill_test.cpp)
 target_link_libraries(traffic-junction-fill-test PRIVATE chase_runtime chase_assets)

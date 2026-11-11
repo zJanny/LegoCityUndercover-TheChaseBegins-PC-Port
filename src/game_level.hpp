@@ -261,6 +261,9 @@ private:
     void updateTrafficJunctions(float dt);
     void driveTrafficCars(float dt);
     void applyTrafficFades();
+    void setupTrafficCarLights();
+    void applyTrafficCarLights();
+    void cullTrafficCars(const chase::render::Mat4& view, float fieldOfView, float aspect, float nearZ, float farZ);
     game_traffic::SystemInputs trafficInputs();
     bool placeTrafficCar(const chase::runtime::TrafficCarPlacement& placement);
     void updatePropAnimations(float dt);
@@ -636,6 +639,14 @@ private:
     game_traffic::LevelTraffic traffic;
     std::vector<std::optional<std::size_t>> trafficBoarding;
     std::vector<int> trafficFadeShown;
+    chase::runtime::TrafficCarLights trafficCarLights;
+    std::vector<bool> trafficLightsDisabled;
+    std::vector<std::array<std::array<float, 3>, 4>> trafficGlowLocal;
+    struct TrafficCullBounds {
+        std::array<float, 3> centre{};
+        float radius = 0.0f;
+    };
+    std::vector<TrafficCullBounds> trafficCullBounds;
     chase::runtime::PropAnimations propAnimations;
     chase::runtime::PlayerScriptAnimation playerScriptAnimation;
     chase::runtime::CatRescueSet catRescue;

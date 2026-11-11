@@ -218,6 +218,7 @@ public:
     bool instanceVisible(std::size_t instance) const { return instances_.at(instance).visible; }
     Mat4 instanceTransform(std::size_t instance) const { return instances_.at(instance).transform; }
     void setInstanceFade(std::size_t instance, float fade) { instances_.at(instance).fade = fade; }
+    void setInstanceNodeShown(std::size_t instance, int node, bool shown, std::uint8_t alpha) { instances_.at(instance).nodeShow[node] = {!shown, alpha}; }
     void setInstanceTint(std::size_t instance, const std::array<float, 3>& tint) { instances_.at(instance).tint = tint; }
     float instanceFade(std::size_t instance) const { return instances_.at(instance).fade; }
     const std::string& instanceModel(std::size_t instance) const { return instances_.at(instance).path; }
@@ -282,6 +283,11 @@ private:
         std::array<float, 3> tint{1, 1, 1};
         bool whiteMaterials = false;
         std::map<int, Mat4> nodeMatrix = {};
+        struct NodeShow {
+            bool hidden = false;
+            std::uint8_t alpha = 255;
+        };
+        std::map<int, NodeShow> nodeShow = {};
         std::string path = {};
         bool shadowCaster = false, shadowReceiver = false;
     };
@@ -292,6 +298,8 @@ private:
     void drawInstances(const Mat4& viewProjection, bool skyPass) const;
     void drawQueued(GLuint program, const Mat4& viewProjection, const Queued& item, bool culling, bool skyPass) const;
     static Mat4 partWorld(const Instance& instance, const DrawPart& part);
+    static bool partHidden(const Instance& instance, const DrawPart& part);
+    static float partFade(const Instance& instance, const DrawPart& part);
     std::uint64_t partSortKey(const ModelPart& part);
     const TextureInfo& texture(const std::string& name, const std::string& modelDir);
     DrawPart upload(const ModelPart& part, LoadedModel& model, const Mat4& nodeMatrix = identity());
@@ -586,6 +594,17 @@ float clipDepth(const Mat4& clip, const float point[3]) { return clip[3] * point
 
 }
 
+bool SceneImpl::partHidden(const Instance& instance, const DrawPart& part) {
+    const auto shown = instance.nodeShow.find(part.node);
+    return shown != instance.nodeShow.end() && shown->second.hidden;
+}
+
+float SceneImpl::partFade(const Instance& instance, const DrawPart& part) {
+    const auto shown = instance.nodeShow.find(part.node);
+    if (shown == instance.nodeShow.end() || shown->second.alpha == 255) return instance.fade;
+    return instance.fade * (float(shown->second.alpha) / 255.0f);
+}
+
 Mat4 SceneImpl::partWorld(const Instance& instance, const DrawPart& part) {
     const auto replaced = instance.nodeMatrix.find(part.node);
     if (replaced != instance.nodeMatrix.end()) return multiply(instance.transform, replaced->second);
@@ -603,9 +622,10 @@ void SceneImpl::drawQueued(GLuint program, const Mat4& viewProjection, const Que
     const Mat4 clip = multiply(viewProjection, world);
     glUniformMatrix4fv(glGetUniformLocation(program, "mvp"), 1, GL_FALSE, clip.data());
     glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, world.data());
-    glUniform1f(glGetUniformLocation(program, "instanceFade"), instance.fade);
+    const float fade = partFade(instance, part);
+    glUniform1f(glGetUniformLocation(program, "instanceFade"), fade);
     glUniform3fv(glGetUniformLocation(program, "instanceTint"), 1, instance.tint.data());
-    const std::uint8_t nodeAlpha = nodeAlphaByte(instance.fade);
+    const std::uint8_t nodeAlpha = nodeAlphaByte(fade);
     const std::array<std::uint8_t, 2> indices = drawBlendIndices(part.sourceIndex, part.destinationIndex, drawAlpha(part.colour[3], nodeAlpha));
     if (!part.hasMaterial) {
         glDisable(GL_BLEND);
@@ -644,9 +664,10 @@ void SceneImpl::drawInstances(const Mat4& viewProjection, bool skyPass) const {
     DrawList list;
     for (const auto& instance : instances_) {
         if (!instance.visible || instance.sky != skyPass) continue;
-        const std::uint8_t nodeAlpha = nodeAlphaByte(instance.fade);
         for (const auto& part : instance.model->parts) {
             if (override_ && part.hasMaterial && (override_->flags & 0x40) && part.material.additive) continue;
+            if (partHidden(instance, part)) continue;
+            const std::uint8_t nodeAlpha = nodeAlphaByte(partFade(instance, part));
             const bool blended = part.hasMaterial && blendedPass(part.colour[3], part.destinationIndex, nodeAlpha);
             if (skyPass) {
                 (blended ? skyBlended : skyOpaque).push_back({&instance, &part});
@@ -685,8 +706,9 @@ std::vector<Scene::ShadowPart> SceneImpl::shadowParts(bool casters) const {
     std::vector<Scene::ShadowPart> out;
     for (const auto& instance : instances_) {
         if (!instance.visible || instance.sky || !(casters ? instance.shadowCaster : instance.shadowReceiver)) continue;
-        const std::uint8_t nodeAlpha = nodeAlphaByte(instance.fade);
         for (const auto& part : instance.model->parts) {
+            if (partHidden(instance, part)) continue;
+            const std::uint8_t nodeAlpha = nodeAlphaByte(partFade(instance, part));
             const bool blended = part.hasMaterial && blendedPass(part.colour[3], part.destinationIndex, nodeAlpha);
             if (!casters && (!part.hasMaterial || blended || part.material.reflection || part.material.stages.size() > 4)) continue;
             out.push_back({part.vao, int(part.count), partWorld(instance, part)});
@@ -826,6 +848,8 @@ bool Scene::instanceVisible(std::size_t instance) const { return impl_->instance
 Mat4 Scene::instanceTransform(std::size_t instance) const { return impl_->instanceTransform(instance); }
 
 void Scene::setInstanceFade(std::size_t instance, float fade) { impl_->setInstanceFade(instance, fade); }
+
+void Scene::setInstanceNodeShown(std::size_t instance, int node, bool shown, std::uint8_t alpha) { impl_->setInstanceNodeShown(instance, node, shown, alpha); }
 
 void Scene::setInstanceTint(std::size_t instance, const std::array<float, 3>& tint) { impl_->setInstanceTint(instance, tint); }
 

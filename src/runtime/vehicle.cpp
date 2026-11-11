@@ -32,6 +32,12 @@ float floatOf(const assets::LevelParam* param, float fallback) {
     return fallback;
 }
 
+std::string stringOf(const assets::LevelParam* param) {
+    if (!param || param->type != 1 || param->blocks.empty()) return {};
+    const assets::Bytes& block = param->blocks.front();
+    return std::string(block.begin(), std::find(block.begin(), block.end(), std::uint8_t(0)));
+}
+
 std::int32_t intOf(const assets::LevelParam* param) {
     if (!param) return 0;
     if (param->type == 5 || param->type == 7) return std::int32_t(param->value);
@@ -61,6 +67,17 @@ void readParameters(const ParamReader& reader, const std::vector<VehicleTableRow
     if (const assets::LevelParam* centre = reader.get("CentreOfMass"))
         if (centre->type == 2 && !centre->blocks.empty() && centre->blocks[0].size() >= 12) std::memcpy(record.centreOfMass.data(), centre->blocks[0].data(), 12);
     record.trafficHeightOffRoad = floatOf(reader.get("TrafficHeightOffRoad"), 1.0f);
+    for (std::size_t i = 0; i < record.brakeLightModels.size(); ++i) {
+        char name[32];
+        std::snprintf(name, sizeof name, "BrakeLightModel%02u", unsigned(i + 1));
+        record.brakeLightModels[i] = stringOf(reader.get(name));
+    }
+    for (std::size_t i = 0; i < record.brakeLightLocators.size(); ++i) {
+        char name[32];
+        std::snprintf(name, sizeof name, "BrakeLightLocator%02u", unsigned(i + 1));
+        record.brakeLightLocators[i] = stringOf(reader.get(name));
+    }
+    record.brakeLightParticle = std::int32_t(floatOf(reader.get("BrakeLightParticle"), 242.0f));
     const std::int32_t tableHealth = record.vehicleType < table.size() ? table[record.vehicleType].health : 0;
     record.health = std::uint8_t(tableHealth);
     record.hearts = record.health;

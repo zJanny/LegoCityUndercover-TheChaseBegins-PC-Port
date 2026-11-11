@@ -92,6 +92,9 @@ struct VehicleRecord {
     bool hasDriverPosition = false;
     std::array<float, 3> centreOfMass = {0, 0, 0};  // class value CentreOfMass: the origin of the physics body relative to the node
     float trafficHeightOffRoad = 1.0f;  // class value TrafficHeightOffRoad (default 1): driver record +0x74, stored by 0x1796e8
+    std::array<std::string, 2> brakeLightModels;    // class values BrakeLightModel01..02: node names of the brake light meshes (vehicle create 0x165880)
+    std::array<std::string, 4> brakeLightLocators;  // class values BrakeLightLocator01..04: node names of the glow positions
+    std::int32_t brakeLightParticle = 242;          // class value BrakeLightParticle (default 242): the glow effect definition, record +0x2d8
     float cameraPosY = 0, cameraPosZ = 0, cameraLookY = 0, cameraLookZ = 0, cameraPanScale = 1.0f;  // +0x2f0..+0x300
     float topSpeed = 0;                // class value TopSpeed, the limit of the stand-in body
     float dampingLinear = 0;           // class value DampingLinear (body+0xd58)

@@ -154,6 +154,7 @@ void LevelSession::loadTraffic() {
         for (std::size_t i = 0; i < boardingVehicles.size(); ++i)
             if (boardingVehicles[i].instance == name) trafficBoarding[car] = i;
     }
+    setupTrafficCarLights();
 }
 
 game_traffic::SystemInputs LevelSession::trafficInputs() {
@@ -199,6 +200,7 @@ void LevelSession::driveTrafficCars(float dt) {
     };
     chase::runtime::TrafficDriveStep step;
     step.dt = dt;
+    step.lights = &trafficCarLights;
     std::vector<std::optional<std::size_t>> carOfVehicle(boardingVehicles.size());
     for (std::size_t car = 0; car < trafficBoarding.size(); ++car)
         if (trafficBoarding[car]) carOfVehicle[*trafficBoarding[car]] = car;
@@ -233,6 +235,7 @@ void LevelSession::driveTrafficCars(float dt) {
         matrix[15] = 1.0f;
         placeVehicleAt(*index, matrix);
     }
+    applyTrafficCarLights();
 }
 
 bool LevelSession::placeTrafficCar(const chase::runtime::TrafficCarPlacement& placement) {
