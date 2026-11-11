@@ -9,6 +9,7 @@ What 20261103-large-D read behind the FallArrestBoundSystem update and BulletTim
 - The FallArrest update walks only the bad guys' list. The port keeps both lists (`EngagedTable`), enters a character at its aggro and at its first AI move, and marks one in the air inside an enabled bound as auto-arrested, which the takedown reads; no character is in the air yet (SCRIPT-430). [§2026-11-03T08:42:13](#ts-20261103-084213)
 - BulletTime's restore calls the camera mode setters 0x221054 (mode 0 or 4) and 0x1fc060 (mode 3) from the mode byte, the time scale is also stored in 0x376d08 and read by the callback 0x2b6698 (integer +0x18 times the scale), and the scale slows the one gameplay client Update; the camera shot 0x2a36b4 is read in part. [§2026-11-07T12:10:05](#ts-20261107-121005)
 - BulletTime's start routine 0x239330 pauses every sound voice while a slow motion runs (0x1cef9c) and resumes them at the restore; the flag is the native's third argument above 0 and only then a camera shot is set (SCRIPT-437). Nine callers of 0x239330 are listed. [§2026-11-03T08:42:13](#ts-20261103-084213)
+- Cutscenes `1_4_c` (`1-4_Hatch_Open`) and `1_4_e` (`1-4_RobberCaught`) play with the cutscene natives; the port's update counts are pinned, the oracle's lengths and cuts are not measured yet (SCRIPT-453, SCRIPT-454). [§2026-11-11T23:56:17+01:00](#ts-20261111-235617)
 
 <a id="ts-20261103-084213"></a>
 
@@ -70,3 +71,15 @@ Evidence: llvm-objdump (armv6k, `--mattr=+vfp3`) of 0x239330..0x2394d8, 0x221054
 - The numbers of the camera shot 0x2a36b4 beyond its first part, and what the camera does with the requested mode object (SCRIPT-437).
 - The record of 0x2b6698 and 0x2b6650 (emitter, particle, other), the writer of `0x376ce4 + 0x28`, the call chain from 0x202054, and the hosts and records of the other callers (SCRIPT-438).
 - The caller of 0x2e4140, whether HUD and character intro are drawn or updated inside the scaled Update, and the real length of the slow motion in the oracle (SCRIPT-439).
+
+<a id="ts-20261111-235617"></a>
+
+## 2026-11-11T23:56:17+01:00 — Cutscenes 1_4_c and 1_4_e in the port
+
+**The script calls** (level data, read with the C++ level loader). `1-4_Hatch_Open`: after the hatch cameras and the break-in, `DCamCutSceneLoad "1_4_c"`, `DCamCutScenePlay "1_4_c" 0 0 0 0`, `Wait 4`, the window swap (`EnableObject 1-4_Window 0`, `1-4_WindowSmashed 1`), `DCamCutSceneWait`, `DCamCutSceneFree`, `Wait 0.1`, then the window-exit cameras. `1-4_RobberCaught`: `DCamCutSceneLoad "1_4_e"`, `Wait 1.2`, `FadeScreen 0`, placement and `StreamRoomIn "Room17"`, `wait 1.5`, `DCamCutScenePlay "1_4_e" 0 1 1 1`, `DCamCutSceneWait`, `DCamCutSceneFree`, `1-4_MissionEnd`.
+
+**The port's numbers.** Lengths from the archive: `1_4_c` 171 camera frames at 30 fps with a 7.7 s soundtrack, so 7.7 s; `1_4_e` 251 frames with 9.36667 s, so 9.36667 s. Run from the shipped scripts with the cutscene natives, steps of 0.033 s, the other natives as no-ops (20261111-chase-E, scratch driver over ScriptRunner): `1_4_c` plays from update 289 (start fade none, flag a is 0) to 523 and ends at 542 (end fade and exit wait 19 updates); `1_4_e` plays from update 99 to 383 and ends at 402. Pinned in CTest `natives-cutscene-real-data`. They are not oracle values.
+
+**Unknowns.**
+- The oracle's length of `1_4_c` and `1_4_e`, their camera cuts, and whether flag a of 0 skips the fades and the mode-switch wait in the original (servant request 20261111-chase-E-1, 2026-11-11: not measured, because 1-4_Hatch_Open starts only when the last roof goons are beaten, which needs real play; a state on the lower roof at the jump-on-roof bound with the last goon about to be beaten, and a state at the arrest of the chaser for `1_4_e`, were requested from the user and not provided this round).
+- The camera cut times: the port plays the cutscene camera as one track and has no cut list.

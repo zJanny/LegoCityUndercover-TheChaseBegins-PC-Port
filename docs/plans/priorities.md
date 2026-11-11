@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1110 open items and stand-ins, 198 linked to game usage, 912 with unknown reach.
+Items: 1112 open items and stand-ins, 198 linked to game usage, 914 with unknown reach.
 
 ## Top 50 overall
 
@@ -39,7 +39,7 @@ Items: 1110 open items and stand-ins, 198 linked to game usage, 912 with unknown
 | 3 | [PLAYER-S9](features/player-movement-attack.md?display=source#L22) | 0 | 2513 | 8 | 0 | - | `leprops/leprop_wobblydestructible` | `attackTargetObjects` — of the level objects only `leprop_wobblydestructible` props are attack targets (the ... |
 | 4 | [PART-3](features/particles.md?display=source#L28) | 1019 | 281 | 8 | 2 | 1 implemented | `triggerobject`, `particles` | The rest of the level object class `particles` (kind 1): read in full, ported are only TriggerObject's ... |
 | 5 | [SCRIPT-S325](features/script-system-missions-1-4-roof.md?display=source#L23) | 1019 | 281 | 8 | 0 | 1 implemented | `triggerobject`, `particles` | The class `particles` is ported only for TriggerObject's messages and the one-shot timer: the endless ... |
-| 6 | [SCRIPT-444](features/script-system-missions-1-4.md?display=source#L28) | 1019 | 0 | 8 | 1 | 1 implemented | `triggerobject` | `1-4_BoosterChaser_Spawner` (spawns `1-4_Booster_Strange_Chaser`, fired by TriggerObject in `1-4_Hatch_Open` ... |
+| 6 | [SCRIPT-444](features/script-system-missions-1-4.md?display=source#L30) | 1019 | 0 | 8 | 1 | 1 implemented | `triggerobject` | `1-4_BoosterChaser_Spawner` (spawns `1-4_Booster_Strange_Chaser`, fired by TriggerObject in `1-4_Hatch_Open` ... |
 | 7 | [SCRIPT-285](features/script-system-missions.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
 | 8 | [SCRIPT-365](features/script-system-missions-reference.md?display=source#L30) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The other switch kinds (100 energy switches, 125, 138 fires, 139 switchfloor, 141, 185 ability props and ... |
 | 9 | [SCRIPT-389](features/script-system-platforms.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The ledge lift starts one update later than in the oracle (the update between the switch's state 3 and the ... |
@@ -137,13 +137,13 @@ Items: 1110 open items and stand-ins, 198 linked to game usage, 912 with unknown
 
 ## Scripts and missions
 
-130 of 281 items linked.
+130 of 283 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
 | 1 | [SCRIPT-52](features/script-system.md?display=source#L41) | 3101 | 0 | 8 | 1 | 2 implemented | `enablebound`, `enabletrigger` | Class owners: an empty object name as the owner itself, the variable `TaskComplete.TASK_COMPLETE` (saved per ... |
 | 2 | [SCRIPT-S325](features/script-system-missions-1-4-roof.md?display=source#L23) | 1019 | 281 | 8 | 0 | 1 implemented | `triggerobject`, `particles` | The class `particles` is ported only for TriggerObject's messages and the one-shot timer: the endless ... |
-| 3 | [SCRIPT-444](features/script-system-missions-1-4.md?display=source#L28) | 1019 | 0 | 8 | 1 | 1 implemented | `triggerobject` | `1-4_BoosterChaser_Spawner` (spawns `1-4_Booster_Strange_Chaser`, fired by TriggerObject in `1-4_Hatch_Open` ... |
+| 3 | [SCRIPT-444](features/script-system-missions-1-4.md?display=source#L30) | 1019 | 0 | 8 | 1 | 1 implemented | `triggerobject` | `1-4_BoosterChaser_Spawner` (spawns `1-4_Booster_Strange_Chaser`, fired by TriggerObject in `1-4_Hatch_Open` ... |
 | 4 | [SCRIPT-285](features/script-system-missions.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | Nothing known fires the ObjectTriggered of `1-2_Door_Lock_Hint_Script`: no name source besides its own ... |
 | 5 | [SCRIPT-365](features/script-system-missions-reference.md?display=source#L30) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The other switch kinds (100 energy switches, 125, 138 fires, 139 switchfloor, 141, 185 ability props and ... |
 | 6 | [SCRIPT-389](features/script-system-platforms.md?display=source#L32) | 1019 | 0 | 8 | 0 | 1 implemented | `triggerobject` | The ledge lift starts one update later than in the oracle (the update between the switch's state 3 and the ... |
@@ -272,7 +272,7 @@ Widest Unblocks among them: [VEH-91](features/vehicles-physics-collision.md?disp
 - [script-system-missions-1-4-conduct.md](features/script-system-missions-1-4-conduct.md): SCRIPT-441 (+3), SCRIPT-428 (+2), SCRIPT-433 (+1), SCRIPT-442, SCRIPT-S326, SCRIPT-S329, SCRIPT-S330, SCRIPT-S333, SCRIPT-S334, SCRIPT-S335
 - [script-system-missions-1-4-fight.md](features/script-system-missions-1-4-fight.md): SCRIPT-423 (+1), SCRIPT-S320, SCRIPT-S321, SCRIPT-S322, SCRIPT-S324
 - [script-system-missions-1-4-roof.md](features/script-system-missions-1-4-roof.md): SCRIPT-430 (+1), SCRIPT-439 (+1), SCRIPT-S328, SCRIPT-S332
-- [script-system-missions-1-4.md](features/script-system-missions-1-4.md): SCRIPT-415 (+3), SCRIPT-443 (+1), SCRIPT-445, SCRIPT-S336
+- [script-system-missions-1-4.md](features/script-system-missions-1-4.md): SCRIPT-415 (+3), SCRIPT-453 (+2), SCRIPT-454 (+2), SCRIPT-443 (+1), SCRIPT-445, SCRIPT-S336
 - [script-system-missions-reference.md](features/script-system-missions-reference.md): SCRIPT-359 (+1), SCRIPT-360 (+1), SCRIPT-370 (+1), SCRIPT-S289, SCRIPT-S292, SCRIPT-S293, SCRIPT-S299
 - [script-system-missions.md](features/script-system-missions.md): SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S255
 - [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-324 (+3), SCRIPT-352 (+2), SCRIPT-325 (+1), SCRIPT-334 (+1), SCRIPT-405 (+1), SCRIPT-S284 (+1), SCRIPT-344, SCRIPT-353, SCRIPT-S262, SCRIPT-S266, SCRIPT-S267

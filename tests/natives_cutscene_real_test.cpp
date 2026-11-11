@@ -64,6 +64,40 @@ void showroomArrivalUpdates(const chase::assets::Level& level, const chase::asse
     require(cutToPlacementSeconds >= 17.28f && cutToPlacementSeconds <= 17.32f + 2 * kStep,
             "first cut to the placement within two updates of the free-run 17.28 to 17.32 s, got " + std::to_string(cutToPlacementSeconds));
 }
+// Port counts of the chase cutscenes, run from the shipped scripts with the cutscene natives (20261111-chase-E, 2026-11-11, scratch
+// driver over ScriptRunner, steps of 0.033 s; the other natives of the scripts are no-ops there). Lengths from the archive: 1_4_c 171 camera
+// frames at 30 fps and a 7.7 s soundtrack, 1_4_e 251 frames and 9.36667 s. They are NOT oracle values: the oracle comparison is open (SCRIPT-443).
+// 1-4_Hatch_Open plays 1_4_c with flags 0 0 0 0 (no start fade); 1-4_RobberCaught plays 1_4_e with 0 1 1 1.
+void chaseCutsceneUpdates(const chase::assets::Level& level, const chase::assets::ClassLookup& classOf,
+                          const chase::runtime::CutsceneNativeState::LengthSource& lengthOf) {
+    using namespace chase;
+    constexpr float kStep = 0.033f;
+    struct Case { const char* script; const char* cutscene; float length; int played, shown, playEnd, ended; };
+    const Case cases[] = {{"1-4_Hatch_Open", "1_4_c", 7.7f, 289, 289, 523, 542}, {"1-4_RobberCaught", "1_4_e", 9.36667f, 99, 99, 383, 402}};
+    for (const Case& c : cases) {
+        require(std::fabs(*lengthOf(c.cutscene) - c.length) < 0.001f, std::string(c.cutscene) + " length");
+        assets::PlacedObjectState state = runtime::levelInitialState(level, classOf);
+        runtime::ScriptRunner runner(level, state);
+        runner.cutscenes().setLengthSource(lengthOf);
+        require(runner.start(c.script), c.script);
+        const auto noObject = [](const std::string&, float*) { return false; };
+        int played = -1, shown = -1, playEnd = -1, ended = -1;
+        for (int i = 1; i <= 3000 && ended < 0; ++i) {
+            runner.update(kStep);
+            runner.director().update(kStep, noObject);
+            const runtime::CutscenePlaying* playing = runner.cutscenes().playing();
+            if (playing && played < 0) played = i;
+            if (playing && runner.cutscenes().shown() && shown < 0) shown = i;
+            if (playing && playing->elapsed >= playing->length && playEnd < 0) playEnd = i;
+            if (!playing && played > 0) ended = i;
+        }
+        const std::string what = std::string(c.cutscene) + ": ";
+        require(played == c.played, what + "Play at update " + std::to_string(played));
+        require(shown == c.shown, what + "shown at update " + std::to_string(shown));
+        require(playEnd == c.playEnd, what + "play end at update " + std::to_string(playEnd));
+        require(ended == c.ended, what + "ended at update " + std::to_string(ended));
+    }
+}
 }
 
 int main(int argc, char** argv) {
@@ -114,6 +148,7 @@ int main(int argc, char** argv) {
                 "Wait blocks for the fade before the start (flag a of 1-1_VanBreakdown is 1), the cutscene length, the end fade and the exit wait: freed at update " + std::to_string(freedAt) + ", expected about " + std::to_string(expected));
         require(runner.cutscenes().playing() == nullptr, "the cutscene has ended when Free runs");
         showroomArrivalUpdates(level, classOf, lengthOf);
+        chaseCutsceneUpdates(level, classOf, lengthOf);
     } catch (const std::exception& error) {
         std::cerr << "natives-cutscene-real-test: " << error.what() << '\n';
         return 1;
