@@ -10,6 +10,7 @@ Subtopic of [traffic.md](traffic.md); the AI driver is in [traffic-ai-driver.md]
 - With the mode 255 of the contact step, the wall slide 0x21a73c only runs 0x2c8f80: each gathered character is pushed through 0x2baef0 (message 45 and a move of the character), and the move is cut to half the car's radius after a push. [§2026-11-08T12:12:24](#ts-20261108-121224)
 - Entering state 5 gives the car an enemy arrow and a place in the enemy group of the carry-it waypoint (0x230dbc, 0x230e60); leaving 5 removes both. [§2026-11-08T12:12:24](#ts-20261108-121224)
 - 0x2c87a8 stops all traffic while the clock 0x241098 is below a time the cop whistle state (0x1b2 COPWHISTLE) sets to clock + 120 + random % 60. The lights 0x278b78 are the brake lights: two mesh parts with an alpha level and up to four glow effects. [§2026-11-08T12:12:24](#ts-20261108-121224)
+- The push 0x2baef0, the characters' message 45 and the whistle state 0x1b2 are read and ported in [traffic-car-push.md](traffic-car-push.md) (`src/runtime/traffic_car_push.*`, test `traffic-car-push`).
 - The brake light parts, glow parts and glow effect of 0x278b78 are written by the vehicle's parameter reader 0x1658a8 from the class values `BrakeLightModel%02u`, `BrakeLightLocator%02u` and `BrakeLightParticle`; the port draws them. [traffic-car-lights.md §2026-11-12T00:10:29](traffic-car-lights.md#ts-20261112-001029)
 - Port: `src/runtime/traffic_driver_calls.*` (test `traffic-driver-calls`), not connected to `ai_driver_input` yet (TRAFFIC-2).
 

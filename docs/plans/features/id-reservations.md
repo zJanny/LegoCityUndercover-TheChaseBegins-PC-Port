@@ -13,5 +13,3 @@ Ranges of item IDs held by parallel agents, named like `20261021-audio-A`. The p
 | COMBAT | 13 | 14 | 20261111-chase-D | 2026-11-11T23:47:58+01:00 |
 | SCRIPT | 451 | 452 | 20261111-chase-D | 2026-11-11T23:47:58+01:00 |
 | COMBAT-S | 8 | 9 | 20261111-chase-D | 2026-11-11T23:47:58+01:00 |
-| TRAFFIC | 45 | 47 | 20261111-chase-F | 2026-11-11T23:47:58+01:00 |
-| TRAFFIC-S | 33 | 34 | 20261111-chase-F | 2026-11-11T23:47:58+01:00 |
