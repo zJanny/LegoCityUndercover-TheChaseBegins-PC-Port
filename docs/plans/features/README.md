@@ -64,7 +64,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [script-system-missions-1-4-chase](script-system-missions-1-4-chase.md) | IN_PROGRESS | SCRIPT-415 the chase; SCRIPT-462 draw the target display; SCRIPT-447 the hold of a VehicleSetAI car |
 | [script-system-missions-1-4-fight](script-system-missions-1-4-fight.md) | IN_PROGRESS | SCRIPT-419 spawner details; SCRIPT-423 the StartState entries not ported |
 | [script-system-missions-1-4-conduct](script-system-missions-1-4-conduct.md) | IN_PROGRESS | SCRIPT-428 rest of the idle decision; SCRIPT-441 inputs of the state 14 walk; SCRIPT-433 sleep clips |
-| [script-system-missions-1-4-roof](script-system-missions-1-4-roof.md) | IN_PROGRESS | SCRIPT-414 rest of the roof scene; SCRIPT-430 a goon in the air; SCRIPT-437 BulletTime camera shot; SCRIPT-438 callers and time scale readers; SCRIPT-439 slow motion length |
+| [script-system-missions-1-4-roof](script-system-missions-1-4-roof.md) | IN_PROGRESS | SCRIPT-414 rest of the roof scene; SCRIPT-430 thrown goon in play; SCRIPT-465 pair motion; SCRIPT-467 camera shot; SCRIPT-438 callers and time scale readers; SCRIPT-439 slow motion length |
 | [script-system-use-markers](script-system-use-markers.md) | IN_PROGRESS | SCRIPT-299 markers of the other 34 kinds; SCRIPT-355 special cases and HeadMarker; SCRIPT-356 list builder; SCRIPT-357 placement ray |
 | [script-system-natives](script-system-natives.md) | IN_PROGRESS | SCRIPT-7 natives in batches SCRIPT-29 to SCRIPT-39, SCRIPT-57 to SCRIPT-65 |
 | [script-system-natives-world](script-system-natives-world.md) | IN_PROGRESS | SCRIPT-280 destroy message 1 per class; SCRIPT-281 effect fade rest; SCRIPT-282 distance fade gate; SCRIPT-283 AddToSemiTransList |

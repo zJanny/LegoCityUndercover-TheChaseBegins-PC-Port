@@ -7,9 +7,9 @@ namespace game_level {
 namespace runtime = chase::runtime;
 
 // STAND-IN SCRIPT-S328: a character joins the allegiance lists when it moves under the AI (the AIMove front end 0x22d85c creates the path record at
-// the call; the port takes the first update that moved it) or at the aggro; the airborne flag ctrl+0x314 bit 6 stays "on the ground" because the
-// mover 0x20b498 and the fall of a thrown goon are not ported (COMBAT-8, SCRIPT-430); the sound's owner id is 0 (entity +0x14 is not read); the update
-// runs after the particle objects, an order the port chose.
+// the call; the port takes the first update that moved it) or at the aggro; the airborne flag ctrl+0x314 bit 6 is written by the character mover
+// (game_character_air.cpp) only for the characters in the grab and takedown states, every other character stays "on the ground"; the sound's owner id
+// is 0 (entity +0x14 is not read); the update runs after the particle objects, an order the port chose.
 void LevelSession::updateFallArrest(const std::function<void(const runtime::SoundCall&)>& emit) {
     if (!levelCharacters) return;
     const runtime::AiCore& ai = levelScripts.ai();

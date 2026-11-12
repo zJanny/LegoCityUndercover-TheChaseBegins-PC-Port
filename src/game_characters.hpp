@@ -66,6 +66,14 @@ public:
     void holdIdle(const std::string& lowerCaseInstance, bool held);
     // Slot kind 6 of 0x22f560: no animation or the current one finished.
     std::optional<bool> clipFinished(const std::string& lowerCaseInstance) const;
+    // The newest slot's clip and its frame on the current clock; nothing without a playing slot.
+    struct ClipFrame {
+        const assets::Animation* animation = nullptr;
+        float frame = 0;
+    };
+    std::optional<ClipFrame> currentClip(const std::string& lowerCaseInstance) const;
+    // 0x1fdad0 -> 0x24f8fc on the newest slot (runtime::AnimationSlots::pause).
+    void pauseClip(const std::string& lowerCaseInstance, bool paused);
     // The character's node matrix (what place() wrote, or its AI position).
     std::optional<assets::Matrix> world(const std::string& lowerCaseInstance) const;
     // The lower-case instance names with their level data.

@@ -85,6 +85,22 @@ void stopFreezesThePose() {
     require(slots.kind(2 * kTicks) == kAnimationStopped && slots.currentNearEnd(2 * kTicks), "kind 6");
 }
 
+void pauseHoldsAndResumeShiftsTheStart() {
+    AnimationSlots slots;
+    slots.start(kOpen, kAnimationOnce, 0, kAnimationFrameDefault, 1.0f, 0.0f, 0);
+    slots.pause(true, kTicks);
+    slots.pause(true, 2 * kTicks);
+    require(slots.current()->stop == kTicks && slots.current()->mode == kAnimationOnce, "0x24f8fc: the first pause keeps its clock, the mode stays");
+    require(near(AnimationSlots::position(*slots.current(), 3 * kTicks).frame, 15.0f) && slots.kind(30 * kTicks) == kAnimationOnce,
+            "a paused clip holds its frame and does not finish");
+    slots.pause(false, 3 * kTicks);
+    require(slots.current()->stop == -1 && slots.current()->start == 2 * kTicks, "the resume moves the start by the paused time");
+    require(near(AnimationSlots::position(*slots.current(), 4 * kTicks).frame, 30.0f), "the clip runs on from the held frame");
+    slots.stop(5 * kTicks);
+    slots.pause(true, 6 * kTicks);
+    require(slots.current()->stop == 5 * kTicks, "mode 6 is not paused");
+}
+
 void offsetMovesTheStart() {
     AnimationSlots slots;
     AnimationRequest request;
@@ -134,6 +150,7 @@ int main() {
         loopWithWrapFrame();
         reverseAndPingPong();
         stopFreezesThePose();
+        pauseHoldsAndResumeShiftsTheStart();
         offsetMovesTheStart();
         samePlayRestartsWithoutANewSlot();
         fourSlotsNewestFirst();

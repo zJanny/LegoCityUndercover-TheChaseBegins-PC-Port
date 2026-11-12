@@ -31,6 +31,7 @@ const char* takedownStateName(std::uint16_t state) {
 // The takedown tables (tables/tablescombat.bxls) and the fight sink of the attack: the fight move's target enters MELEE PUTDOWN.
 void LevelSession::loadCharacterTakedowns(chase::assets::FuseArchive& archive) {
     characterTakedowns.clear();
+    characterAir.clear();
     arrestables = runtime::ArrestableList{};
     if (const chase::assets::FuseEntry* entry = archive.find("tables/tablescombat.bxls"))
         takedownTables = runtime::takedownTables(chase::assets::parseTable(archive.read(*entry)));
@@ -68,8 +69,8 @@ void LevelSession::characterTakedownStart(const runtime::CharacterFightStart& fi
     entry->second.startedAt = updates;
 }
 
-// STAND-IN COMBAT-S4: the character stays where it stands (no pair motion of 0x1fda20, no mover 0x283b10) and the takedown runs on its own
-// machine beside the hit states.
+// STAND-IN COMBAT-S4: the takedown runs on its own machine beside the hit states; the movement of the state updates is moveTakedownCharacter
+// (game_character_air.cpp).
 void LevelSession::updateCharacterTakedowns(float dt) {
     if (!levelCharacters || !player) return;
     for (auto& [name, entry] : characterTakedowns) {
@@ -81,8 +82,9 @@ void LevelSession::updateCharacterTakedowns(float dt) {
         entry.character.autoArrestFlag = engagedTable.autoArrested(name);
         entry.character.destroyed = hit->second.target.destroyed || objectState.destroyed.count(name) != 0;
         entry.character.avoidArrestTrigger = enabledObjectTrigger("characteravoidarrest", name);
-        const bool finished = levelCharacters->clipFinished(name).value_or(true);
         const std::uint16_t before = entry.states.state();
+        moveTakedownCharacter(name, before, levelCharacters->clipFinished(name).value_or(true), dt);
+        const bool finished = levelCharacters->clipFinished(name).value_or(true);
         // STAND-IN COMBAT-S4: the random words come from the stand-in generator of the attack, not the game's shared generator state.
         const runtime::TakedownStep step = entry.states.update(entry.character, hit->second.target, takedownTables, arrestables, name, finished, dt,
                                                                [this] { return breakRandomStandIn.next(); });
@@ -90,6 +92,7 @@ void LevelSession::updateCharacterTakedowns(float dt) {
         if (step.unlisted) std::cout << "character " << name << ": not arrestable any more at update " << updatesForLog << '\n';
         if (step.avoidArrest && characterArrestEventSink) characterArrestEventSink("CharacterAvoidArrest", name);
         if (entry.states.state() != before) {
+            enterTakedownAir(name, entry.states.state());
             std::cout << "character " << name << ": state " << entry.states.state() << ' ' << takedownStateName(entry.states.state());
             if (step.notPorted) std::cout << " (not ported, COMBAT-7)";
             std::cout << " at update " << updatesForLog << '\n';

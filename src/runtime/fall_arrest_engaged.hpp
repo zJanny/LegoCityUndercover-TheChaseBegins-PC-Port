@@ -40,7 +40,8 @@ public:
     void setPlayerSlot(const std::string& name) { player_ = name; }
     const std::string& playerSlot() const { return player_; }
 
-    // ctrl+0x314 bit 6 (the character stands on the ground). The mover 0x20b498 that writes it is not ported (STAND-IN SCRIPT-S328): the glue leaves it set.
+    // ctrl+0x314 bit 6 (the character stands on the ground), written by the character mover's ground probe 0x20b48c (character_air_mover.hpp).
+    // STAND-IN SCRIPT-S328: only the characters in the grab and takedown states are moved by it; the others stay on the ground.
     void setOnGround(const std::string& name, bool onGround);
     bool onGround(const std::string& name) const;
     // Sub +0x131 bits 6..7 of a character (the auto-arrested mark), kept after the character leaves the list.

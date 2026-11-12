@@ -134,6 +134,19 @@ void AnimationSlots::stop(std::int64_t now) {
     slot.mode = kAnimationStopped;
 }
 
+void AnimationSlots::pause(bool paused, std::int64_t now) {
+    if (!count_) return;
+    AnimationSlot& slot = slots_[0];
+    if (slot.mode == kAnimationStopped) return;
+    if (paused) {
+        if (slot.stop == -1) slot.stop = now;
+        return;
+    }
+    if (slot.stop == -1) return;
+    slot.start += now - slot.stop;
+    slot.stop = -1;
+}
+
 void AnimationSlots::setMode(unsigned mode) {
     if (count_) slots_[0].mode = mode & 7u;
 }

@@ -107,6 +107,17 @@ std::optional<bool> LevelCharacters::clipFinished(const std::string& instance) c
     return entry->slots.kind(clock_) == runtime::kAnimationStopped;
 }
 
+std::optional<LevelCharacters::ClipFrame> LevelCharacters::currentClip(const std::string& instance) const {
+    const Entry* entry = find(instance);
+    if (!entry || !entry->slots.current()) return std::nullopt;
+    const runtime::AnimationSlot& slot = *entry->slots.current();
+    return ClipFrame{&clips_[slot.clip].animation, runtime::AnimationSlots::position(slot, clock_).frame};
+}
+
+void LevelCharacters::pauseClip(const std::string& instance, bool paused) {
+    if (Entry* entry = find(instance)) entry->slots.pause(paused, clock_);
+}
+
 bool LevelCharacters::place(const std::string& instance, const Matrix& world) {
     Entry* entry = find(instance);
     if (!entry) return false;

@@ -494,6 +494,9 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     updateLevelCharacters(dt);
     followPlacedChildren();
     fallApart.update(debrisLineStandIn(), updates);
+    // STAND-IN SCRIPT-S332: a switch to the CameraRotFixedSet preset is only logged; the port's camera stays the follow camera.
+    if (const std::optional<runtime::CameraModeSwitch> change = cameraModes.update())
+        std::cout << "camera mode " << runtime::cameraModeName(change->from) << " -> " << runtime::cameraModeName(change->to) << " at update " << updatesForLog << '\n';
     if (follow) updateFollowCamera(dt);
     else camera.update(dt, pad);
     if (follow && player) {

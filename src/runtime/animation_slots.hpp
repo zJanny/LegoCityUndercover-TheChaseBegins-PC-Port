@@ -69,6 +69,9 @@ public:
     static AnimationPosition position(const AnimationSlot& slot, std::int64_t now, std::int32_t offset = 0);
     unsigned kind(std::int64_t now) const;
     void stop(std::int64_t now);
+    // 0x24f8fc on the newest slot: nothing in mode 6; a pause stores the clock in +0x38 when it holds -1, a resume moves the start clock +0x34 by
+    // the paused time and sets +0x38 back to -1.
+    void pause(bool paused, std::int64_t now);
     void setMode(unsigned mode);
     void setOffset(float frame, std::int64_t now);
     bool currentNearEnd(std::int64_t now) const;

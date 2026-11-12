@@ -84,10 +84,12 @@
 #include "runtime/arrest_after_crash.hpp"
 #include "runtime/character_arrest.hpp"
 #include "runtime/character_takedown.hpp"
+#include "runtime/character_air_mover.hpp"
 #include "runtime/fall_arrest_engaged.hpp"
 #include "runtime/camera_lock_icon.hpp"
 #include "runtime/screen_shake.hpp"
 #include "runtime/camera_rig.hpp"
+#include "runtime/camera_manager_mode.hpp"
 #include "runtime/camera_near_plane.hpp"
 #include "runtime/clip_planes.hpp"
 #include "runtime/collision.hpp"
@@ -368,6 +370,10 @@ private:
     void loadCharacterTakedowns(chase::assets::FuseArchive& archive);
     void characterTakedownStart(const chase::runtime::CharacterFightStart& fight);
     void updateCharacterTakedowns(float dt);
+    // The mover of the grab and takedown states and the throw fall (runtime/character_air_mover.hpp; glue src/runtime/game_character_air.cpp).
+    std::map<std::string, chase::runtime::CharacterAir> characterAir;
+    void moveTakedownCharacter(const std::string& name, std::uint16_t state, bool clipFinished, float dt);
+    void enterTakedownAir(const std::string& name, std::uint16_t state);
     std::optional<std::uint8_t> characterTakedownTargetMode(const std::string& lowerInstance) const;
     bool enabledObjectTrigger(const std::string& lowerEvent, const std::string& lowerInstance) const;
     // The player's arrest by A (runtime/character_arrest.hpp; glue src/runtime/game_character_arrest.cpp).
@@ -414,6 +420,8 @@ private:
     chase::runtime::EngagedTable engagedTable;
     void updateFallArrest(const std::function<void(const chase::runtime::SoundCall&)>& emit);
     void updateBulletTime(float realDt);
+    // The camera manager's requested and current mode (runtime/camera_manager_mode.hpp); BulletTime's restore requests a mode.
+    chase::runtime::CameraManagerModes cameraModes;
     void loadScriptDestroyProps(chase::assets::FuseArchive& archive);
     // STAND-IN VEH-S104: the line tests 0x21ab20 / 0x22b108 of a brick burst are the wheel ray of the collision world, vehicles skipped.
     chase::runtime::DebrisLineTest debrisLineStandIn() const;
