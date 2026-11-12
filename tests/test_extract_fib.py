@@ -44,7 +44,7 @@ class FibTests(unittest.TestCase):
         if names is not None:
             csv = Path(d) / 'a.csv'
             csv.write_text('Filename CRC, Filename, Compressed Size, File Size, Offset\n' + ''.join(
-                '0x%08x,%s,%d,%d,0x%08x\n' % row for row in names))
+                '0x%08x,%s,%d,%d,0x%08x\n' % row for row in names), encoding='utf-8', newline='\n')
         return fib, csv
 
     def test_extract_codecs_names_and_manifest(self):
@@ -62,7 +62,7 @@ class FibTests(unittest.TestCase):
             self.assertEqual((files / 'b/packed.bin').read_bytes(), DECODED)
             self.assertEqual((files / 'unnamed/00000003.bin').read_bytes(), big)
             self.assertEqual((m['extracted'], m['named']), (3, 2))
-            saved = json.loads((Path(d) / 'out/fib-manifest.json').read_text())
+            saved = json.loads((Path(d) / 'out/fib-manifest.json').read_text(encoding='utf-8'))
             self.assertEqual(saved['codec_counts'], {'0': 1, '1': 1, '2': 1})
             self.assertEqual([r['stored_size'] for r in m['files']], [3, 4 + len(STREAM), 8 + len(big)])
             self.assertEqual((saved['archive']['version'], saved['archive']['directory_offset']), ('1.00', 20 + 3 + 4 + len(STREAM) + 8 + len(big)))

@@ -7,6 +7,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parents[1] / 'tools'))
 import priority_report as report  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fixtures import isolate_git_environment  # noqa: E402
+
+isolate_git_environment()
 
 FEATURE = """# Sample
 
@@ -156,7 +160,7 @@ class ArgumentTests(unittest.TestCase):
     def test_no_game_data_skips_the_check(self):
         with tempfile.TemporaryDirectory() as directory:
             target = Path(directory) / 'p.md'
-            target.write_text('x')
+            target.write_text('x', encoding='utf-8', newline='\n')
             code, out, _err = self.run_main('--root', directory, '--romfs', directory, '--check', str(target))
         self.assertEqual(code, report.SKIP_EXIT)
         self.assertIn('game data not extracted', out)

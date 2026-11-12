@@ -3,6 +3,7 @@
 #include "qol/controls_file.hpp"
 
 #include <SDL.h>
+#include <filesystem>
 #include <fstream>
 #include <stdexcept>
 
@@ -28,8 +29,7 @@ std::string sdlKeyNamer(int code) {
 }
 
 std::string shippedPathNextTo(const std::string& path) {
-    auto slash = path.find_last_of('/');
-    return (slash == std::string::npos ? std::string() : path.substr(0, slash + 1)) + "controls.default.cfg";
+    return (std::filesystem::path(path).parent_path() / "controls.default.cfg").string();
 }
 
 QolControlsBindings::QolControlsBindings(const std::string& path) : QolControlsBindings(path, shippedPathNextTo(path)) {}

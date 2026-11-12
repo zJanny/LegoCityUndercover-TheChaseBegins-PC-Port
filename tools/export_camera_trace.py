@@ -33,7 +33,7 @@ def main():
     if len(data) % record:
         sys.exit('trace size %d is not a multiple of %d' % (len(data), record))
     arguments.output.parent.mkdir(parents=True, exist_ok=True)
-    with open(arguments.output, 'w', newline='') as out:
+    with open(arguments.output, 'w', newline='', encoding='utf-8') as out:
         writer = csv.writer(out)
         writer.writerow('frame dt stick_x stick_y held player_x player_y player_z facing_x facing_z '
                         'look_x look_y look_z eye_x eye_y eye_z wanted_x wanted_y wanted_z clearance spring_hold'.split())

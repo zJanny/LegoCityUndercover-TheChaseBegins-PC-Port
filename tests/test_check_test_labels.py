@@ -31,9 +31,9 @@ set_tests_properties(check-shot PROPERTIES  FIXTURES_REQUIRED "shot")
 def run(testfile: str, cache: str = "CHASE_ROMFS_DIR:PATH=/data/romfs\n", *extra: str) -> subprocess.CompletedProcess:
     with tempfile.TemporaryDirectory() as directory:
         build = Path(directory)
-        (build / "CTestTestfile.cmake").write_text(testfile)
+        (build / "CTestTestfile.cmake").write_text(testfile, encoding='utf-8', newline='\n')
         if cache is not None:
-            (build / "CMakeCache.txt").write_text(cache)
+            (build / "CMakeCache.txt").write_text(cache, encoding='utf-8', newline='\n')
         return subprocess.run([sys.executable, str(TOOL), str(build), *extra], capture_output=True, text=True)
 
 

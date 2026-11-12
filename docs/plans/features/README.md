@@ -147,6 +147,10 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 
 | Feature | Status | Top open items |
 |---|---|---|
-| [windows-build](windows-build.md) | NOT_STARTED | WINBUILD-1 dependency discovery and flags; WINBUILD-2 commands and package list; WINBUILD-3 GitHub Windows job |
-| [windows-platform](windows-platform.md) | NOT_STARTED | WINPLAT-1 save directory; WINPLAT-2 native library loading |
-| [windows-tests](windows-tests.md) | NOT_STARTED | WINTEST-1 skips with reasons; WINTEST-2 floating-point equality |
+| [windows-build](windows-build.md) | IN_PROGRESS | WINBUILD-3 GitHub Windows job; WINBUILD-4 merge tool environment on Windows |
+| [windows-platform](windows-platform.md) | IN_PROGRESS | WINPLAT-1 save directory; WINPLAT-2 native library name; WINPLAT-3 overlay memory line |
+| [windows-tests](windows-tests.md) | IN_PROGRESS | WINTEST-13 offscreen OpenGL tests; WINTEST-2 floating-point equality of the scene tests |
+| [windows-hook-paths](windows-hook-paths.md) | IN_PROGRESS | WINTEST-6 MSYS root paths in hook commands |
+| [windows-hooks](windows-hooks.md) | IN_PROGRESS | WINTEST-3 real Claude Code run on a clean Windows |
+| [windows-line-endings](windows-line-endings.md) | IN_PROGRESS | WINTEST-11 camera CSVs stored with CRLF; WINTEST-12 CI check with autocrlf=true |
+| [windows-python-tools](windows-python-tools.md) | IN_PROGRESS | WINTEST-8 symlink privilege of the artifacts link; WINTEST-10 Azahar oracle is Linux-only |

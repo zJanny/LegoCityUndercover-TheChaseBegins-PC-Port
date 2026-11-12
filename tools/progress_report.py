@@ -52,7 +52,7 @@ def load_archive_files(romfs):
     """[(archive path, decoded size)] of every archive entry, named through the shipped CSV index."""
     import chase_native
     names = {}
-    with open(romfs / 'lego_city3ds.csv', newline='') as handle:
+    with open(romfs / 'lego_city3ds.csv', newline='', encoding='utf-8') as handle:
         rows = csv.reader(handle)
         next(rows)
         for row in rows:
@@ -514,7 +514,7 @@ def main(argv=None):
         print('README progress section and trend graphic are current')
         return 0
     if args.json:
-        args.json.write_text(json.dumps(report, indent=1) + '\n', encoding='utf-8')
+        args.json.write_text(json.dumps(report, indent=1) + '\n', encoding='utf-8', newline='\n')
     if args.update_readme:
         gaps = missing_data(report)
         if gaps:
@@ -522,7 +522,7 @@ def main(argv=None):
             return 2
         readme = args.update_readme.read_text(encoding='utf-8')
         section = render_section(report)
-        args.update_readme.write_text(replace_section(readme, section), encoding='utf-8')
+        args.update_readme.write_text(replace_section(readme, section), encoding='utf-8', newline='\n')
         write_trend(root, section)
         print('updated %s and docs/progress-trend.svg' % args.update_readme)
     if not (args.json or args.update_readme):

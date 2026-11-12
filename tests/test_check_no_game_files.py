@@ -30,6 +30,10 @@ except ImportError:
     sys.modules['forbidden_files'] = stand_in
 
 import check_no_game_files as script  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fixtures import isolate_git_environment  # noqa: E402
+
+isolate_git_environment()
 
 
 def git(root, *args):

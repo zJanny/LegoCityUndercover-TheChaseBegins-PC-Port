@@ -43,7 +43,7 @@ def main():
     if len(data) % record:
         sys.exit('trace size %d is not a multiple of %d' % (len(data), record))
     arguments.output.parent.mkdir(parents=True, exist_ok=True)
-    with open(arguments.output, 'w', newline='') as out:
+    with open(arguments.output, 'w', newline='', encoding='utf-8') as out:
         writer = csv.writer(out)
         writer.writerow(HEADER + (ENTER_COLUMNS if arguments.layout == 'enter' else []))
         for index in range(len(data) // record):

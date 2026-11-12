@@ -27,7 +27,7 @@ def read_tests(build: Path) -> tuple[dict[str, str], dict[str, str]]:
     if not files:
         raise ValueError(f"no CTestTestfile.cmake under {build}")
     for path in files:
-        for line in STATEMENT_START.split(path.read_text()):
+        for line in STATEMENT_START.split(path.read_text(encoding='utf-8')):
             added = ADD_TEST.match(line)
             if added:
                 commands[unquote(added.group(1))] = added.group(2)
@@ -42,7 +42,7 @@ def romfs_directory(build: Path) -> str:
     cache = build / "CMakeCache.txt"
     if not cache.is_file():
         raise ValueError(f"no CMakeCache.txt in {build}")
-    found = CACHE_ROMFS.search(cache.read_text())
+    found = CACHE_ROMFS.search(cache.read_text(encoding='utf-8'))
     return found.group(1).strip() if found else ""
 
 

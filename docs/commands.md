@@ -1,6 +1,6 @@
 # Command reference
 
-Every command of the extraction tools, converters and programs, on Linux, with its options. For build and test setup, see [Building](building.md).
+Every command of the extraction tools, converters and programs, on Linux, with its options. For build and test setup, see [Building](building.md). Windows: [Commands on Windows](commands-windows.md).
 
 Back to the [documentation list](../README.md#more-documentation).
 
@@ -153,6 +153,7 @@ python3 tools/merge_agent.py close -m FILE --release 20261021-audio-C --log linu
 python3 tools/merge_agent.py check-pr 42             # check pull request 42 of the GitHub remote
 ```
 
+- On Windows, start it as in [Commands on Windows](commands-windows.md#merging-an-agent-branch).
 - `sync` compares main with its upstream (`--upstream REMOTE/BRANCH` names another one). When the upstream is ahead and main has no own commits, it fast-forwards main. When both moved, or main has uncommitted changes, it stops with an error, and the user decides.
 - `prepare` runs `sync` first and takes the same `--upstream`. `--no-sync` skips it, for a session without a remote.
 - `finish --release WHO` drops the ID ranges WHO holds, inside the merge commit; give it once per holder. A name that holds no reservation stops with an error.

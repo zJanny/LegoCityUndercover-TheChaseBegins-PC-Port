@@ -38,7 +38,7 @@ def main():
     if len(data) % record:
         sys.exit('trace size %d is not a multiple of %d' % (len(data), record))
     arguments.output.parent.mkdir(parents=True, exist_ok=True)
-    with open(arguments.output, 'w', newline='') as out:
+    with open(arguments.output, 'w', newline='', encoding='utf-8') as out:
         writer = csv.writer(out)
         writer.writerow('frame dt player_x player_y player_z look_x look_y look_z eye_x eye_y eye_z fov '
                         'eye_factor look_factor top top_weight depth follow_look_x follow_look_y follow_look_z '

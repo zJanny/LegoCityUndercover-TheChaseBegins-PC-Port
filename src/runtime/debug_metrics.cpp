@@ -1,5 +1,5 @@
 #include "runtime/debug_metrics.hpp"
-#include <sys/resource.h>
+#include "runtime/process_cpu_time.hpp"
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
@@ -11,13 +11,6 @@ namespace {
 
 double wallSeconds() {
     return std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
-}
-
-double processCpuSeconds() {
-    rusage usage{};
-    getrusage(RUSAGE_SELF, &usage);
-    return double(usage.ru_utime.tv_sec) + double(usage.ru_utime.tv_usec) * 1e-6 +
-           double(usage.ru_stime.tv_sec) + double(usage.ru_stime.tv_usec) * 1e-6;
 }
 
 std::optional<long> kilobytesOf(const std::string& text, const std::string& key) {

@@ -131,7 +131,7 @@ class ScriptCommandTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             state = Path(directory) / 'motion.json'
             oracle.run_scenario(None, ['tilt 0 0 -1 1 2 3  # comment'], state)
-            self.assertEqual(json.loads(state.read_text()), {'accel': [0.0, 0.0, -1.0], 'gyro': [1.0, 2.0, 3.0]})
+            self.assertEqual(json.loads(state.read_text(encoding='utf-8')), {'accel': [0.0, 0.0, -1.0], 'gyro': [1.0, 2.0, 3.0]})
 
     def test_tilt_errors_name_the_line(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -151,7 +151,7 @@ class CommandLineTest(unittest.TestCase):
     def test_serve_rejects_bad_options(self):
         with tempfile.TemporaryDirectory() as directory:
             state = Path(directory) / 'motion.json'
-            state.write_text(json.dumps(motion.level_state()))
+            state.write_text(json.dumps(motion.level_state()), encoding='utf-8', newline='\n')
             for args, message in (
                     (['--port', '80', '--state', state], '--port 80 is outside'),
                     (['--port', '70000', '--state', state], '--port 70000 is outside'),
@@ -177,7 +177,7 @@ class ServerTest(unittest.TestCase):
     def test_server_registers_a_client_and_follows_the_state_file(self):
         with tempfile.TemporaryDirectory() as directory:
             state = Path(directory) / 'motion.json'
-            state.write_text(json.dumps(motion.level_state()))
+            state.write_text(json.dumps(motion.level_state()), encoding='utf-8', newline='\n')
             port = free_port()
             server = subprocess.Popen([sys.executable, str(TOOLS / 'oracle_motion.py'), 'serve', '--port', str(port),
                                        '--state', str(state)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -188,7 +188,7 @@ class ServerTest(unittest.TestCase):
                 self.assertEqual(struct.unpack_from('<I', version, 16)[0], 0x100000)
                 client.sendto(motion.build_request(0x100002, bytes(8)), ('127.0.0.1', port))
                 self.assertEqual(struct.unpack_from('<3f', self.pad_packet(client), 76), (0.0, 0.0, -1.0))
-                state.write_text(json.dumps({'accel': [1.0, 0.0, 0.0], 'gyro': [0.0, 0.0, 0.0]}))
+                state.write_text(json.dumps({'accel': [1.0, 0.0, 0.0], 'gyro': [0.0, 0.0, 0.0]}), encoding='utf-8', newline='\n')
                 deadline = time.monotonic() + 5.0
                 accel = None
                 while time.monotonic() < deadline and accel != (1.0, 0.0, 0.0):
@@ -205,7 +205,7 @@ class ServerTest(unittest.TestCase):
             client.sendto(datagram, ('127.0.0.1', port))
             try:
                 return client.recv(1024)
-            except socket.timeout:
+            except (socket.timeout, ConnectionResetError):
                 continue
         self.fail('no answer from the motion source')
 

@@ -16,7 +16,7 @@ spec.loader.exec_module(oracle)
 def run_tool(scenario_text, *options):
     directory = Path(tempfile.mkdtemp())
     scenario = directory / 'scenario.txt'
-    scenario.write_text(scenario_text)
+    scenario.write_text(scenario_text, encoding='utf-8', newline='\n')
     states = directory / 'states'
     states.mkdir()
     result = subprocess.run([sys.executable, str(TOOLS / 'azahar_oracle.py'), str(scenario), '--states', str(states),
@@ -78,7 +78,7 @@ class ScenarioStateErrorTest(unittest.TestCase):
 
     def test_missing_state_files_are_reported(self):
         states = Path(tempfile.mkdtemp())
-        (states / 'there.json').write_text('{}')
+        (states / 'there.json').write_text('{}', encoding='utf-8', newline='\n')
         self.assertIn("(missing there.cst): 'there'", oracle.state_files_error(states, ['there']))
         (states / 'there.cst').write_bytes(b'')
         self.assertIsNone(oracle.state_files_error(states, ['there']))
@@ -137,7 +137,7 @@ class CommittedScriptsTest(unittest.TestCase):
     def roles(self):
         found = set()
         for path in self.scripts:
-            found.update(re.findall(r'@([A-Z][A-Z0-9_]*)', path.read_text()))
+            found.update(re.findall(r'@([A-Z][A-Z0-9_]*)', path.read_text(encoding='utf-8')))
         return found
 
     def test_the_scripts_exist_and_use_roles(self):
@@ -147,11 +147,11 @@ class CommittedScriptsTest(unittest.TestCase):
     def test_every_script_is_valid_with_all_roles_given(self):
         params = {role: 'x-' + role.lower() for role in self.roles()}
         for path in self.scripts:
-            self.assertIsNone(oracle.scenario_state_error(path.read_text().splitlines(), params), path.name)
+            self.assertIsNone(oracle.scenario_state_error(path.read_text(encoding='utf-8').splitlines(), params), path.name)
 
     def test_a_script_with_a_role_needs_its_parameter(self):
         for path in self.scripts:
-            lines = path.read_text().splitlines()
+            lines = path.read_text(encoding='utf-8').splitlines()
             wanted = {w[1][1:] for w in (l.split('#', 1)[0].split() for l in lines)
                       if len(w) == 2 and w[0] == 'loadstate' and w[1].startswith('@')}
             if not wanted:

@@ -26,7 +26,7 @@
 
 ## Status
 
-**The game is not playable on PC yet.** This project is early. The goal is a port that plays exactly like the original, from start to finish. It runs on Linux first. A Windows version is planned for after the Linux version is finished.
+**The game is not playable on PC yet.** This project is early. The goal is a port that plays exactly like the original, from start to finish. It runs on Linux first. The Windows version is work in progress: it builds and starts, with gaps listed in [the project status](docs/status.md#on-windows).
 
 What you can start today is `chase-game`, an early development runtime. It shows the start screens of the original game. After them you can play parts of the first missions (1-1 to 1-3, and the start of 1-4) in one street of the city. Nothing else of the game works yet. See [the project status](docs/status.md).
 
@@ -34,7 +34,7 @@ The game data is never part of this repository. You need your own copy of the ga
 
 ## What you need
 
-- A computer with Linux (x86_64) and a graphics card that supports OpenGL 4.6.
+- A computer with Linux or Windows 11 (x86_64) and a graphics card that supports OpenGL 4.6.
 - About 3 GB of free disk space.
 - Your own **decrypted `.cci` image** of the game. Only the European version 1.0 (title ID `00040000000AD600`) is tested. Other regions may work, because the port reads only the game's asset files, but nobody has tried them yet. More in [Getting started](docs/getting-started.md#check-your-game-file).
 - A keyboard. A mouse is optional.
@@ -93,6 +93,47 @@ build/chase-game
 
 A window opens. It shows the start screens of the original game: logos, language list, slot list and the intro movie. After the title card the level starts, and you can move the main character. To quit, close the window, or press Escape for the pause menu, choose PC Settings and then Quit game on the Game tab. The window is borderless full screen; F11 switches to a window and back.
 
+### Quick start on Windows
+
+You need [Git for Windows](https://git-scm.com/download/win) (it brings Git Bash) and [Python 3.11 or newer](https://www.python.org/downloads/windows/). In Git Bash, `python3 -V` must print 3.11 or newer ([details](docs/getting-started.md#on-windows)).
+
+**1. Get the code.** In Git Bash:
+
+```sh
+git clone -c core.autocrlf=false https://github.com/zJanny/LegoCityUndercover-TheChaseBegins-PC-Port.git
+cd LegoCityUndercover-TheChaseBegins-PC-Port
+```
+
+This keeps the Linux line endings that the project needs.
+
+**2. Install [MSYS2](https://www.msys2.org/)** into `C:\msys64`. Open **MSYS2 UCRT64** from the Start menu and run:
+
+```sh
+pacman -Syu
+pacman -S mingw-w64-ucrt-x86_64-{gcc,cmake,ninja,pkgconf,sdl2-compat,libepoxy,ffmpeg}
+```
+
+Press Enter at each question. If the first line closes the window, open it again and run both lines again. Then `gcc -v` prints a version.
+
+**3. Build the game.** In Git Bash, in the project folder, open the build window:
+
+```sh
+/c/msys64/msys2_shell.cmd -ucrt64 -use-full-path -here
+```
+
+An MSYS2 UCRT64 window opens in the project folder. Build there:
+
+```sh
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCHASE_BUILD_TESTS=OFF
+cmake --build build -j"$(nproc)"
+```
+
+It ends with a line like `[693/693] Linking CXX executable chase-game.exe`.
+
+**4. Extract the game data.** Run the command of step 4 above in Git Bash. Write the image path with forward slashes, like `C:/Games/game.cci`. It ends with `-> artifacts\romfs`.
+
+**5. Start the game.** In the UCRT64 window, run `build/chase-game`. Start it from there, so it finds the MSYS2 libraries.
+
 ### Saving and continuing later
 
 The game saves at the same moments as the original (for example when the story saves or you collect a super brick). The file is `~/.local/share/chase/savegame.dat` (under `$XDG_DATA_HOME` if you set it); the terminal prints `save: request N written to ...` each time. To continue later, start from that file:
@@ -130,6 +171,7 @@ All keys and how to change them: [Controls](docs/controls.md).
 - **The extraction says a hash does not match.** The image file is damaged or incomplete. Dump it again.
 - **The extraction says "output already exists".** Delete the folder `artifacts/romfs` and run step 4 again.
 - **The window does not open or stays black.** Update your graphics driver. The game needs OpenGL 4.6.
+- **Windows: `cmake: command not found`, or a missing DLL when you start a program.** Run them in the MSYS2 UCRT64 window of Windows step 3.
 - More help: [Getting started](docs/getting-started.md#problems).
 
 
@@ -141,13 +183,13 @@ All keys and how to change them: [Controls](docs/controls.md).
 | Script commands | 56 of 239 (23.4%) | Different commands the level scripts call that the port runs. They cover 68.5% of all calls. 142 more run with a stand-in result. |
 | Object types | 169 of 506 (33.4%) | Different object types in the levels that the port treats with recovered rules (collision, doors, studs). They cover 56.6% of all placed objects. |
 | Game files read | 99.8% of files, 100.0% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
-| Open work | 668 open items, 536 stand-ins | Known gaps and temporary guesses in 42 feature areas. It has no total to reach; watch the trend. |
-| Checked against the original | 552 tests, 233 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
+| Open work | 675 open items, 536 stand-ins | Known gaps and temporary guesses in 46 feature areas. It has no total to reach; watch the trend. |
+| Checked against the original | 555 tests, 233 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
 | Game code documented | 3169 of about 7575 (41.8%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-11-12, commit 719acee6. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-11-13, commit 6cba96e8. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## More documentation
@@ -162,7 +204,7 @@ For players:
 - [Controls and the input laboratory](docs/controls.md)
 - [Building the tools](docs/building.md), including tests
 - [Extracting game data](docs/extracting-game-data.md): all extraction and conversion tools
-- [Command reference](docs/commands.md)
+- [Command reference](docs/commands.md) and [commands on Windows](docs/commands-windows.md)
   - [Test list](docs/commands-tests.md): [display](docs/commands-tests-display.md), [simulation](docs/commands-tests-simulation.md), [data](docs/commands-tests-data.md)
 - [Model viewer](docs/model-viewer.md), [sound test](docs/sound-test.md), [video player](docs/fmv-player.md), [debug overlay](docs/debug-overlay.md)
 - [How progress is measured](docs/progress.md)

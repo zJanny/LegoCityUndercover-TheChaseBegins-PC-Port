@@ -32,7 +32,7 @@ class LocToolTests(unittest.TestCase):
         data = loc_file([(native.text_key('OK'), 'OK'), (native.text_key('FRENCH'), 'Fran\xe7ais'), (7, escapes)])
         with tempfile.TemporaryDirectory() as d:
             (Path(d) / 'a.loc').write_bytes(data)
-            (Path(d) / 'extended.txt').write_text('abcd\n', encoding='utf-8')
+            (Path(d) / 'extended.txt').write_text('abcd\n', encoding='utf-8', newline='\n')
             (Path(d) / 'code.bin').write_bytes(b'\0French\0PAUSE\0')
             result = run_tool('convert_loc.py', Path(d) / 'a.loc', '--extended', Path(d) / 'extended.txt', '--names', Path(d) / 'code.bin')
             census = run_tool('convert_loc.py', '--census', Path(d) / 'a.loc', '--names', Path(d) / 'code.bin')

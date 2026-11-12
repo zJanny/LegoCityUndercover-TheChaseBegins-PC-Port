@@ -1,0 +1,1 @@
+add_compile_definitions(_USE_MATH_DEFINES)

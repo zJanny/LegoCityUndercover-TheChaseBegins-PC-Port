@@ -6,6 +6,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parents[1] / 'tools'))
 import progress_report as report  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fixtures import isolate_git_environment  # noqa: E402
+
+isolate_git_environment()
 
 FEATURE = """# Sample
 
@@ -55,11 +59,11 @@ class FeatureParserTests(unittest.TestCase):
             root = Path(directory)
             features = root / 'docs' / 'plans' / 'features'
             features.mkdir(parents=True)
-            (features / 'sample.md').write_text(FEATURE)
-            (features / 'sample.closed.md').write_text('# Closed\n\n- [x] SAMP-9 done\n')
-            (features / 'sample-extra.md').write_text('## 5. Open items\n\n- [ ] SAMP-10 gap\n- SAMP-S3 guess\n')
-            (features / 'sample-extra.closed.md').write_text('- [x] SAMP-11 done\n')
-            (features / 'README.md').write_text(INDEX)
+            (features / 'sample.md').write_text(FEATURE, encoding='utf-8', newline='\n')
+            (features / 'sample.closed.md').write_text('# Closed\n\n- [x] SAMP-9 done\n', encoding='utf-8', newline='\n')
+            (features / 'sample-extra.md').write_text('## 5. Open items\n\n- [ ] SAMP-10 gap\n- SAMP-S3 guess\n', encoding='utf-8', newline='\n')
+            (features / 'sample-extra.closed.md').write_text('- [x] SAMP-11 done\n', encoding='utf-8', newline='\n')
+            (features / 'README.md').write_text(INDEX, encoding='utf-8', newline='\n')
             measured = report.measure_features(root)
             self.assertEqual(list(measured['per_feature']), ['sample'])
             self.assertEqual(measured['features'], 2)
@@ -73,8 +77,8 @@ class FeatureParserTests(unittest.TestCase):
             root = Path(directory)
             features = root / 'docs' / 'plans' / 'features'
             features.mkdir(parents=True)
-            (features / 'sample.md').write_text(FEATURE)
-            (features / 'README.md').write_text(INDEX)
+            (features / 'sample.md').write_text(FEATURE, encoding='utf-8', newline='\n')
+            (features / 'README.md').write_text(INDEX, encoding='utf-8', newline='\n')
             measured = report.measure_features(root)
         self.assertEqual((measured['features'], measured['open'], measured['done'], measured['stand_ins']), (2, 2, 1, 2))
 
@@ -113,12 +117,12 @@ class CMakeParserTests(unittest.TestCase):
             root = Path(directory)
             (root / 'tests' / 'data' / 'camera').mkdir(parents=True)
             for name in ('one.csv', 'two.csv', 'notes.txt'):
-                (root / 'tests' / 'data' / 'camera' / name).write_text('')
+                (root / 'tests' / 'data' / 'camera' / name).write_text('', encoding='utf-8', newline='\n')
             (root / 'tests' / 'data' / 'jumps.inc').write_text(
-                '// header\n{"a", {\n{1},\n}},\n{"b@0", {\n{1},\n}},\n{"b@10", {\n{1},\n}},\n')
+                '// header\n{"a", {\n{1},\n}},\n{"b@0", {\n{1},\n}},\n{"b@10", {\n{1},\n}},\n', encoding='utf-8', newline='\n')
             (root / 'CMakeLists.txt').write_text(
                 'add_test(NAME plain COMMAND tool)\n'
-                'add_test(NAME camera-real-data COMMAND tool\n  "data" (nested))\n')
+                'add_test(NAME camera-real-data COMMAND tool\n  "data" (nested))\n', encoding='utf-8', newline='\n')
             checks = report.measure_checks(root)
         self.assertEqual((checks['ctest_tests'], checks['ctest_tests_with_traces']), (2, 1))
         self.assertEqual(checks['recorded_traces'], 4)
@@ -148,8 +152,8 @@ class CodeMeasureTests(unittest.TestCase):
             root = Path(directory)
             (root / 'docs' / 're').mkdir(parents=True)
             (root / 'src').mkdir()
-            (root / 'docs' / 're' / 'a.md').write_text('code 0x1ddd00 and 0x3d4ccccd and 0x1234 and x0x2428c0y')
-            (root / 'src' / 'b.cpp').write_text('// 0x23aff8, 0x23AFF8')
+            (root / 'docs' / 're' / 'a.md').write_text('code 0x1ddd00 and 0x3d4ccccd and 0x1234 and x0x2428c0y', encoding='utf-8', newline='\n')
+            (root / 'src' / 'b.cpp').write_text('// 0x23aff8, 0x23AFF8', encoding='utf-8', newline='\n')
             self.assertEqual(report.cited_addresses(root), {0x1ddd00, 0x23aff8})
 
 

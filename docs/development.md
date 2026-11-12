@@ -74,6 +74,7 @@ Documentation lives in four places. Do not copy text between them; link instead.
 - The subject is imperative, in sentence case, without a final period. Aim for 50 characters, 72 at most. It names the main change, not a list of findings, addresses or IDs.
 - Add a body only when it gives context the subject cannot, such as what changed and why.
 - Never commit game-derived files: `*.cci`, `*.3ds`, `artifacts/` and `build/` are ignored by git. Inspect what you stage.
+- Never point git at another checkout through `GIT_DIR`, `GIT_WORK_TREE`, `GIT_COMMON_DIR` or `GIT_INDEX_FILE`. They override the repository for every later git command, and a Claude Code hook refuses commands that set them. Tests that run git use only their own temporary repositories.
 - Never edit the generated files: the progress section of `README.md`, `docs/plans/priorities.md` and `docs/progress-trend.svg`. The maintainer's tools produce them.
 - Outside pull requests need a `Signed-off-by:` line on every commit. See [Contributing](../CONTRIBUTING.md#sign-off-dco).
 
@@ -94,7 +95,7 @@ Documentation lives in four places. Do not copy text between them; link instead.
 ## Plans and gates
 
 - The work is split into plans, one per line of work, listed in the [plan index](plans/README.md). Each has a rule file in `docs/rules/`.
-- The faithful Linux port comes first. Windows is refused while its gate is closed. Quality-of-life features are suggested as issues.
+- The faithful Linux port comes first. Windows changes follow the Windows rules too ([rules/windows.md](rules/windows.md)): Linux stays green. Quality-of-life features are suggested as issues.
 - The maintainer opens a gate. A pull request never opens one.
 - Where a plan gets its behaviour: the port from the original, every other plan from a design the maintainer approved in `docs/design/`.
 - The faithful game stays the default. No other plan may change game behaviour with its options at their defaults.
@@ -104,7 +105,36 @@ Documentation lives in four places. Do not copy text between them; link instead.
 Claude Code hooks in `.claude/settings.json` run `tools/claude_hooks.py` and check the rules above before an agent commits.
 
 - On a branch, `README.md` may be edited, except inside the section between `<!-- progress:start -->` and `<!-- progress:end -->`. Only the maintainer's merge tool writes that section.
+- A command that sets `GIT_DIR`, `GIT_WORK_TREE`, `GIT_COMMON_DIR` or `GIT_INDEX_FILE` is refused, also inside `wsl.exe -e bash -c '...'`. Run git with `git -C <folder>` in a checkout of its own.
 - A commit that stages `CLAUDE.md` without `docs/development.md` is refused on every branch, including `main`.
+
+### Claude Code hooks on Windows
+
+The hooks start through the launcher `.claude/run_hook.cmd`. It runs on Linux (`sh`) and on Windows (`cmd`). Each command in `.claude/settings.json` changes into `${CLAUDE_PROJECT_DIR}` and starts the launcher. It works in Git Bash because Bash expands the variable. It works in PowerShell because Claude Code rewrites `${CLAUDE_PROJECT_DIR}` to `${env:CLAUDE_PROJECT_DIR}` there and passes an exit code of 2 on.
+
+Requirements:
+
+1. Python 3.11 or newer, reachable as `python3`, `python` or `py -3`. The launcher tries them in this order and skips any that is not Python 3.11 or newer, such as the Microsoft Store placeholder that `python3` is on a fresh Windows. The documented commands still say `python3`; how to set it up: [Python on Windows](rules/windows.md#python-on-windows).
+2. `git` on the `PATH` of the shell that Claude Code uses.
+3. A checkout with LF line endings and `core.autocrlf=false`, as in [the Windows rules](rules/windows.md).
+
+If no Python is found, the launcher prints `claude hooks: no Python 3.11 or newer found` and exits with code 1. Claude Code treats that as a non-blocking error, so no rule is checked until you install Python.
+
+To check that the hooks run, start a shell in the checkout root and pipe a call the hook must refuse. In Git Bash:
+
+```sh
+echo '{"cwd":".","tool_input":{"command":"git config user.name X"}}' | ./.claude/run_hook.cmd pre-bash
+```
+
+In PowerShell:
+
+```powershell
+'{"cwd":".","tool_input":{"command":"git config user.name X"}}' | .\.claude\run_hook.cmd pre-bash
+```
+
+Each prints one line of JSON with `"permissionDecision": "deny"` and the reason `agents never change git config`.
+
+A denial shows up in Claude Code as a refused tool call that names the rule and how to fix it. The PowerShell tool and the Bash tool follow the same rules.
 
 ## For the maintainer
 

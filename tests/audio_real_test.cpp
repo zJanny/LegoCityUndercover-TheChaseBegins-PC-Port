@@ -30,11 +30,19 @@ struct Call {
     unsigned id = 0;
 };
 
+std::string shellCommand(const std::string& command) {
+#ifdef _WIN32
+    return "\"" + command + "\"";  // cmd.exe /c drops the first and the last quote of a line that starts with one
+#else
+    return command;
+#endif
+}
+
 std::vector<Call> runGame(const std::string& game, const std::string& config, const std::string& fib, const std::string& names, const std::string& arguments) {
-    const std::string command = "SDL_VIDEODRIVER=offscreen SDL_AUDIODRIVER=dummy \"" + game + "\" --fib \"" + fib + "\" --names \"" + names +
+    const std::string command = "\"" + game + "\" --fib \"" + fib + "\" --names \"" + names +
                                 "\" --config \"" + config + "\" --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes " +
                                 arguments + " 2>&1";
-    FILE* pipe = popen(command.c_str(), "r");
+    FILE* pipe = popen(shellCommand(command).c_str(), "r");
     require(pipe != nullptr, "cannot start chase-game");
     std::string output;
     char buffer[4096];

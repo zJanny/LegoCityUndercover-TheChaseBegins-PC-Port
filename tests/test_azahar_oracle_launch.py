@@ -14,12 +14,15 @@ spec = importlib.util.spec_from_file_location('azahar_oracle', Path(__file__).pa
 oracle = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(oracle)
 
+POSIX_ONLY = unittest.skipIf(sys.platform == 'win32', 'the Azahar oracle runs the emulator on Linux (Xvfb, POSIX process groups and signals)')
+
 
 def start_sleeper():
     return subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'], start_new_session=True)
 
 
 class LaunchedTest(unittest.TestCase):
+    @POSIX_ONLY
     def test_stop_kills_and_reaps_both_processes(self):
         emulator, xvfb = start_sleeper(), start_sleeper()
         oracle.Launched(emulator, xvfb, ':0', None).stop()
@@ -29,6 +32,7 @@ class LaunchedTest(unittest.TestCase):
             with self.assertRaises(ProcessLookupError):
                 os.kill(pid, 0)
 
+    @POSIX_ONLY
     def test_stop_leaves_foreign_processes_alone(self):
         other = start_sleeper()
         try:
@@ -37,6 +41,7 @@ class LaunchedTest(unittest.TestCase):
         finally:
             oracle.stop_process(other)
 
+    @POSIX_ONLY
     def test_check_raises_after_exit(self):
         process = subprocess.Popen([sys.executable, '-c', 'import os, signal; os.kill(os.getpid(), signal.SIGABRT)'])
         process.wait(timeout=30)
@@ -62,7 +67,7 @@ class SessionModeTest(unittest.TestCase):
             popen.return_value.pid = 4242
             motion.return_value.pid = 4243
             oracle.launch_emulator(args, home, '/nonexistent/azahar', Path('game.cci'), new_3ds)
-        return json.loads((home / 'session.json').read_text())
+        return json.loads((home / 'session.json').read_text(encoding='utf-8'))
 
     def test_session_records_the_motion_source(self):
         session = self.launch(True)
@@ -91,13 +96,13 @@ class StateModeTest(unittest.TestCase):
         instance.run_free = fake_run_free
         instance.keys.window_names.return_value = []
         instance.savestate('k-check')
-        meta = json.loads((saved_states / 'k-check.json').read_text())
+        meta = json.loads((saved_states / 'k-check.json').read_text(encoding='utf-8'))
         self.assertIs(meta['new_3ds'], True)
         self.assertEqual(meta['file'], 'slot.01.cst')
 
     def test_loadstate_refuses_a_state_from_the_other_mode(self):
         saved_states = Path(tempfile.mkdtemp())
-        (saved_states / 'gameplay-start.json').write_text(json.dumps({'file': 'x.cst', 'frame': 0}))
+        (saved_states / 'gameplay-start.json').write_text(json.dumps({'file': 'x.cst', 'frame': 0}), encoding='utf-8', newline='\n')
         instance = self.oracle_in(saved_states, True)
         with self.assertRaisesRegex(RuntimeError, 'gameplay-start was saved in Old 3DS mode; start a new emulator '
                                                   'with --state gameplay-start'):
@@ -106,7 +111,7 @@ class StateModeTest(unittest.TestCase):
 
     def test_loadstate_refuses_a_new_3ds_state_in_old_3ds_mode(self):
         saved_states = Path(tempfile.mkdtemp())
-        (saved_states / 'some-state.json').write_text(json.dumps({'file': 'x.cst', 'frame': 0, 'new_3ds': True}))
+        (saved_states / 'some-state.json').write_text(json.dumps({'file': 'x.cst', 'frame': 0, 'new_3ds': True}), encoding='utf-8', newline='\n')
         instance = self.oracle_in(saved_states, False)
         with self.assertRaisesRegex(RuntimeError, 'some-state was saved in New 3DS mode'):
             instance.loadstate('some-state')
@@ -115,7 +120,7 @@ class StateModeTest(unittest.TestCase):
 class PlaceStateTest(unittest.TestCase):
     def test_place_state_refuses_a_slot_the_quick_load_does_not_read(self):
         saved_states = Path(tempfile.mkdtemp())
-        (saved_states / 'other-state.json').write_text(json.dumps({'file': '00040000000AD600.02.cst', 'new_3ds': True}))
+        (saved_states / 'other-state.json').write_text(json.dumps({'file': '00040000000AD600.02.cst', 'new_3ds': True}), encoding='utf-8', newline='\n')
         (saved_states / 'other-state.cst').write_bytes(b'state')
         with self.assertRaisesRegex(SystemExit, 'state other-state: "file" is \'00040000000AD600.02.cst\', but the quick load'):
             oracle.place_state(saved_states, 'other-state', saved_states / 'emulator')
@@ -123,21 +128,22 @@ class PlaceStateTest(unittest.TestCase):
 
     def test_place_state_copies_a_slot_00_state(self):
         saved_states = Path(tempfile.mkdtemp())
-        (saved_states / 'gameplay-start.json').write_text(json.dumps({'file': '00040000000AD600.00.cst'}))
+        (saved_states / 'gameplay-start.json').write_text(json.dumps({'file': '00040000000AD600.00.cst'}), encoding='utf-8', newline='\n')
         (saved_states / 'gameplay-start.cst').write_bytes(b'state')
         oracle.place_state(saved_states, 'gameplay-start', saved_states / 'emulator')
         self.assertEqual((saved_states / 'emulator' / '00040000000AD600.00.cst').read_bytes(), b'state')
 
 
+@POSIX_ONLY
 class FreeDisplayTest(unittest.TestCase):
     def test_lock_of_a_dead_process_is_reused_and_cleaned(self):
         root = Path(tempfile.mkdtemp())
         (root / '.X11-unix').mkdir()
-        (root / '.X90-lock').write_text('%10d\n' % os.getpid())
+        (root / '.X90-lock').write_text('%10d\n' % os.getpid(), encoding='utf-8', newline='\n')
         dead = subprocess.Popen([sys.executable, '-c', 'pass'])
         dead.wait(timeout=30)
-        (root / '.X91-lock').write_text('%10d\n' % dead.pid)
-        (root / '.X11-unix' / 'X91').write_text('')
+        (root / '.X91-lock').write_text('%10d\n' % dead.pid, encoding='utf-8', newline='\n')
+        (root / '.X11-unix' / 'X91').write_text('', encoding='utf-8', newline='\n')
         self.assertEqual(oracle.free_display(root), ':91')
         self.assertFalse((root / '.X91-lock').exists())
         self.assertFalse((root / '.X11-unix' / 'X91').exists())
@@ -149,7 +155,7 @@ class CrashDescriptionTest(unittest.TestCase):
         home = Path(tempfile.mkdtemp())
         log = home / 'data/azahar-emu/log/azahar_log.txt'
         log.parent.mkdir(parents=True)
-        log.write_text(text)
+        log.write_text(text, encoding='utf-8', newline='\n')
         return home
 
     def test_known_signature_is_named(self):
@@ -170,7 +176,7 @@ class RpcFailureMessageTest(unittest.TestCase):
         if text is not None:
             log = home / 'data/azahar-emu/log/azahar_log.txt'
             log.parent.mkdir(parents=True)
-            log.write_text(text)
+            log.write_text(text, encoding='utf-8', newline='\n')
         return home
 
     def test_log_without_rpc_line_names_the_missing_build_option(self):

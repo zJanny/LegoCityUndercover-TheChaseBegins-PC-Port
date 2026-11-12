@@ -586,17 +586,17 @@ def session_file(home):
 
 def load_session(home):
     try:
-        return json.loads(session_file(home).read_text())
+        return json.loads(session_file(home).read_text(encoding='utf-8'))
     except (OSError, ValueError):
         return None
 
 
 def state_frame(saved_states, name):
-    return json.loads((saved_states / ('%s.json' % name)).read_text())['frame']
+    return json.loads((saved_states / ('%s.json' % name)).read_text(encoding='utf-8'))['frame']
 
 
 def place_state(saved_states, name, emulator_states):
-    meta = json.loads((saved_states / ('%s.json' % name)).read_text())
+    meta = json.loads((saved_states / ('%s.json' % name)).read_text(encoding='utf-8'))
     if not meta['file'].endswith(QUICK_SLOT_SUFFIX):
         raise SystemExit('state %s: "file" is %r, but the quick load (%s) reads only the slot file ending in %s'
                          % (name, meta['file'], QUICK_LOAD_KEY, QUICK_SLOT_SUFFIX))
@@ -689,7 +689,7 @@ def crash_description(home, code):
     texts = []
     for path in (home / 'data/azahar-emu/log/azahar_log.txt', home / 'azahar-stdout.log'):
         try:
-            texts.append(path.read_text(errors='replace'))
+            texts.append(path.read_text(errors='replace', encoding='utf-8'))
         except OSError:
             pass
     text = '\n'.join(texts)
@@ -701,7 +701,7 @@ def crash_description(home, code):
 
 def rpc_failure_message(home, error):
     try:
-        log = (home / 'data/azahar-emu/log/azahar_log.txt').read_text(errors='replace')
+        log = (home / 'data/azahar-emu/log/azahar_log.txt').read_text(errors='replace', encoding='utf-8')
     except OSError:
         log = ''
     if 'Starting RPC server' not in log:
@@ -756,7 +756,7 @@ def start_motion_source(home, port):
                          '--motion-port' % port)
     oracle_motion = load_motion_module()
     state = motion_state_file(home)
-    state.write_text(json.dumps(oracle_motion.level_state()))
+    state.write_text(json.dumps(oracle_motion.level_state()), encoding='utf-8', newline='\n')
     log = open(home / 'motion-source.log', 'wb')
     try:
         process = subprocess.Popen([sys.executable, str(Path(oracle_motion.__file__).resolve()), 'serve',
@@ -775,7 +775,7 @@ def start_motion_source(home, port):
 
 def lock_owner_alive(lock):
     try:
-        os.kill(int(lock.read_text().strip()), 0)
+        os.kill(int(lock.read_text(encoding='utf-8').strip()), 0)
     except (ValueError, ProcessLookupError):
         return False
     except PermissionError:
@@ -873,7 +873,7 @@ def state_needs_new_3ds(saved_states, name):
     if not name:
         return False
     info = saved_states / (name + '.json')
-    return info.is_file() and bool(json.loads(info.read_text()).get('new_3ds'))
+    return info.is_file() and bool(json.loads(info.read_text(encoding='utf-8')).get('new_3ds'))
 
 
 def start_xvfb(log):
@@ -1010,7 +1010,7 @@ class Oracle:
                 index += 1
 
         self.run_free(loop, seconds + 30)
-        with open(self.output / ('%s_log.csv' % name), 'w', newline='') as out:
+        with open(self.output / ('%s_log.csv' % name), 'w', newline='', encoding='utf-8') as out:
             writer = csv.writer(out)
             writer.writerow(('shot', 'vblank_before', 'vblank_after', 'states_before', 'states_after', 'seconds',
                              'eye_x', 'eye_y', 'eye_z', 'look_x', 'look_y', 'look_z', 'player_x', 'player_y', 'player_z'))
@@ -1106,7 +1106,7 @@ class Oracle:
                 self.remote.command('z0,%x,4' % address)
                 self.remote.breakpoints.discard(address)
             hits, self.watch_hits = self.watch_hits, None
-        with open(path, 'w') as out:
+        with open(path, 'w', encoding='utf-8', newline='\n') as out:
             for hit in hits:
                 out.write('frame %d pc 0x%08x fields %s\n' % (hit['frame'], hit['pc'], hit['fields']))
                 out.write('  r0-r15 %s\n' % ' '.join('%08x' % v for v in hit['registers']))
@@ -1175,7 +1175,7 @@ class Oracle:
             for address in installed:
                 r.command('Z0,%x,4' % address)
             self.frame_object = None
-            with open(self.output / ('%s.txt' % name), 'w') as out:
+            with open(self.output / ('%s.txt' % name), 'w', encoding='utf-8', newline='\n') as out:
                 for elapsed, registers, pointed in hits:
                     out.write('second %.3f pc 0x%08x\n' % (elapsed, registers[15]))
                     out.write('  r0-r15 %s\n' % ' '.join('%08x' % v for v in registers))
@@ -1234,12 +1234,12 @@ class Oracle:
             raise RuntimeError('quick save did not write a state file (the game may still be starting)')
         shutil.copyfile(written[0], self.saved_states / ('%s.cst' % name))
         (self.saved_states / ('%s.json' % name)).write_text(json.dumps({
-            'file': written[0].name, 'frame': self.frame, 'new_3ds': self.new_3ds}))
+            'file': written[0].name, 'frame': self.frame, 'new_3ds': self.new_3ds}), encoding='utf-8', newline='\n')
         print('  saved %s (%d bytes, frame %d)' % (name, written[0].stat().st_size, self.frame))
 
     def loadstate(self, name):
         self.require_keys()
-        saved_new_3ds = bool(json.loads((self.saved_states / ('%s.json' % name)).read_text()).get('new_3ds'))
+        saved_new_3ds = bool(json.loads((self.saved_states / ('%s.json' % name)).read_text(encoding='utf-8')).get('new_3ds'))
         if saved_new_3ds != self.new_3ds:
             raise RuntimeError('state %s was saved in %s mode; start a new emulator with --state %s'
                                % (name, 'New 3DS' if saved_new_3ds else 'Old 3DS', name))
@@ -1347,7 +1347,7 @@ class Oracle:
     def trace(self, count, name, with_memory=False):
         path = self.output / ('%s.csv' % name)
         memory = open(self.output / ('%s.mem' % name), 'wb') if with_memory else None
-        with open(path, 'w') as out:
+        with open(path, 'w', encoding='utf-8', newline='\n') as out:
             out.write('frame,dt,held,stick_x,stick_y,x,y,z,fx,fz,intent,flags,state,camera_yaw\n')
 
             def sample():
@@ -1446,7 +1446,7 @@ class Oracle:
                 time.sleep(max(0.0, due - time.monotonic()))
 
         self.run_free(collect, seconds)
-        with open(path, 'w', newline='') as out:
+        with open(path, 'w', newline='', encoding='utf-8') as out:
             writer = csv.writer(out)
             writer.writerow(('t', 'epoch', 'rpc_seconds', 'clock', 'vblank_a', 'vblank_b', 'entity', 'x', 'y', 'z'))
             for row in rows:
@@ -1707,7 +1707,7 @@ def launch_emulator(args, home, azahar, image, new_3ds):
     session_file(home).write_text(json.dumps({
         'pid': process.pid, 'port': args.port, 'xvfb_pid': xvfb.pid if xvfb else None,
         'display': display, 'rpc': args.rpc, 'renderer': args.renderer, 'new_3ds': new_3ds,
-        'motion_pid': motion.pid, 'motion_port': args.motion_port, 'touch_device': True}))
+        'motion_pid': motion.pid, 'motion_port': args.motion_port, 'touch_device': True}), encoding='utf-8', newline='\n')
     return Launched(process, xvfb, display, keys, visible=args.display == 'desktop', motion=motion)
 
 
@@ -1803,7 +1803,7 @@ def main():
         return stop_session(home)
     if args.scenario is None and not args.keep:
         parser.error('a scenario file is required')
-    scenario = args.scenario.read_text().splitlines() if args.scenario else []
+    scenario = args.scenario.read_text(encoding='utf-8').splitlines() if args.scenario else []
     try:
         state_params = parse_state_params(args.state_param)
     except ValueError as error:
@@ -1871,7 +1871,7 @@ def main():
                               .replace('{motion_port}', str(args.motion_port))
                               .replace('{touch_max_x}', str(load_motion_module().TOUCH_PAD_WIDTH))
                               .replace('{touch_max_y}', str(load_motion_module().TOUCH_PAD_HEIGHT))
-                              .replace('{new_3ds}', 'true' if new_3ds else 'false'))
+                              .replace('{new_3ds}', 'true' if new_3ds else 'false'), encoding='utf-8', newline='\n')
             if args.state:
                 place_state(saved_states, args.state, emulator_states)
             launched, oracle = start_emulator(args, home, azahar, image, output, emulator_states, saved_states,

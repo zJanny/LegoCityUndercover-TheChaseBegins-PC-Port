@@ -116,7 +116,7 @@ class RomfsTests(unittest.TestCase):
             m = r.extract(p, Path(d) / 'out')
             self.assertEqual((Path(d) / 'out/romfs/sub/b.bin').read_bytes(), b'xyz')
             self.assertEqual(m['file_count'], 2)
-            saved = json.loads((Path(d) / 'out/romfs-manifest.json').read_text())
+            saved = json.loads((Path(d) / 'out/romfs-manifest.json').read_text(encoding='utf-8'))
             self.assertEqual(saved['files'][0]['sha256'], hashlib.sha256(b'hello').hexdigest())
             with self.assertRaisesRegex(ValueError, 'already exists'):
                 r.extract(p, Path(d) / 'out')

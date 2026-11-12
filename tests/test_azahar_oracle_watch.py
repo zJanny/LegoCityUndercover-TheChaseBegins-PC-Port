@@ -149,7 +149,7 @@ class FreeTrapTest(unittest.TestCase):
             stop = [0x0870f6f0, 0x08618d7c, 0, 0] + [0] * 10 + [0x17b040, 0x22ce9c]
             probe.remote = FreeTrapRemote([stop])
             probe.free_trap(5.0, [0x22ce9c], 'demo')
-            text = (Path(directory) / 'demo.txt').read_text()
+            text = (Path(directory) / 'demo.txt').read_text(encoding='utf-8')
             self.assertIn('pc 0x0022ce9c', text)
             self.assertIn('[r1] 00000000', text)
             sent = probe.remote.sent

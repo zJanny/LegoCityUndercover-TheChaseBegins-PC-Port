@@ -58,6 +58,41 @@ Before you open a pull request:
 - Never use a number pair like `1_3` or a status word such as `fix`, `glue` or `temp`.
 - The CTest test `file-names` (`tools/check_file_names.py`) checks the names.
 
+## Working on Windows
+
+### The `artifacts` link of a worktree
+
+Each worktree needs an `artifacts` link to the main checkout. Without Developer Mode, `ln -s` in Git Bash copies the folder and Python's `os.symlink` fails. A directory junction needs no privilege. In the worktree root, in PowerShell:
+
+```powershell
+New-Item -ItemType Junction -Path artifacts -Target <main checkout>\artifacts
+```
+
+With Developer Mode on (Settings, System, For developers), a symbolic link works too. Claude Code hooks create it for agents: [Commit hooks](docs/development.md#commit-hooks).
+
+### Graphify on PATH
+
+Install Graphify with `pip install --user graphifyy`. Its `Scripts` folder is not on `PATH`. Add the printed folder to `PATH` and open a new shell:
+
+```powershell
+python -c "import sysconfig; print(sysconfig.get_path('scripts', 'nt_user'))"
+graphify --help
+```
+
+`graphify --help` prints a list of commands. Set `PYTHONIOENCODING=utf-8`. Build the graph once in the checkout with `graphify update .`.
+
+### Checking Linux in WSL
+
+Install WSL with `wsl --install` as administrator. Commit first, then run the checks on a clone inside WSL. Checks: [Linux stays green](docs/rules/windows.md#linux-stays-green).
+
+```sh
+git clone --branch <your branch> /mnt/c/<path to the main checkout> ~/wslcheck/<name>
+```
+
+- Never set `GIT_*` variables (such as `GIT_DIR`) in WSL. The tests run git and would change it.
+- The clone has no `artifacts` folder: game-data tests skip.
+- WSL needs a Linux distribution with CMake, a C++17 compiler, SDL2, libepoxy, FFmpeg development libraries, pkg-config, git and Python 3.11+.
+
 ## Your first pull request
 
 1. Open an issue or a [discussion](https://github.com/zJanny/LegoCityUndercover-TheChaseBegins-PC-Port/discussions) first for anything bigger than a small fix. Ask questions in the discussions.
@@ -73,7 +108,7 @@ The first pull request of a new contributor needs the maintainer's approval befo
 
 - You may move the port forward. Prove that your implementation matches the original: link the `docs/re/` evidence, or list it as a stand-in.
 - Quality-of-life ideas come as issues with the quality-of-life template, not as pull requests. They are not guaranteed to be accepted.
-- Windows changes are refused while the Windows gate is closed.
+- Windows changes follow the [Windows rules](docs/rules/windows.md) too: Linux stays green.
 - Never change these files in a pull request: the progress files and their archives, `docs/plans/features/id-reservations.md`, the generated files (the progress section of `README.md`, `docs/plans/priorities.md`, `docs/progress-trend.svg`), plan gates, `docs/design/` and `.claude/`.
 
 ### Duplicate item IDs

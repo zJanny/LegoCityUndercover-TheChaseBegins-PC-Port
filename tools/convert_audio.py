@@ -75,7 +75,7 @@ def main():
         key = '%s %d Hz x%d' % (info['encoding'], info['rate'], info['parts'])
         census[key] = census.get(key, 0) + 1
     if args.output:
-        (args.output / 'audio-manifest.json').write_text(json.dumps(sounds, indent=1) + '\n')
+        (args.output / 'audio-manifest.json').write_text(json.dumps(sounds, indent=1) + '\n', encoding='utf-8', newline='\n')
     print(json.dumps({'files': len(files), 'kinds': dict(sorted(census.items())),
                       'failures': failures[:20], 'failure_count': len(failures)}, indent=1))
     return 1 if failures else 0

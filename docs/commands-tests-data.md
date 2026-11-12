@@ -10,6 +10,7 @@ Back to the [documentation list](../README.md#more-documentation).
 |---|---|
 | `canvas-clip` | `Canvas::drawScaled` with a destination inside, partly outside, covering and wholly outside the canvas (also flipped) equals the same draw on a larger canvas, and only canvas pixels are visited (`tests/canvas_clip_test.cpp`). |
 | `debug-metrics-core` | [Debug overlay](debug-overlay.md) values on synthetic input: frame-time window, `/proc/self/status` fixture, CPU percent, overlay lines |
+| `process-cpu-time` | Process CPU time of the debug overlay on the platform of the build (POSIX or Windows): busy work adds CPU time, sleeping adds almost none |
 | `fence-vault`, `fence-vault-real-data`, `game-fence-vault-1-3` | The fence vault (the B press near a fence): zone, use point, rise of the clip and the sequence with a made-up fence, then the fences of the first level and the clip `vault_fence` (needs the extracted RomFS), then `chase-game` vaulting over the fence of mission 1-3 (needs the extracted RomFS) |
 | `assets-core` | Asset runtime, synthetic fixtures |
 | `assets-real-data` | Needs `artifacts/romfs`; skips with code 77 otherwise |

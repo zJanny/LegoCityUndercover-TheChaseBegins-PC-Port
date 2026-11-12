@@ -84,7 +84,7 @@ def resolve_append_only(root: Path, unmerged: list[str]) -> list[str]:
         resolved = resolve_text(text) if text is not None else None
         if resolved is None:
             continue
-        (root / path).write_text(resolved, encoding="utf-8")
+        (root / path).write_text(resolved, encoding="utf-8", newline='\n')
         git(root, "add", "--", path)
         remaining.remove(path)
     return remaining

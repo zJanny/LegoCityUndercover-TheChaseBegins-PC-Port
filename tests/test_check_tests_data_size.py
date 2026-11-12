@@ -37,6 +37,15 @@ class TestsDataSizeTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn('WARNING: tests/data/sub/big.inc', text)
 
+    def test_crlf_and_lf_copies_give_the_same_verdict(self):
+        lf = (b'x' * 99 + b'\n') * 1000
+        crlf = lf.replace(b'\n', b'\r\n')
+        self.assertEqual(len(lf), 100_000)
+        for name, content in (('lf.csv', lf), ('crlf.csv', crlf), ('lf_over.csv', lf + b'y'), ('crlf_over.csv', crlf + b'y')):
+            (self.root / 'tests' / 'data' / name).write_bytes(content)
+        found = script.large_files(self.root, 100_000)
+        self.assertEqual(found, [('tests/data/crlf_over.csv', 100_001), ('tests/data/lf_over.csv', 100_001)])
+
     def test_limit_option(self):
         (self.root / 'tests' / 'data' / 'a.csv').write_bytes(b'x' * 3000)
         self.assertIn('WARNING', run('--root', str(self.root), '--limit-kb', '2')[1])

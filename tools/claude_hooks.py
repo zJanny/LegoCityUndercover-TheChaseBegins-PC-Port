@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Claude Code hooks of this repository (.claude/settings.json): the mechanical part of the CLAUDE.md and lead-round rules.
 
-    python3 tools/claude_hooks.py pre-bash    # PreToolUse Bash: worktree set-up, artifacts link and deletions, push, git config, merge finish and commit rules
-    python3 tools/claude_hooks.py pre-agent   # PreToolUse Agent: a worker starts only from its brief file
-    python3 tools/claude_hooks.py pre-tool    # PreToolUse file tools: worktree set-up
-    python3 tools/claude_hooks.py post-edit   # PostToolUse Edit/Write: doc rules and local-only data of the edited file
-    python3 tools/claude_hooks.py subagent-stop   # SubagentStop: a round worker stops only after its report file exists
+    .claude/run_hook.cmd pre-bash    # PreToolUse Bash and PowerShell: worktree set-up, artifacts link and deletions, push, git config, merge finish and commit rules
+    .claude/run_hook.cmd pre-agent   # PreToolUse Agent: a worker starts only from its brief file
+    .claude/run_hook.cmd pre-tool    # PreToolUse file tools: worktree set-up
+    .claude/run_hook.cmd post-edit   # PostToolUse Edit/Write: doc rules and local-only data of the edited file
+    .claude/run_hook.cmd subagent-stop   # SubagentStop: a round worker stops only after its report file exists
+
+The launcher .claude/run_hook.cmd starts this file with the first working Python 3.11+ of python3, python and py -3, under sh and cmd.
 
 Claude Code writes the hook input as JSON to stdin. A denied call is answered with a JSON permission decision on stdout, a blocked
 stop with a JSON block decision;
@@ -21,7 +23,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-WORKTREES = "/.claude/worktrees/"
+import hook_paths
+
 LEADING_CD = re.compile(r"\s*cd\s+(\"[^\"]+\"|'[^']+'|[^\s;&|]+)\s*(?:&&|;)")
 HEREDOC = re.compile(r"<<-?\s*(['\"]?)(\w+)\1[^\n]*\n.*?\n\s*\2\s*(?=\n|$)", re.S)
 QUOTED = re.compile(r"'[^']*'|\"(?:\\.|[^\"\\])*\"")
@@ -51,6 +54,13 @@ ASSIGNMENT = re.compile(r"\w+=")
 CODE_SUFFIXES = {".cpp", ".cc", ".cxx", ".hpp", ".h"}
 WRITE_REDIRECTS = {">", ">>", ">|", "&>", "&>>"}
 FILE_WRITERS = {"tee", "cp", "mv", "install"}
+GIT_LOCATION_NAMES = "GIT_DIR|GIT_WORK_TREE|GIT_COMMON_DIR|GIT_INDEX_FILE"
+GIT_LOCATION_VARIABLE = re.compile(
+    rf"(?<!\w)(?:{GIT_LOCATION_NAMES})\}}?\s*\+?=(?!=)"
+    rf"|\bexport\s+(?:-\w+\s+)*(?:{GIT_LOCATION_NAMES})\b"
+    rf"|\b(?:Set-Item|New-Item|Set-Content|Set-Variable)\b[^;\n|]*\b(?:{GIT_LOCATION_NAMES})\b"
+    rf"|SetEnvironmentVariable\s*\(\s*[\"'](?:{GIT_LOCATION_NAMES})\b",
+    re.I)
 CLAUDE_SESSION = "Claude-Session"
 CO_AUTHOR = "Co-Authored-By:"
 MAX_FINDINGS = 25
@@ -61,8 +71,12 @@ def deny(reason):
     return 0
 
 
+TEXT = {"encoding": "utf-8", "errors": "replace"}
+ASSETS_LIBRARIES = ("libchase_assets_c.so", "chase_assets_c.dll", "libchase_assets_c.dll")
+
+
 def git(root, *args):
-    return subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True)
+    return subprocess.run(["git", "-C", str(root), *args], capture_output=True, **TEXT)
 
 
 def checkout_of(path):
@@ -78,18 +92,6 @@ def checkout_of(path):
     return root if (root / "CLAUDE.md").is_file() and (root / "tools" / "claude_hooks.py").is_file() else None
 
 
-def ensure_artifacts_link(path):
-    text = str(path)
-    at = text.find(WORKTREES)
-    if at < 0:
-        return
-    main = Path(text[:at])
-    tree = main / ".claude" / "worktrees" / text[at + len(WORKTREES):].split("/")[0]
-    link = tree / "artifacts"
-    if (tree / "CLAUDE.md").is_file() and (main / "artifacts").is_dir() and not os.path.lexists(link):
-        os.symlink(main / "artifacts", link)
-
-
 def unquote(word):
     return word[1:-1] if len(word) > 1 and word[0] == word[-1] and word[0] in "'\"" else word
 
@@ -98,7 +100,7 @@ def base_dir(command, cwd):
     match = LEADING_CD.match(command)
     if not match:
         return Path(cwd)
-    return (Path(cwd) / os.path.expanduser(unquote(match.group(1)))).resolve()
+    return hook_paths.resolve_in(cwd, unquote(match.group(1)))
 
 
 def statements(command):
@@ -121,7 +123,7 @@ def statements(command):
                 if words:
                     found.append((joiner, words, writes))
                 joiner, words, writes = token, [], []
-            elif token[0] in "<>&" and set(token) <= set("<>&|"):
+            elif token and token[0] in "<>&" and set(token) <= set("<>&|"):
                 skip = token
                 if words and words[-1].isdigit():
                     words.pop()
@@ -152,7 +154,7 @@ def positional(words):
 
 
 def lexical_path(base, text):
-    path = Path(os.path.expandvars(os.path.expanduser(text)))
+    path = Path(os.path.expandvars(os.path.expanduser(hook_paths.native_path(text))))
     if "$" in str(path):
         return None
     path = Path(base) / path
@@ -183,7 +185,7 @@ def deleted_paths(words):
 def main_artifacts_part(path):
     for ancestor in (path, *path.parents):
         parent = ancestor.parent
-        if (ancestor.name == "artifacts" and WORKTREES not in str(ancestor) and (parent / "CLAUDE.md").is_file()
+        if (ancestor.name == "artifacts" and not hook_paths.in_worktree(ancestor) and (parent / "CLAUDE.md").is_file()
                 and (parent / "tools" / "claude_hooks.py").is_file()):
             return path.relative_to(ancestor).as_posix()
     return None
@@ -191,13 +193,13 @@ def main_artifacts_part(path):
 
 def artifacts_deletion(command, cwd):
     current = Path(cwd)
-    for _, words, _ in statements(command):
+    for _, words, _ in statements(hook_paths.drive_paths_with_slashes(command)):
         words = command_words(words)
         if not words:
             continue
         name = Path(words[0]).name
         if name == "cd" and len(words) > 1:
-            current = (current / os.path.expanduser(words[1])).resolve()
+            current = hook_paths.resolve_in(current, words[1])
         elif name in SHELLS and "-c" in words and words.index("-c") + 1 < len(words):
             found = artifacts_deletion(words[words.index("-c") + 1], current)
             if found:
@@ -228,10 +230,10 @@ def is_scratch_code_in_artifacts(path):
 
 def artifacts_code_writes(command, cwd):
     current = Path(cwd)
-    for _, words, writes in statements(command):
+    for _, words, writes in statements(hook_paths.drive_paths_with_slashes(command)):
         words = command_words(words)
         if words and Path(words[0]).name == "cd" and len(words) > 1:
-            current = (current / os.path.expanduser(words[1])).resolve()
+            current = hook_paths.resolve_in(current, words[1])
         for text in written_paths(words, writes) if words else writes:
             if is_scratch_code_in_artifacts(lexical_path(current, text)):
                 return text
@@ -241,11 +243,11 @@ def artifacts_code_writes(command, cwd):
 def artifacts_link_requests(command, cwd):
     current = Path(cwd)
     found, guard = [], False
-    for joiner, words, _ in statements(command):
+    for joiner, words, _ in statements(hook_paths.drive_paths_with_slashes(command)):
         words = command_words(words)
         name = Path(words[0]).name if words else ""
         if name == "cd" and len(words) > 1:
-            current = (current / os.path.expanduser(words[1])).resolve()
+            current = hook_paths.resolve_in(current, words[1])
         elif name == "ln":
             flags = "".join(word[1:] for word in words[1:] if word.startswith("-") and not word.startswith("--"))
             replaces = "T" in flags or "n" in flags or "--no-target-directory" in words
@@ -264,7 +266,7 @@ def git_calls(command, base):
     for match in GIT_CALL.finditer(bare(command)):
         target = base
         for option in GIT_DIR_OPTION.findall(match.group(1)):
-            target = (target / os.path.expanduser(option)).resolve()
+            target = hook_paths.resolve_in(target, option)
         yield target, match.group(2), match.group(3)
 
 
@@ -291,7 +293,7 @@ def message_text(command, base):
     text = command
     read = False
     for name in MESSAGE_FILE.findall(bare(command)) + MERGE_MESSAGE.findall(bare(command)):
-        path = base / os.path.expanduser(unquote(name))
+        path = hook_paths.join(base, unquote(name))
         if name != "-" and path.is_file():
             text += "\n" + path.read_text(encoding="utf-8", errors="replace")
             read = True
@@ -335,7 +337,7 @@ def commit_form(arguments):
 
 
 def left_out_by_paths(root, base, paths):
-    covered = [(base / os.path.expanduser(path)).resolve() for path in paths]
+    covered = [hook_paths.resolve_in(base, path) for path in paths]
     left = []
     for name in git(root, "diff", "--cached", "--name-only").stdout.split("\n"):
         target = (root / name).resolve()
@@ -358,8 +360,9 @@ def assets_env(root):
     env = dict(os.environ)
     common = git(root, "rev-parse", "--path-format=absolute", "--git-common-dir").stdout.strip()
     for build in (root / "build", Path(common).parent / "build" if common else None):
-        if build and (build / "libchase_assets_c.so").is_file():
-            env["CHASE_ASSETS_LIB"] = str(build / "libchase_assets_c.so")
+        library = next((build / name for name in ASSETS_LIBRARIES if build and (build / name).is_file()), None)
+        if library:
+            env["CHASE_ASSETS_LIB"] = str(library)
             break
     return env
 
@@ -368,7 +371,7 @@ def run_tool(root, env, *args):
     tool = root / "tools" / args[0]
     if not tool.is_file():
         return None
-    return subprocess.run([sys.executable, str(tool), *args[1:]], cwd=root, env=env, capture_output=True, text=True)
+    return subprocess.run([sys.executable, str(tool), *args[1:]], cwd=root, env={**env, "PYTHONUTF8": "1"}, capture_output=True, **TEXT)
 
 
 def refresh(root, env, tool, check, update, target):
@@ -539,16 +542,22 @@ def load_tool(root, name):
 def pre_bash(data):
     command = data.get("tool_input", {}).get("command", "")
     cwd = data.get("cwd") or os.getcwd()
+    if GIT_LOCATION_VARIABLE.search(command):
+        return deny("commands never point git at another checkout through GIT_DIR, GIT_WORK_TREE, GIT_COMMON_DIR or GIT_INDEX_FILE: a worktree "
+                    "shares one .git, so such a setting (also inside wsl.exe -e bash -c '...') sends every later git command, including the "
+                    "user's, to the wrong work tree and config. Use git -C <folder> in a checkout of its own. For the Linux check on Windows, "
+                    "commit first, then clone the branch inside WSL (git clone -q --branch <branch> <main checkout> ~/wslcheck/<agent>) and "
+                    "run the checks in that clone (CLAUDE.md \"Git\")")
     base = base_dir(command, cwd)
-    in_agent = bool(data.get("agent_id")) or WORKTREES in str(base) or WORKTREES in cwd
+    in_agent = bool(data.get("agent_id")) or hook_paths.in_worktree(base) or hook_paths.in_worktree(cwd)
     unguarded = [link for link, guarded in artifacts_link_requests(command, cwd) if not guarded and link is not None]
+    if hook_paths.IS_WINDOWS or not unguarded:
+        for place in (cwd, base):
+            hook_paths.ensure_artifacts_link(place)
     if any(link.is_dir() for link in unguarded):
         return deny("`artifacts` already exists here, so `ln -s ... artifacts` would create a link inside the folder it points to, in the "
                     "user's artifacts/. The link is in place: skip this step. Use the guarded form `[ -e artifacts ] || ln -s <main checkout>/artifacts "
                     "artifacts` if you must repeat it (lead-round skill, worker brief)")
-    if not unguarded:
-        for place in (cwd, base):
-            ensure_artifacts_link(place)
     code = artifacts_code_writes(command, cwd)
     if code:
         return deny(scratch_code_reason(code))
@@ -599,7 +608,7 @@ def pre_agent(data):
     match = BRIEF.search(prompt)
     if not match:
         return 0
-    brief = Path(data.get("cwd") or os.getcwd()) / os.path.expanduser(match.group(1))
+    brief = hook_paths.join(data.get("cwd") or os.getcwd(), match.group(1))
     if not brief.is_file():
         return deny(f"the brief {match.group(1)} does not exist. Workers start only from the briefs the planner writes in phase 2, "
                     "after the user approved the round (lead-round skill \"Approval and briefs\")")
@@ -614,14 +623,14 @@ def scratch_code_reason(path):
 
 def pre_tool(data):
     cwd = data.get("cwd") or os.getcwd()
-    ensure_artifacts_link(cwd)
+    hook_paths.ensure_artifacts_link(cwd)
     tool_input = data.get("tool_input", {})
     if data.get("tool_name") in ("Write", "Edit") and tool_input.get("file_path"):
         if is_scratch_code_in_artifacts(lexical_path(cwd, tool_input["file_path"])):
             return deny(scratch_code_reason(tool_input["file_path"]))
     for key in ("file_path", "path"):
         if tool_input.get(key):
-            ensure_artifacts_link(tool_input[key])
+            hook_paths.ensure_artifacts_link(tool_input[key])
     return 0
 
 
@@ -647,18 +656,18 @@ def worker_report(data):
     if not isinstance(cwd, str) or not isinstance(transcript, str):
         return None
     prompt, started_in = first_prompt(transcript)
-    if WORKTREES not in cwd and isinstance(started_in, str):
+    if not hook_paths.in_worktree(cwd) and isinstance(started_in, str):
         cwd = started_in
-    at = cwd.find(WORKTREES)
+    main = hook_paths.main_of_worktree(cwd)
     match = BRIEF.search(prompt or "")
-    if at < 0 or not match:
+    if main is None or not match:
         return None
-    brief = Path(cwd) / os.path.expanduser(match.group(1))
+    brief = hook_paths.join(cwd, match.group(1))
     try:
         named = REPORT_PATH.findall(brief.read_text(encoding="utf-8"))
     except OSError:
         return None
-    return Path(cwd[:at]) / named[-1] if named else None
+    return main / named[-1] if named else None
 
 
 def subagent_stop(data):
@@ -712,6 +721,9 @@ def main(argv=None):
     if len(argv) != 1 or argv[0] not in HOOKS:
         print(f"usage: claude_hooks.py {{{','.join(HOOKS)}}} < hook input JSON; got: {' '.join(argv) or 'nothing'}", file=sys.stderr)
         return 1
+    sys.stdin.reconfigure(encoding="utf-8-sig", errors="replace")
+    for stream in (sys.stdout, sys.stderr):
+        stream.reconfigure(encoding="utf-8", errors="replace")
     try:
         data = json.load(sys.stdin)
     except json.JSONDecodeError as error:

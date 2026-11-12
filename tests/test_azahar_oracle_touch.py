@@ -43,7 +43,7 @@ class FakeOracle:
         if self.fail_after is not None and len(self.seen) >= self.fail_after:
             raise IOError('connection lost')
         for _ in range(count):
-            self.seen.append(json.loads(self.state_file.read_text()).get('touch'))
+            self.seen.append(json.loads(self.state_file.read_text(encoding='utf-8')).get('touch'))
 
 
 class ParseTouchTest(unittest.TestCase):
@@ -155,13 +155,13 @@ class StateFileTest(unittest.TestCase):
     def test_tilt_and_touch_keep_each_others_values(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'motion.json'
-            path.write_text(json.dumps(motion.level_state()))
+            path.write_text(json.dumps(motion.level_state()), encoding='utf-8', newline='\n')
             motion.update_state(path, touch=[1, 2])
             motion.update_state(path, **motion.parse_tilt(['1', '0', '0']))
-            self.assertEqual(json.loads(path.read_text()),
+            self.assertEqual(json.loads(path.read_text(encoding='utf-8')),
                              {'accel': [1.0, 0.0, 0.0], 'gyro': [0.0, 0.0, 0.0], 'touch': [1, 2]})
             motion.update_state(path, touch=None)
-            self.assertEqual(json.loads(path.read_text()), {'accel': [1.0, 0.0, 0.0], 'gyro': [0.0, 0.0, 0.0]})
+            self.assertEqual(json.loads(path.read_text(encoding='utf-8')), {'accel': [1.0, 0.0, 0.0], 'gyro': [0.0, 0.0, 0.0]})
 
     def test_a_state_without_touch_is_still_read_by_the_old_format(self):
         self.assertEqual(motion.load_state('{"accel": [0, 0, -1], "gyro": [0, 0, 0]}'),
@@ -180,12 +180,12 @@ class ScriptCommandTest(unittest.TestCase):
     def run_lines(self, lines, fake_fail=None, touch_device=True):
         with tempfile.TemporaryDirectory() as directory:
             state = Path(directory) / 'motion.json'
-            state.write_text(json.dumps(motion.level_state()))
+            state.write_text(json.dumps(motion.level_state()), encoding='utf-8', newline='\n')
             fake = FakeOracle(state, fake_fail)
             try:
                 oracle.run_scenario(fake, lines, state, touch_device)
             finally:
-                final = json.loads(state.read_text())
+                final = json.loads(state.read_text(encoding='utf-8'))
             return fake, final
 
     def test_tap_holds_the_point_for_the_updates_and_releases(self):
@@ -203,15 +203,15 @@ class ScriptCommandTest(unittest.TestCase):
             state = Path(directory) / 'motion.json'
             motion.write_state(state, dict(motion.level_state(), touch=[3, 4]))
             oracle.run_scenario(FakeOracle(state), ['touch release'], state)
-            self.assertNotIn('touch', json.loads(state.read_text()))
+            self.assertNotIn('touch', json.loads(state.read_text(encoding='utf-8')))
 
     def test_an_error_during_the_hold_still_releases(self):
         with tempfile.TemporaryDirectory() as directory:
             state = Path(directory) / 'motion.json'
-            state.write_text(json.dumps(motion.level_state()))
+            state.write_text(json.dumps(motion.level_state()), encoding='utf-8', newline='\n')
             with self.assertRaises(IOError):
                 oracle.run_scenario(FakeOracle(state, 2), ['touch 5 6 10'], state)
-            self.assertNotIn('touch', json.loads(state.read_text()))
+            self.assertNotIn('touch', json.loads(state.read_text(encoding='utf-8')))
 
     def test_tilt_during_a_script_keeps_the_released_state(self):
         _, final = self.run_lines(['touch 1 1 2', 'tilt 0.5 0 -1'])
@@ -235,10 +235,10 @@ class ScriptCommandTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             state = Path(directory) / 'motion.json'
             motion.write_state(state, motion.level_state())
-            before = state.read_text()
+            before = state.read_text(encoding='utf-8')
             with self.assertRaises(ValueError):
                 oracle.run_scenario(FakeOracle(state), ['touch 999 0'], state)
-            self.assertEqual(state.read_text(), before)
+            self.assertEqual(state.read_text(encoding='utf-8'), before)
 
     def test_without_the_motion_source_or_the_touch_device_the_step_is_rejected(self):
         for op in ('touch 1 2', 'drag 1 2 3 4'):
@@ -270,7 +270,7 @@ class ServerTest(unittest.TestCase):
                     client.sendto(motion.build_request(0x100002, bytes(8)), ('127.0.0.1', port))
                     try:
                         registered = len(client.recv(1024)) == 100
-                    except socket.timeout:
+                    except (socket.timeout, ConnectionResetError):
                         pass
                 self.assertTrue(registered, 'no pad data from the motion source')
                 self.assertEqual(self.touch_field(client), (0, 0, 0, 0))

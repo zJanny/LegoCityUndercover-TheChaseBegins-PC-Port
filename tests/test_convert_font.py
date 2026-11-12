@@ -21,7 +21,7 @@ def draw(directory, font, text, extended=None):
     (Path(directory) / 'f.btga').write_bytes(rgba8_texture(16, 8, lambda x, y: (x, y, 0, 255)))
     args = [Path(directory) / 'f.tnf', text, '--output', Path(directory) / 'out.png']
     if extended is not None:
-        (Path(directory) / 'extended.txt').write_text(extended, encoding='utf-8')
+        (Path(directory) / 'extended.txt').write_text(extended, encoding='utf-8', newline='\n')
         args += ['--extended', Path(directory) / 'extended.txt']
     result = run_tool('convert_font.py', *args)
     return result, read_png(Path(directory) / 'out.png') if result.returncode == 0 else None

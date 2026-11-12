@@ -56,7 +56,7 @@ def convert(directory, data):
         frames = wav.readframes(wav.getnframes())
         shape = (wav.getnchannels(), wav.getframerate())
     samples = struct.unpack('<%dh' % (len(frames) // 2), frames)
-    return result, shape, samples, json.loads((out / 'audio-manifest.json').read_text())['x.bwav']
+    return result, shape, samples, json.loads((out / 'audio-manifest.json').read_text(encoding='utf-8'))['x.bwav']
 
 
 @unittest.skipUnless(native.available(), 'C++ asset library not built')

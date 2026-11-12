@@ -387,7 +387,7 @@ def main(argv=None):
         print('%s is current' % args.check)
         return 0
     if args.update:
-        args.update.write_text(text, encoding='utf-8')
+        args.update.write_text(text, encoding='utf-8', newline='\n')
         print('updated %s' % args.update)
         return 0
     sys.stdout.write(text)

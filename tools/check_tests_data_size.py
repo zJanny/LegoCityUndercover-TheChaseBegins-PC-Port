@@ -14,12 +14,16 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_LIMIT_KB = 100
 
 
+def lf_size(path):
+    return len(path.read_bytes().replace(b'\r\n', b'\n'))
+
+
 def large_files(root, limit_bytes):
     data = root / 'tests' / 'data'
     if not data.is_dir():
         return []
-    return sorted((path.relative_to(root).as_posix(), path.stat().st_size) for path in data.rglob('*')
-                  if path.is_file() and path.stat().st_size > limit_bytes)
+    sizes = ((path.relative_to(root).as_posix(), lf_size(path)) for path in data.rglob('*') if path.is_file())
+    return sorted((name, size) for name, size in sizes if size > limit_bytes)
 
 
 def existing_directory(text):

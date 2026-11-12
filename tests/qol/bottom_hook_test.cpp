@@ -108,7 +108,7 @@ void touch() {
 }
 
 int main() {
-    setenv("SDL_VIDEODRIVER", "dummy", 0);
+    SDL_setenv("SDL_VIDEODRIVER", "dummy", 0);
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         std::cerr << "FAIL: SDL video: " << SDL_GetError() << '\n';
         return 1;

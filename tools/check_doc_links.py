@@ -92,14 +92,14 @@ GENERATED_PRIORITIES = "docs/plans/priorities.md"
 
 
 def off_main(root):
-    result = subprocess.run(["git", "-C", str(root), "symbolic-ref", "--short", "-q", "HEAD"], capture_output=True, text=True)
+    result = subprocess.run(["git", "-C", str(root), "symbolic-ref", "--short", "-q", "HEAD"], capture_output=True, encoding="utf-8", errors="replace")
     return result.returncode == 0 and result.stdout.strip() not in ("", "main", "master")
 
 
 def markdown_files(root):
     if (root / ".git").exists():
         out = subprocess.run(
-            ["git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard", "*.md"], capture_output=True, text=True, check=True
+            ["git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard", "*.md"], capture_output=True, encoding="utf-8", errors="replace", check=True
         ).stdout.splitlines()
         return sorted(root / p for p in set(out) if not set(Path(p).parts) & EXCLUDED_DIRS and (root / p).is_file())
     return sorted(
@@ -194,7 +194,7 @@ class Doc:
         return added
 
     def save(self):
-        self.path.write_text("\n".join(self.lines), encoding="utf-8")
+        self.path.write_text("\n".join(self.lines), encoding="utf-8", newline="\n")
 
 
 def stamp_prefix(match):
@@ -252,7 +252,7 @@ def correction_errors(root, files, load):
     corrected_by = []
     for path in files:
         doc = load(path)
-        rel = path.relative_to(root)
+        rel = path.relative_to(root).as_posix()
         in_re = in_findings(root, path)
         source_in_design = in_design(root, path)
         for number, line in enumerate(doc.lines):
@@ -288,9 +288,9 @@ def correction_errors(root, files, load):
                     continue
                 if line.startswith("Corrected by") or line.startswith(SUPERSEDED):
                     if not leading:
-                        errors.append(f"{path.relative_to(root)}:{number + 1}: correction-pairing: '{line.split(' [')[0]}' must stand directly under the heading of its entry")
+                        errors.append(f"{path.relative_to(root).as_posix()}:{number + 1}: correction-pairing: '{line.split(' [')[0]}' must stand directly under the heading of its entry")
                     elif line.startswith(SUPERSEDED) and not LINK.search(line):
-                        errors.append(f"{path.relative_to(root)}:{number + 1}: superseded-link: 'Superseded by' needs a link to the entry that replaces it")
+                        errors.append(f"{path.relative_to(root).as_posix()}:{number + 1}: superseded-link: 'Superseded by' needs a link to the entry that replaces it")
                 else:
                     leading = False
     for (source_path, source_anchor, dest, fragment), where in corrects.items():
@@ -302,7 +302,7 @@ def correction_errors(root, files, load):
             for path, number, back_dest, back_fragment in corrected_by
         )
         if not found:
-            errors.append(f"{where}: correction-pairing: no 'Corrected by' line linking back under {dest.relative_to(root)}#{fragment}")
+            errors.append(f"{where}: correction-pairing: no 'Corrected by' line linking back under {dest.relative_to(root).as_posix()}#{fragment}")
     for path, number, dest, fragment in corrected_by:
         entry = entry_anchor_at(load(path), number)
         matched = any(
@@ -310,7 +310,7 @@ def correction_errors(root, files, load):
             for key in corrects
         )
         if not matched:
-            errors.append(f"{path.relative_to(root)}:{number + 1}: correction-pairing: 'Corrected by' line has no matching 'Corrects' link in {dest.relative_to(root)}#{fragment}")
+            errors.append(f"{path.relative_to(root).as_posix()}:{number + 1}: correction-pairing: 'Corrected by' line has no matching 'Corrects' link in {dest.relative_to(root).as_posix()}#{fragment}")
     return errors
 
 
@@ -360,7 +360,7 @@ def duplicate_id_errors(root):
                 if not match:
                     continue
                 key = (base, match.group(1))
-                where = f"{member.relative_to(root)}:{number + 1}"
+                where = f"{member.relative_to(root).as_posix()}:{number + 1}"
                 if key in seen:
                     errors.append(f"{where}: duplicate-id: {match.group(1)} is already defined at {seen[key]}; IDs are never reused. "
                                   + DUPLICATE_ID_FIX.format(prefix=id_prefix(match.group(1))))
@@ -375,7 +375,7 @@ def index_errors(root):
         return []
     errors = []
     rows = {}
-    rel = index.relative_to(root)
+    rel = index.relative_to(root).as_posix()
     index_lines = index.read_text(encoding="utf-8").split("\n")
     for number, line in enumerate(index_lines):
         match = INDEX_ROW.match(line)
@@ -392,7 +392,7 @@ def index_errors(root):
             errors.append(f"{rel}:{number}: index-closed-file: {name} is a closed-items file and has no index row")
     for path in feature_files(root):
         if path.name not in rows:
-            errors.append(f"{path.relative_to(root)}:1: index-missing-row: {path.name} has no row in {rel}; add one")
+            errors.append(f"{path.relative_to(root).as_posix()}:1: index-missing-row: {path.name} has no row in {rel}; add one")
     return errors
 
 
@@ -407,7 +407,7 @@ def item_format_errors(root):
                     continue
                 ranks = [FIELD_ORDER[m.group(1)] for m in FIELD.finditer(line)]
                 if ranks != sorted(set(ranks)):
-                    errors.append(f"{member.relative_to(root)}:{number + 1}: item-field-order: fields must follow gap text, needs:, blocks:, uses:, evidence: (each at most once, evidence last)")
+                    errors.append(f"{member.relative_to(root).as_posix()}:{number + 1}: item-field-order: fields must follow gap text, needs:, blocks:, uses:, evidence: (each at most once, evidence last)")
     return errors
 
 
@@ -477,12 +477,12 @@ def dependency_errors(root):
     errors = []
     for item, name, target in conflicts:
         path, number = items[item]
-        errors.append(f"{path.relative_to(root)}:{number + 1}: dependency-conflict: {item} and {target} both say '{name}:' of each other; "
+        errors.append(f"{path.relative_to(root).as_posix()}:{number + 1}: dependency-conflict: {item} and {target} both say '{name}:' of each other; "
                       "decide which one waits for the other")
     for target, other, item in missing:
         path, number = items[target]
         name = "needs" if other == "blocks" else "blocks"
-        errors.append(f"{path.relative_to(root)}:{number + 1}: dependency-pair: {item} has '{name}: {target}' but {target} has no '{other}: {item}'; "
+        errors.append(f"{path.relative_to(root).as_posix()}:{number + 1}: dependency-pair: {item} has '{name}: {target}' but {target} has no '{other}: {item}'; "
                       "needs: and blocks: are written on both sides (--fix adds the missing one)")
     return errors
 
@@ -495,13 +495,13 @@ def add_dependency_counterparts(root):
         lines = texts.setdefault(path, path.read_text(encoding="utf-8").split("\n"))
         lines[number] = with_field_id(lines[number], other, item)
     for path, lines in texts.items():
-        path.write_text("\n".join(lines), encoding="utf-8")
+        path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
     return len(missing)
 
 
 def head_item_addresses(root):
-    result = subprocess.run(["git", "-C", str(root), "grep", "-h", "-E", r"^- (\[[ x]\] )?[A-Z]", "HEAD", "--", str(feature_dir(root).relative_to(root))],
-                            capture_output=True, text=True)
+    result = subprocess.run(["git", "-C", str(root), "grep", "-h", "-E", r"^- (\[[ x]\] )?[A-Z]", "HEAD", "--", str(feature_dir(root).relative_to(root).as_posix())],
+                            capture_output=True, encoding="utf-8", errors="replace")
     addresses = {}
     for line in result.stdout.split("\n"):
         line = line.split(":", 1)[1] if line.startswith("HEAD:") else line
@@ -599,7 +599,7 @@ def timestamp_errors(root):
             for match in TIMESTAMP.finditer(line):
                 moment = parse_timestamp(match)
                 if moment is not None and moment > now:
-                    errors.append(f"{path.relative_to(root)}:{number + 1}: future-timestamp: {match.group(0)} is later than the current time; take times from date -Iseconds")
+                    errors.append(f"{path.relative_to(root).as_posix()}:{number + 1}: future-timestamp: {match.group(0)} is later than the current time; take times from date -Iseconds")
     return errors
 
 
@@ -608,7 +608,7 @@ def design_errors(root):
     for path in findings_files(root):
         if not in_design(root, path):
             continue
-        rel = path.relative_to(root)
+        rel = path.relative_to(root).as_posix()
         if path.name.endswith(HISTORY_SUFFIX):
             errors.append(f"{rel}:1: design-history: docs/design keeps no history files; delete it (git keeps the old versions)")
             continue
@@ -629,9 +629,9 @@ def current_state_errors(root):
         state = next((i for i, line in enumerate(lines) if line.strip() == CURRENT_STATE), None)
         first = next((i for i, line in enumerate(lines) if ENTRY_HEADING.match(line)), None)
         if state is None and first is not None:
-            errors.append(f"{path.relative_to(root)}:1: current-state-missing: every topic file needs '{CURRENT_STATE}' before its first dated entry")
+            errors.append(f"{path.relative_to(root).as_posix()}:1: current-state-missing: every topic file needs '{CURRENT_STATE}' before its first dated entry")
         if state is not None and first is not None and state > first:
-            errors.append(f"{path.relative_to(root)}:{state + 1}: current-state-position: '{CURRENT_STATE}' must come before the first dated entry")
+            errors.append(f"{path.relative_to(root).as_posix()}:{state + 1}: current-state-position: '{CURRENT_STATE}' must come before the first dated entry")
     return errors
 
 
@@ -650,7 +650,7 @@ def split_leftover_warnings(root):
         for number in range(state + 1, end):
             for name in re.findall(r"\]\(([\w.-]+\.md)#ts-", lines[number]):
                 if name in subtopics:
-                    warnings.append(f"{path.relative_to(root)}:{number + 1}: warning: current-state-split: links an entry of the split subtopic {name}; after a split that bullet belongs in {name}'s '{CURRENT_STATE}'")
+                    warnings.append(f"{path.relative_to(root).as_posix()}:{number + 1}: warning: current-state-split: links an entry of the split subtopic {name}; after a split that bullet belongs in {name}'s '{CURRENT_STATE}'")
     return warnings
 
 
@@ -658,8 +658,8 @@ def added_lines(root):
     if not (root / ".git").exists():
         return {}
     try:
-        diff = subprocess.run(["git", "-C", str(root), "diff", "HEAD", "-U0", "--no-color", "--", "docs"], capture_output=True, text=True, check=True).stdout
-        untracked = subprocess.run(["git", "-C", str(root), "ls-files", "--others", "--exclude-standard", "docs"], capture_output=True, text=True, check=True).stdout.split()
+        diff = subprocess.run(["git", "-C", str(root), "diff", "HEAD", "-U0", "--no-color", "--", "docs"], capture_output=True, encoding="utf-8", errors="replace", check=True).stdout
+        untracked = subprocess.run(["git", "-C", str(root), "ls-files", "--others", "--exclude-standard", "docs"], capture_output=True, encoding="utf-8", errors="replace", check=True).stdout.split()
     except (OSError, subprocess.CalledProcessError):
         return {}
     added = {}
@@ -805,7 +805,7 @@ def release_ids(root, holder):
             removed += 1
         else:
             kept.append(line)
-    path.write_text("\n".join(kept), encoding="utf-8")
+    path.write_text("\n".join(kept), encoding="utf-8", newline="\n")
     return removed
 
 
@@ -872,12 +872,12 @@ def move_superseded(root):
         header = f"# History of {topic.stem}\n\nSuperseded entries moved from [{topic.name}]({topic.name}) by tools/check_doc_links.py --fix, unchanged.\n\n"
         appended(history, header, block[:-1])
         drop = {n for start, end, _ in spans for n in range(start, end)}
-        topic.write_text("\n".join(line for n, line in enumerate(doc.lines) if n not in drop), encoding="utf-8")
+        topic.write_text("\n".join(line for n, line in enumerate(doc.lines) if n not in drop), encoding="utf-8", newline="\n")
         for path in markdown_files(root):
             current = Doc(path)
             lines = [line if current.in_code[n] else retarget_links(line, path, topic, history, moved, False) for n, line in enumerate(current.lines)]
             if lines != current.lines:
-                path.write_text("\n".join(lines), encoding="utf-8")
+                path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
         total += len(spans)
     return total
 
@@ -902,7 +902,7 @@ def session_log_errors(root):
     for path in progress_files(root):
         span = log_span(path.read_text(encoding="utf-8").split("\n"))
         if span and len(span[1]) > MAX_LOG_LINES:
-            errors.append(f"{path.relative_to(root)}:{span[1][0] + 1}: session-log-length: {len(span[1])} entry lines, limit {MAX_LOG_LINES}; run tools/check_doc_links.py --fix to archive the older ones")
+            errors.append(f"{path.relative_to(root).as_posix()}:{span[1][0] + 1}: session-log-length: {len(span[1])} entry lines, limit {MAX_LOG_LINES}; run tools/check_doc_links.py --fix to archive the older ones")
     return errors
 
 
@@ -916,7 +916,7 @@ def appended(path, header, new_lines):
         text = text if text.endswith("\n") else text + "\n"
     else:
         text = header
-    path.write_text(text + "\n".join(new_lines) + "\n", encoding="utf-8")
+    path.write_text(text + "\n".join(new_lines) + "\n", encoding="utf-8", newline="\n")
 
 
 def archived_log_lines(path):
@@ -942,7 +942,7 @@ def rotate_session_logs(root):
             appended(archive_path(path), header, [lines[i] for i in old])
         drop |= set(old)
         if drop:
-            path.write_text("\n".join(line for i, line in enumerate(lines) if i not in drop), encoding="utf-8")
+            path.write_text("\n".join(line for i, line in enumerate(lines) if i not in drop), encoding="utf-8", newline="\n")
         moved += len(old)
     return moved
 
@@ -962,7 +962,7 @@ def remove_duplicate_archive_lines(root):
             seen.add(line)
             kept.append(line)
         if len(kept) < len(lines):
-            archive.write_text("\n".join(kept), encoding="utf-8")
+            archive.write_text("\n".join(kept), encoding="utf-8", newline="\n")
             removed += len(lines) - len(kept)
     return removed
 
@@ -977,9 +977,13 @@ def move_closed_items(root):
         header = (f"# Closed items of {path.stem}\n\nDone items of [{path.name}]({path.name}), moved here by "
                   "tools/check_doc_links.py --fix in the order they were closed. IDs are never reused.\n\n")
         appended(closed_file_of(path), header, closed)
-        path.write_text("\n".join(line for line in lines if not CLOSED_ITEM_LINE.match(line)), encoding="utf-8")
+        path.write_text("\n".join(line for line in lines if not CLOSED_ITEM_LINE.match(line)), encoding="utf-8", newline="\n")
         moved += len(closed)
     return moved
+
+
+def lf_size(path):
+    return len(path.read_bytes().replace(b"\r\n", b"\n"))
 
 
 def size_errors(root):
@@ -987,15 +991,15 @@ def size_errors(root):
     for path in findings_files(root):
         if path.name.endswith(HISTORY_SUFFIX):
             continue
-        size = path.stat().st_size
+        size = lf_size(path)
         if size > MAX_RE_BYTES:
-            errors.append(f"{path.relative_to(root)}:1: re-file-size: {size} bytes, limit {MAX_RE_BYTES}; split it by subtopic")
+            errors.append(f"{path.relative_to(root).as_posix()}:1: re-file-size: {size} bytes, limit {MAX_RE_BYTES}; split it by subtopic")
     features = feature_dir(root)
     if features.is_dir():
         for path in feature_files(root):
-            size = path.stat().st_size
+            size = lf_size(path)
             if size > MAX_FEATURE_BYTES:
-                errors.append(f"{path.relative_to(root)}:1: feature-file-size: {size} bytes, limit {MAX_FEATURE_BYTES}; split it by subtopic as <feature>-<subtopic>.md")
+                errors.append(f"{path.relative_to(root).as_posix()}:1: feature-file-size: {size} bytes, limit {MAX_FEATURE_BYTES}; split it by subtopic as <feature>-<subtopic>.md")
     errors.extend(duplicate_id_errors(root))
     errors.extend(index_errors(root))
     errors.extend(item_format_errors(root))
@@ -1008,8 +1012,8 @@ def size_errors(root):
     errors.extend(user_docs.user_doc_errors(root))
     errors.extend(project_file_errors(root))
     claude = root / "CLAUDE.md"
-    if claude.is_file() and claude.stat().st_size > MAX_CLAUDE_BYTES:
-        errors.append(f"CLAUDE.md:1: claude-md-size: {claude.stat().st_size} bytes, limit {MAX_CLAUDE_BYTES}")
+    if claude.is_file() and lf_size(claude) > MAX_CLAUDE_BYTES:
+        errors.append(f"CLAUDE.md:1: claude-md-size: {lf_size(claude)} bytes, limit {MAX_CLAUDE_BYTES}")
     return errors
 
 
@@ -1084,13 +1088,13 @@ def process(root, fix, messages=None):
             doc = load(path)
             for number, anchor in doc.entries():
                 if number == 0 or doc.lines[number - 2].strip() != f'<a id="{anchor}"></a>':
-                    errors.append(f"{path.relative_to(root)}:{number + 1}: entry has no anchor {anchor}")
+                    errors.append(f"{path.relative_to(root).as_posix()}:{number + 1}: entry has no anchor {anchor}")
             seen = set()
             for number, line in enumerate(doc.lines):
                 match = ANCHOR_LINE.match(line)
                 if match and not doc.in_code[number]:
                     if match.group(1) in seen:
-                        errors.append(f"{path.relative_to(root)}:{number + 1}: duplicate anchor {match.group(1)}")
+                        errors.append(f"{path.relative_to(root).as_posix()}:{number + 1}: duplicate anchor {match.group(1)}")
                     seen.add(match.group(1))
     skip_generated = off_main(root)
     for path in files:
@@ -1108,7 +1112,7 @@ def process(root, fix, messages=None):
             for match in LINK.finditer(masked):
                 head, target, tail = line[match.start(1):match.end(1)], line[match.start(2):match.end(2)], line[match.start(3):match.end(3)]
                 new_target = target
-                where = f"{rel}:{number + 1}"
+                where = f"{rel.as_posix()}:{number + 1}"
                 source_link = SOURCE_LINE_TARGET.match(target)
                 if source_link:
                     file_part, wanted = source_link.group(1), int(source_link.group(2))

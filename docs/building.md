@@ -1,6 +1,6 @@
 # Building the tools
 
-How to install the packages, build the programs and run the tests on Linux.
+How to install the packages, build the programs and run the tests on Linux and on Windows.
 
 Back to the [documentation list](../README.md#more-documentation).
 
@@ -56,6 +56,84 @@ Some tests need your extracted game data in `artifacts/romfs` (see [Extracting g
 - The viewer, development runtime, sound, video player and start-screen tests are only added if the data existed when you ran the first `cmake` command. Run that command again after you extract the data.
 
 Tests that need the game data carry the CTest label `needs-game-data`. Exclude them with `-LE needs-game-data`, for example on a machine without the data.
+
+## Build on Windows
+
+The Windows build uses GCC and the libraries of [MSYS2](https://www.msys2.org/) in its UCRT64 environment, with the Ninja build tool. It is work in progress; see [Project status](status.md#on-windows). Install the tools as in [Getting started](getting-started.md#on-windows).
+
+The MSYS2 UCRT64 packages:
+
+```sh
+pacman -S mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-sdl2-compat mingw-w64-ucrt-x86_64-libepoxy mingw-w64-ucrt-x86_64-ffmpeg
+```
+
+Run the build and the tests in the UCRT64 window that keeps the Windows `PATH`. Open it from Git Bash in the project folder:
+
+```sh
+/c/msys64/msys2_shell.cmd -ucrt64 -use-full-path -here
+```
+
+Then configure, build and test there:
+
+```sh
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCHASE_BUILD_TESTS=ON -DPython3_EXECUTABLE="$(py -3 -c 'import sys; print(sys.executable)')"
+cmake --build build -j"$(nproc)"
+ctest --test-dir build -j"$(nproc)" --output-on-failure
+```
+
+- `-G Ninja` selects the Ninja build tool. The build writes the programs as `build/*.exe` and the library as `build/libchase_assets_c.dll`.
+- `-DPython3_EXECUTABLE` sets the Python that the Python checks of `ctest` use. FFmpeg brings MSYS2's own Python, which comes first in this window, so name the python.org Python here. The `py` launcher prints its path.
+- The tests need Git, which the window finds through the Windows `PATH` (`-use-full-path`).
+- Run the Python tests in Git Bash: `python3 -m unittest discover -s tests -p 'test_*.py' -v`.
+- On Windows the tests that start `chase-game` or `chase-viewer` without a window are skipped. SDL's offscreen mode needs `libEGL.dll`, which MSYS2 does not have. The list is in [the Windows test notes](plans/features/windows-tests.md).
+- The extraction and conversion tools load `build/libchase_assets_c.dll`. Set `CHASE_ASSETS_LIB` as shown in [Extracting game data](extracting-game-data.md#3-unpack-the-asset-archive).
+- `-DCHASE_BUILD_TESTS=ON` builds the tests again after a build with `-DCHASE_BUILD_TESTS=OFF`, as in the README. Without tests the build needs no Python setting.
+
+### Linux tests in WSL
+
+A change on Windows to code that Linux shares also has to pass the Linux build and tests ([Windows rules](rules/windows.md#linux-stays-green)). You run them in WSL, the Linux subsystem of Windows, with an Ubuntu distribution and the Debian packages of the README. The tests that run `chase-game` offscreen need OpenGL 4.6 in WSL, which comes from your graphics card through Mesa's D3D12 driver.
+
+1. Install WSL with an Ubuntu distribution, as in [Microsoft's guide](https://learn.microsoft.com/windows/wsl/install), and the Debian packages of the README in Ubuntu. Install a current graphics driver with WSL support. Then update WSL in PowerShell:
+
+   ```powershell
+   wsl --update
+   ```
+
+2. In WSL, add your user to the `render` and `video` groups and install the EGL check tool:
+
+   ```sh
+   sudo usermod -aG render,video "$USER"
+   sudo apt install mesa-utils
+   ```
+
+   Then end WSL in PowerShell, so the next start has the new groups. Replace `Ubuntu` with the name that `wsl -l` shows:
+
+   ```powershell
+   wsl -t Ubuntu
+   ```
+
+3. Check the driver in WSL:
+
+   ```sh
+   GALLIUM_DRIVER=d3d12 eglinfo -B
+   ```
+
+   You should see `OpenGL core profile renderer: D3D12 (...)` with your graphics card, and `OpenGL core profile version: 4.6 (Core Profile) Mesa ...`.
+
+4. Build and test in a WSL clone of your branch, not in the Windows checkout. Replace `BRANCH` and `PROJECT` with your branch and the WSL path of your Windows checkout, for example `/mnt/c/path/to/project`:
+
+   ```sh
+   export GALLIUM_DRIVER=d3d12
+   git clone -q -b BRANCH PROJECT ~/wslcheck
+   cd ~/wslcheck
+   ln -s PROJECT/artifacts artifacts
+   cmake -S . -B build-wsl -DCMAKE_BUILD_TYPE=RelWithDebInfo
+   cmake --build build-wsl -j4
+   ctest --test-dir build-wsl -j4 --output-on-failure
+   python3 -m unittest discover -s tests -p 'test_*.py'
+   ```
+
+Without `GALLIUM_DRIVER=d3d12` Mesa uses its software driver llvmpipe, which offers only OpenGL 4.5. The offscreen tests then fail with `Could not create EGL context`.
 
 ## Continuous integration
 

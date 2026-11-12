@@ -17,7 +17,7 @@ from pathlib import Path
 
 def parse(path):
     rows, current = [], None
-    for line in Path(path).read_text().splitlines():
+    for line in Path(path).read_text(encoding='utf-8').splitlines():
         text = line.strip()
         if line.startswith('frame'):
             current = {'frame': int(line.split()[1])}
@@ -52,7 +52,7 @@ def main():
             kept.append([row['frame'] - args.first_update, registers[0], '0x%x' % registers[1], '0x%x' % registers[14],
                          '%.4f' % x, '%.4f' % y, '%.4f' % z])
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    with args.output.open('w', newline='') as handle:
+    with args.output.open('w', newline='', encoding='utf-8') as handle:
         writer = csv.writer(handle)
         writer.writerow(['update', 'id', 'object', 'caller', 'x', 'y', 'z'])
         writer.writerows(kept)

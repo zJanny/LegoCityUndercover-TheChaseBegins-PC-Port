@@ -61,7 +61,7 @@ LINE_EXEMPTIONS = [
     ("tests/test_azahar_oracle*.py", r"azahar-emu", "tests of the oracle tool's folders"),
     ("docs/re/oracle*.md", r"azahar-emu", "describe the folders the emulator creates"),
     ("tests/test_claude_hooks.py", r"/home/someone/", "made-up home path that the hook test expects to be reported"),
-    ("tests/save_test.cpp", r"/home/u/", "test strings for the XDG path logic"),
+    ("tests/save_default_path_test.cpp", r"/home/u/", "test strings for the XDG path logic"),
 ]
 
 

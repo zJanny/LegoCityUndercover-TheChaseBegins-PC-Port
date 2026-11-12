@@ -73,10 +73,10 @@ class ExtractTests(unittest.TestCase):
     def test_existing_output_not_overwritten(self):
         with tempfile.TemporaryDirectory() as d:
             output = Path(d) / 'out'; output.mkdir()
-            marker = output / 'keep'; marker.write_text('preserve')
+            marker = output / 'keep'; marker.write_text('preserve', encoding='utf-8', newline='\n')
             with self.assertRaisesRegex(ValueError, 'already exists'):
                 x.extract(Path(d) / 'missing', output)
-            self.assertEqual(marker.read_text(), 'preserve')
+            self.assertEqual(marker.read_text(encoding='utf-8'), 'preserve')
 
     def test_blz_literal_and_overlapping_reference(self):
         # Three backwards literals then one 18-byte reference make 21 A bytes.

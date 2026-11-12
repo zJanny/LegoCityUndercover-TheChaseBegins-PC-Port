@@ -10,6 +10,10 @@ from unittest import mock
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parent.parent / "tools" / "merge_agent.py"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fixtures import isolate_git_environment, requires_symlinks  # noqa: E402
+
+isolate_git_environment()
 
 
 def run_script(cwd: Path, *args: str) -> subprocess.CompletedProcess:
@@ -31,7 +35,7 @@ class MergeAgentTest(unittest.TestCase):
         git(self.repo, "init", "-q", "-b", "main")
         git(self.repo, "config", "user.email", "test@example.invalid")
         git(self.repo, "config", "user.name", "Test")
-        (self.repo / "a.txt").write_text("a\n")
+        (self.repo / "a.txt").write_text("a\n", encoding='utf-8', newline='\n')
         git(self.repo, "add", "a.txt")
         git(self.repo, "commit", "-q", "-m", "init")
 
@@ -62,7 +66,7 @@ class MergeAgentTest(unittest.TestCase):
     def test_message_without_co_author_is_refused(self) -> None:
         git(self.repo, "branch", "agent")
         message = self.repo / "message.txt"
-        message.write_text("Subject\n\nBody\n")
+        message.write_text("Subject\n\nBody\n", encoding='utf-8', newline='\n')
         result = run_script(self.repo, "finish", "agent", "-m", str(message))
         self.assertEqual(result.returncode, 1)
         self.assertIn("has no Co-Authored-By line", result.stderr)
@@ -111,11 +115,11 @@ class MergeAgentTest(unittest.TestCase):
     def test_fix_docs_runs_the_doc_fixer_and_restages(self) -> None:
         tools = self.repo / "tools"
         tools.mkdir()
-        (tools / "check_doc_links.py").write_text(SCRIPT.with_name("check_doc_links.py").read_text())
-        (tools / "user_docs.py").write_text(SCRIPT.with_name("user_docs.py").read_text())
+        (tools / "check_doc_links.py").write_text(SCRIPT.with_name("check_doc_links.py").read_text(encoding='utf-8'), encoding='utf-8', newline='\n')
+        (tools / "user_docs.py").write_text(SCRIPT.with_name("user_docs.py").read_text(encoding='utf-8'), encoding='utf-8', newline='\n')
         features = self.repo / "docs" / "plans" / "features"
         features.mkdir(parents=True)
-        (features / "f.md").write_text("- [ ] F-1 open\n- [x] F-2 done\n")
+        (features / "f.md").write_text("- [ ] F-1 open\n- [x] F-2 done\n", encoding='utf-8', newline='\n')
         git(self.repo, "add", "-A")
         sys.path.insert(0, str(SCRIPT.parent))
         import merge_agent
@@ -123,7 +127,7 @@ class MergeAgentTest(unittest.TestCase):
         merge_agent.fix_docs(self.repo)
         staged = subprocess.run(["git", "diff", "--cached", "--name-only"], cwd=self.repo, text=True, capture_output=True).stdout.split()
         self.assertIn("docs/plans/features/f.closed.md", staged)
-        self.assertEqual((features / "f.md").read_text(), "- [ ] F-1 open\n")
+        self.assertEqual((features / "f.md").read_text(encoding='utf-8'), "- [ ] F-1 open\n")
 
     def add_worktree(self, name: str, reason: str | None) -> Path:
         scratch = tempfile.TemporaryDirectory()
@@ -135,6 +139,7 @@ class MergeAgentTest(unittest.TestCase):
             git(self.repo, "worktree", "lock", "--reason", reason, str(tree))
         return tree
 
+    @requires_symlinks
     def test_agent_locked_worktree_is_unlocked_and_removed_with_its_branch(self) -> None:
         sys.path.insert(0, str(SCRIPT.parent))
         import merge_agent
@@ -145,6 +150,7 @@ class MergeAgentTest(unittest.TestCase):
         self.assertNotIn("tree-a", output(self.repo, "branch", "--list"))
         self.assertTrue((self.repo / "a.txt").is_file())
 
+    @requires_symlinks
     def test_unlocked_worktree_is_removed(self) -> None:
         sys.path.insert(0, str(SCRIPT.parent))
         import merge_agent
@@ -154,6 +160,7 @@ class MergeAgentTest(unittest.TestCase):
         self.assertFalse(tree.exists())
         self.assertNotIn("tree-b", output(self.repo, "branch", "--list"))
 
+    @requires_symlinks
     def test_foreign_lock_keeps_worktree_and_branch_with_leftover_commands(self) -> None:
         sys.path.insert(0, str(SCRIPT.parent))
         import merge_agent
@@ -191,9 +198,9 @@ class MergeAgentTest(unittest.TestCase):
         import merge_agent
 
         archive = self.repo / "x.progress-archive.md"
-        archive.write_text("# Archive\n\n- old\n<<<<<<< HEAD\n- from main\n=======\n- from branch\n- old\n>>>>>>> agent\n")
+        archive.write_text("# Archive\n\n- old\n<<<<<<< HEAD\n- from main\n=======\n- from branch\n- old\n>>>>>>> agent\n", encoding='utf-8', newline='\n')
         merge_agent.keep_both_sides(archive)
-        self.assertEqual(archive.read_text(), "# Archive\n\n- old\n- from main\n- from branch\n- old\n")
+        self.assertEqual(archive.read_text(encoding='utf-8'), "# Archive\n\n- old\n- from main\n- from branch\n- old\n")
 
     def test_readme_conflict_inside_progress_section_keeps_main(self) -> None:
         sys.path.insert(0, str(SCRIPT.parent))
@@ -218,20 +225,20 @@ class MergeAgentTest(unittest.TestCase):
 
         target = self.repo / merge_agent.PRIORITIES
         target.parent.mkdir(parents=True)
-        target.write_text("base\n")
+        target.write_text("base\n", encoding='utf-8', newline='\n')
         git(self.repo, "add", "-A")
         git(self.repo, "commit", "-q", "-m", "priorities")
         git(self.repo, "checkout", "-q", "-b", "agent")
-        target.write_text("from agent\n")
+        target.write_text("from agent\n", encoding='utf-8', newline='\n')
         git(self.repo, "commit", "-q", "-am", "agent")
         git(self.repo, "checkout", "-q", "main")
-        target.write_text("from main\n")
+        target.write_text("from main\n", encoding='utf-8', newline='\n')
         git(self.repo, "commit", "-q", "-am", "main")
         subprocess.run(["git", "merge", "--squash", "agent"], cwd=self.repo, capture_output=True)
         unmerged = subprocess.run(["git", "diff", "--name-only", "--diff-filter=U"], cwd=self.repo, text=True, capture_output=True).stdout.split()
         self.assertEqual(unmerged, [merge_agent.PRIORITIES])
         self.assertEqual(merge_agent.resolve_generated(self.repo, unmerged), [])
-        self.assertEqual(target.read_text(), "from main\n")
+        self.assertEqual(target.read_text(encoding='utf-8'), "from main\n")
         left = subprocess.run(["git", "diff", "--name-only", "--diff-filter=U"], cwd=self.repo, text=True, capture_output=True).stdout
         self.assertEqual(left, "")
 
@@ -255,7 +262,7 @@ class SyncTest(unittest.TestCase):
         git(path, "config", "user.name", "Test")
         git(path, "checkout", "-q", "-B", "main")
         if not output(path, "ls-remote", "origin", "main").strip():
-            (path / "a.txt").write_text("a\n")
+            (path / "a.txt").write_text("a\n", encoding='utf-8', newline='\n')
             git(path, "add", "a.txt")
             git(path, "commit", "-q", "-m", "init")
             git(path, "push", "-q", "-u", "origin", "main")
@@ -265,7 +272,7 @@ class SyncTest(unittest.TestCase):
         return path
 
     def commit(self, repo: Path, name: str) -> None:
-        (repo / name).write_text(name + "\n")
+        (repo / name).write_text(name + "\n", encoding='utf-8', newline='\n')
         git(repo, "add", name)
         git(repo, "commit", "-q", "-m", name)
 
@@ -300,7 +307,7 @@ class SyncTest(unittest.TestCase):
     def test_uncommitted_changes_block_the_fast_forward(self) -> None:
         self.commit(self.other, "b.txt")
         git(self.other, "push", "-q", "origin", "main")
-        (self.repo / "a.txt").write_text("changed\n")
+        (self.repo / "a.txt").write_text("changed\n", encoding='utf-8', newline='\n')
         result = run_script(self.repo, "sync")
         self.assertEqual(result.returncode, 1)
         self.assertIn("main has uncommitted changes: stop and ask the user", result.stderr)
@@ -343,18 +350,18 @@ class BookkeepingTest(unittest.TestCase):
         tools = self.repo / "tools"
         tools.mkdir()
         for name in ("check_doc_links.py", "user_docs.py"):
-            (tools / name).write_text(SCRIPT.with_name(name).read_text())
+            (tools / name).write_text(SCRIPT.with_name(name).read_text(encoding='utf-8'), encoding='utf-8', newline='\n')
         features = self.repo / "docs" / "plans" / "features"
         features.mkdir(parents=True)
-        (features / "f.md").write_text("- [ ] F-1 open\n")
-        (features / "id-reservations.md").write_text(RESERVATIONS)
-        (self.repo / "docs" / "plans" / "linux-port.progress.md").write_text(PROGRESS)
+        (features / "f.md").write_text("- [ ] F-1 open\n", encoding='utf-8', newline='\n')
+        (features / "id-reservations.md").write_text(RESERVATIONS, encoding='utf-8', newline='\n')
+        (self.repo / "docs" / "plans" / "linux-port.progress.md").write_text(PROGRESS, encoding='utf-8', newline='\n')
         git(self.repo, "add", "-A")
         git(self.repo, "commit", "-q", "-m", "init")
         self.line = Path(self.tmp.name) / "line.txt"
-        self.line.write_text(ROUND_END + "\n")
+        self.line.write_text(ROUND_END + "\n", encoding='utf-8', newline='\n')
         self.message = Path(self.tmp.name) / "message.txt"
-        self.message.write_text("Log the end\n\nCo-Authored-By: Test <test@example.invalid>\n")
+        self.message.write_text("Log the end\n\nCo-Authored-By: Test <test@example.invalid>\n", encoding='utf-8', newline='\n')
         sys.path.insert(0, str(SCRIPT.parent))
         import merge_agent
         self.merge_agent = merge_agent
@@ -363,10 +370,10 @@ class BookkeepingTest(unittest.TestCase):
         self.tmp.cleanup()
 
     def reservations(self) -> str:
-        return (self.repo / "docs" / "plans" / "features" / "id-reservations.md").read_text()
+        return (self.repo / "docs" / "plans" / "features" / "id-reservations.md").read_text(encoding='utf-8')
 
     def progress(self) -> str:
-        return (self.repo / "docs" / "plans" / "linux-port.progress.md").read_text()
+        return (self.repo / "docs" / "plans" / "linux-port.progress.md").read_text(encoding='utf-8')
 
     def test_release_and_log_go_into_the_staged_merge(self) -> None:
         self.merge_agent.bookkeeping(self.repo, ["20261021-audio-A"], ["linux-port", str(self.line)])
@@ -402,12 +409,12 @@ class BookkeepingTest(unittest.TestCase):
             "": "must hold exactly one line, got 0",
         }
         for text, expected in cases.items():
-            self.line.write_text(text)
+            self.line.write_text(text, encoding='utf-8', newline='\n')
             with self.assertRaises(self.merge_agent.MergeError, msg=text) as caught:
                 self.merge_agent.bookkeeping(self.repo, ["20261021-audio-A"], ["linux-port", str(self.line)])
             self.assertIn(expected, str(caught.exception), text)
             self.assertEqual(self.reservations(), RESERVATIONS, text)
-        self.line.write_text(ROUND_END)
+        self.line.write_text(ROUND_END, encoding='utf-8', newline='\n')
         for plan, expected in (("qol", "plan 'qol' has no progress file"), ("Linux", "PLAN must be a plan name")):
             with self.assertRaisesRegex(self.merge_agent.MergeError, re.escape(expected)):
                 self.merge_agent.bookkeeping(self.repo, [], [plan, str(self.line)])
@@ -442,10 +449,10 @@ class VerifiedFingerprintTest(unittest.TestCase):
         git(self.repo, "init", "-q", "-b", "main")
         git(self.repo, "config", "user.email", "test@example.invalid")
         git(self.repo, "config", "user.name", "Test")
-        (self.repo / "a.txt").write_text("a\n")
-        (self.repo / "README.md").write_text("r\n")
+        (self.repo / "a.txt").write_text("a\n", encoding='utf-8', newline='\n')
+        (self.repo / "README.md").write_text("r\n", encoding='utf-8', newline='\n')
         (self.repo / "docs").mkdir()
-        (self.repo / "docs" / "progress-trend.svg").write_text("<svg/>\n")
+        (self.repo / "docs" / "progress-trend.svg").write_text("<svg/>\n", encoding='utf-8', newline='\n')
         git(self.repo, "add", "-A")
         git(self.repo, "commit", "-q", "-m", "init")
         sys.path.insert(0, str(SCRIPT.parent))
@@ -475,7 +482,7 @@ class VerifiedFingerprintTest(unittest.TestCase):
         return subprocess.CompletedProcess(cmd, 0, "", "")
 
     def stage_change(self, text: str) -> None:
-        (self.repo / "a.txt").write_text(text)
+        (self.repo / "a.txt").write_text(text, encoding='utf-8', newline='\n')
         git(self.repo, "add", "a.txt")
 
     def test_matching_record_skips_the_heavy_checks(self) -> None:
@@ -534,7 +541,7 @@ class CensusRefreshTest(unittest.TestCase):
         git(self.repo, "init", "-q", "-b", "main")
         git(self.repo, "config", "user.email", "test@example.invalid")
         git(self.repo, "config", "user.name", "Test")
-        (self.repo / "a.txt").write_text("a\n")
+        (self.repo / "a.txt").write_text("a\n", encoding='utf-8', newline='\n')
         git(self.repo, "add", "a.txt")
         git(self.repo, "commit", "-q", "-m", "init")
         sys.path.insert(0, str(SCRIPT.parent))
@@ -547,7 +554,7 @@ class CensusRefreshTest(unittest.TestCase):
 
     def stand_in(self, measured: str) -> None:
         (self.repo / "tools").mkdir(exist_ok=True)
-        (self.repo / "tools" / "generated_file_census.py").write_text(CENSUS_STAND_IN.replace("MEASURED", measured))
+        (self.repo / "tools" / "generated_file_census.py").write_text(CENSUS_STAND_IN.replace("MEASURED", measured), encoding='utf-8', newline='\n')
 
     def refresh(self) -> str:
         captured = io.StringIO()
@@ -558,7 +565,7 @@ class CensusRefreshTest(unittest.TestCase):
     def test_measured_table_is_written_and_staged(self) -> None:
         self.stand_in("[('readme_progress', 'files_total', 12, 'census 2026-11-12')]")
         self.assertIn("census table refreshed and staged", self.refresh())
-        self.assertEqual(self.table.read_text(), "section,key,value,provenance\nreadme_progress,files_total,12,census 2026-11-12\n")
+        self.assertEqual(self.table.read_text(encoding='utf-8'), "section,key,value,provenance\nreadme_progress,files_total,12,census 2026-11-12\n")
         self.assertIn(self.merge_agent.CENSUS, output(self.repo, "diff", "--cached", "--name-only").split())
 
     def test_unchanged_table_stays_out_of_the_commit(self) -> None:
@@ -589,7 +596,7 @@ class CheckPullRequestTest(unittest.TestCase):
         git(self.repo, "config", "user.email", "test@example.invalid")
         git(self.repo, "config", "user.name", "Test")
         git(self.repo, "checkout", "-q", "-B", "main")
-        (self.repo / "a.txt").write_text("a\n")
+        (self.repo / "a.txt").write_text("a\n", encoding='utf-8', newline='\n')
         git(self.repo, "add", "a.txt")
         git(self.repo, "commit", "-q", "-m", "init")
         git(self.repo, "push", "-q", "origin", "main")
@@ -657,6 +664,7 @@ class CheckPullRequestTest(unittest.TestCase):
         self.assertIn("files changed against main that run code on this machine (read them first):\n  tools/run_me.py", printed)
         self.assertCleanedUp(7)
 
+    @requires_symlinks
     def test_clean_pull_request_is_built_and_tested_in_a_separate_checkout(self) -> None:
         self.open_pull_request(8, {"docs/notes.md": b"notes\n", "third_party/fonts/Font.ttf": b"\x00\x01\x00\x00"})
         with mock.patch.dict(os.environ, {"SSH_AUTH_SOCK": "/agent.sock", "GH_TOKEN": "secret"}):
@@ -681,6 +689,7 @@ class CheckPullRequestTest(unittest.TestCase):
             env = self.merge_agent.pull_request_env()
         self.assertEqual(env, {"HOME": "/home/x", "PATH": "/usr/bin", "GIT_TERMINAL_PROMPT": "0"})
 
+    @requires_symlinks
     def test_failed_checks_are_reported_and_the_checkout_removed(self) -> None:
         self.open_pull_request(9, {"docs/notes.md": b"notes\n"})
         self.result = ["ctest failed (exit 8); the failing tests are listed above"]
@@ -692,6 +701,7 @@ class CheckPullRequestTest(unittest.TestCase):
             self.assertEqual(self.merge_agent.report_pull_request(9, reasons), 1)
         self.assertEqual(captured.getvalue(), "check-pr 9: FAIL\n- ctest failed (exit 8); the failing tests are listed above\n")
 
+    @requires_symlinks
     def test_interrupt_removes_the_checkout(self) -> None:
         self.open_pull_request(10, {"docs/notes.md": b"notes\n"})
         self.result = KeyboardInterrupt()

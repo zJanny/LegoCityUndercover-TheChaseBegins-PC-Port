@@ -7,6 +7,10 @@ sys.path.insert(0, str(Path(__file__).parents[1] / 'tools'))
 import generated_file_census as census  # noqa: E402
 import priority_report  # noqa: E402
 import progress_report  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fixtures import isolate_git_environment  # noqa: E402
+
+isolate_git_environment()
 
 TABLE = Path(__file__).parents[1] / census.TABLE_PATH
 
@@ -34,7 +38,7 @@ class TableFormatTests(unittest.TestCase):
     def test_unchanged_value_keeps_its_provenance(self):
         census.write_census(self.path, [('priorities', 'f.a.calls', 3, 'census 2026-11-12'), ('priorities', 'f.b.calls', 1, 'census 2026-11-12')])
         census.write_census(self.path, [('priorities', 'f.a.calls', 3, 'census 2027-01-01'), ('priorities', 'f.b.calls', 2, 'census 2027-01-01')])
-        text = self.path.read_text()
+        text = self.path.read_text(encoding='utf-8')
         self.assertIn('f.a.calls,3,census 2026-11-12', text)
         self.assertIn('f.b.calls,2,census 2027-01-01', text)
 
@@ -42,9 +46,9 @@ class TableFormatTests(unittest.TestCase):
         old = 'measured 2026-11-12 with x'
         census.write_census(self.path, [('priorities', 'provenance', old, 'p'), ('priorities', 'f.a.calls', 1, 'p')])
         census.write_census(self.path, [('priorities', 'provenance', 'measured 2027-01-01 with x', 'p'), ('priorities', 'f.a.calls', 1, 'p')])
-        self.assertIn(old, self.path.read_text())
+        self.assertIn(old, self.path.read_text(encoding='utf-8'))
         census.write_census(self.path, [('priorities', 'provenance', 'measured 2027-01-01 with x', 'p'), ('priorities', 'f.a.calls', 2, 'p')])
-        self.assertIn('2027-01-01', self.path.read_text())
+        self.assertIn('2027-01-01', self.path.read_text(encoding='utf-8'))
 
     def test_keys_with_awkward_characters_survive(self):
         census.write_census(self.path, [('priorities', 'c.a,b"c.levels', 1, 'census 2026-11-12')])
@@ -54,7 +58,7 @@ class TableFormatTests(unittest.TestCase):
         for text, message in (('a,b,c,d\n', 'header'), ('section,key,value,provenance\nnope,k,1,p\n', 'unknown section'),
                               ('section,key,value,provenance\npriorities,k,1\n', 'expected'),
                               ('section,key,value,provenance\npriorities,k,1,p\npriorities,k,2,p\n', 'twice')):
-            self.path.write_text(text)
+            self.path.write_text(text, encoding='utf-8', newline='\n')
             with self.assertRaisesRegex(census.CensusError, message):
                 census.read_census(self.path)
 

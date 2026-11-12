@@ -1,1 +1,8 @@
+* text=auto eol=lf
+*.ttf binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.bin binary
+*.csv -text
 docs/plans/linux-port.progress.md merge=union

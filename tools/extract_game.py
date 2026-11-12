@@ -196,7 +196,7 @@ def extract(path, output):
     (output / 'exheader.bin').write_bytes(ex)
     (output / 'code.bin').write_bytes(code)
     (output / 'game.arm.elf').write_bytes(elf)
-    (output / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+    (output / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8', newline='\n')
     return manifest
 
 

@@ -6,6 +6,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 import check_file_names
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fixtures import isolate_git_environment  # noqa: E402
+
+isolate_git_environment()
 
 TOOL = Path(__file__).resolve().parent.parent / "tools" / "check_file_names.py"
 
@@ -145,8 +149,8 @@ class CheckFileNamesTest(unittest.TestCase):
             subprocess.run(["git", "init", "-q", str(root)], check=True)
             for path in ("src/runtime/ai_move_watch.cpp", "src/runtime/game_door_glue.cpp", "tools/oracle/mission_1_3.txt"):
                 (root / path).parent.mkdir(parents=True, exist_ok=True)
-                (root / path).write_text("")
-            (root / "CMakeLists.txt").write_text("add_test(NAME door-hack COMMAND x)\n")
+                (root / path).write_text("", encoding='utf-8', newline='\n')
+            (root / "CMakeLists.txt").write_text("add_test(NAME door-hack COMMAND x)\n", encoding='utf-8', newline='\n')
             subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
             errors = check_file_names.check(root)
             self.assertEqual(len(errors), 2)
@@ -157,7 +161,7 @@ class CheckFileNamesTest(unittest.TestCase):
             self.assertIn("game_door_glue.cpp", run.stdout)
             self.assertIn("door-hack", run.stdout)
             (root / "src/runtime/game_door_glue.cpp").unlink()
-            (root / "CMakeLists.txt").write_text("add_test(NAME door-ok COMMAND x)\n")
+            (root / "CMakeLists.txt").write_text("add_test(NAME door-ok COMMAND x)\n", encoding='utf-8', newline='\n')
             subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
             run = subprocess.run([sys.executable, str(TOOL), "--root", str(root)], capture_output=True, text=True)
             self.assertEqual((run.returncode, run.stderr), (0, ""))

@@ -44,6 +44,7 @@ void keepControlsFile(const std::string& path, const std::vector<BindingEntry>& 
     std::ifstream file(path);
     if (!file) throw std::runtime_error("cannot open controls: " + path);
     const auto user = readBindingEntries(file, resolveKey, nameKey);
+    file.close();
     const auto merged = addMissingActions(user, defaults, resolveKey);
     if (merged.size() != user.size()) writeBindingFile(path, merged, resolveKey);
 }

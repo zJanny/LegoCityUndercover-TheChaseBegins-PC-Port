@@ -182,14 +182,6 @@ require(counts && counts->collected == 45 && counts->total == 711, "filled slot 
         LoadResult truncated = load(path);
         require(truncated.found && truncated.status == Status::Unreadable && !truncated.image, "short file");
 
-        ::setenv("XDG_DATA_HOME", "/xdg", 1);
-        require(defaultSavePath() == "/xdg/chase/savegame.dat", "XDG path");
-        ::setenv("XDG_DATA_HOME", "relative", 1);
-        ::setenv("HOME", "/home/u", 1);
-        require(defaultSavePath() == "/home/u/.local/share/chase/savegame.dat", "relative XDG ignored");
-        ::unsetenv("XDG_DATA_HOME");
-        require(defaultSavePath() == "/home/u/.local/share/chase/savegame.dat", "HOME fallback");
-
         std::filesystem::remove_all(dir);
     } catch (const std::exception& error) {
         std::cerr << "FAIL: " << error.what() << '\n';

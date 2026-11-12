@@ -2,27 +2,27 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash",
-        "hooks": [{"type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/claude_hooks.py\" pre-bash", "timeout": 180}]
+        "matcher": "Bash|PowerShell",
+        "hooks": [{"type": "command", "command": "cd \"${CLAUDE_PROJECT_DIR}\"; ./.claude/run_hook.cmd pre-bash", "timeout": 180}]
       },
       {
         "matcher": "Agent",
-        "hooks": [{"type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/claude_hooks.py\" pre-agent", "timeout": 10}]
+        "hooks": [{"type": "command", "command": "cd \"${CLAUDE_PROJECT_DIR}\"; ./.claude/run_hook.cmd pre-agent", "timeout": 10}]
       },
       {
         "matcher": "Read|Edit|Write|Glob|Grep",
-        "hooks": [{"type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/claude_hooks.py\" pre-tool", "timeout": 10}]
+        "hooks": [{"type": "command", "command": "cd \"${CLAUDE_PROJECT_DIR}\"; ./.claude/run_hook.cmd pre-tool", "timeout": 10}]
       }
     ],
     "SubagentStop": [
       {
-        "hooks": [{"type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/claude_hooks.py\" subagent-stop", "timeout": 10}]
+        "hooks": [{"type": "command", "command": "cd \"${CLAUDE_PROJECT_DIR}\"; ./.claude/run_hook.cmd subagent-stop", "timeout": 10}]
       }
     ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
-        "hooks": [{"type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/claude_hooks.py\" post-edit", "timeout": 60}]
+        "hooks": [{"type": "command", "command": "cd \"${CLAUDE_PROJECT_DIR}\"; ./.claude/run_hook.cmd post-edit", "timeout": 60}]
       }
     ]
   }

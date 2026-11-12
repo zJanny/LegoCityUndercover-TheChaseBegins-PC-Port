@@ -1,6 +1,6 @@
 # Project status
 
-**The game is not playable on PC yet.** This project is at an early stage. The goal is a port that plays exactly like the original 3DS game, from start to finish, on Linux first. Windows comes after the Linux version is finished. Extra features come after that. Today the project can read the game's files and show many of them, and one level can be walked through. The rest of the game does not run yet.
+**The game is not playable on PC yet.** This project is at an early stage. The goal is a port that plays exactly like the original 3DS game, from start to finish, on Linux first. The Windows version is work in progress ([on Windows](#on-windows)). Extra features come after that. Today the project can read the game's files and show many of them, and one level can be walked through. The rest of the game does not run yet.
 
 ## What works
 
@@ -179,6 +179,27 @@
   - Only the completion totals, the last level, the missions done, unlocks, level variables, studs, super bricks and the play time are understood.
   - `chase-game` writes the save at the original's save requests, and `chase-game --save` starts from a slot.
   - Collected items and object states are not saved or loaded.
+
+## On Windows
+
+The Windows version is work in progress. It runs the same code as the Linux version. Setup: [Getting started](getting-started.md#on-windows).
+
+What works on Windows 11:
+
+- Building all programs with MSYS2 (UCRT64, GCC and Ninja), without warnings.
+- Extracting the game data and running the conversion tools in Git Bash.
+- Starting `chase-game` from the MSYS2 UCRT64 window. It opens a window and shows the level.
+- The tests of `ctest`. All of them pass, are skipped with a reason or are disabled with a reason.
+
+What does not work on Windows yet:
+
+- The tests that run `chase-game` or the model viewer without a window are skipped, and the tests of their pictures are disabled. SDL's offscreen mode needs a library that MSYS2 does not have.
+- The save file goes to `.local\share\chase` in the home folder of the shell, not to `%APPDATA%\chase`.
+- The tools need `CHASE_ASSETS_LIB` to find the Windows library ([Extracting game data](extracting-game-data.md#3-unpack-the-asset-archive)).
+- The debug overlay shows no memory value.
+- Some of the Python tests fail on Windows.
+
+The details are in the Windows feature pages: [build](plans/features/windows-build.md), [platform](plans/features/windows-platform.md) and [tests](plans/features/windows-tests.md).
 
 ## For developers
 

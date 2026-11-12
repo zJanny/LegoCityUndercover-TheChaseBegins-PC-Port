@@ -152,13 +152,13 @@ def load_state(text):
 def write_state(path, state):
     path = Path(path)
     temporary = path.with_name(path.name + '.new')
-    temporary.write_text(json.dumps(state))
+    temporary.write_text(json.dumps(state), encoding='utf-8', newline='\n')
     os.replace(temporary, path)
 
 
 def update_state(path, **changes):
     try:
-        state = load_state(Path(path).read_text())
+        state = load_state(Path(path).read_text(encoding='utf-8'))
     except (OSError, MotionError):
         state = level_state()
     state.update(changes)
@@ -251,7 +251,7 @@ def answer(datagram):
 
 def read_state(path, previous):
     try:
-        return load_state(Path(path).read_text())
+        return load_state(Path(path).read_text(encoding='utf-8'))
     except (OSError, MotionError) as error:
         print('motion state not read: %s' % error, file=sys.stderr, flush=True)
         return previous

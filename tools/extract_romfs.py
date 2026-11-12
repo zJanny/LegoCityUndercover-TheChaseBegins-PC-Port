@@ -198,7 +198,7 @@ def extract(path, output):
                           'ivfc_verified': True},
                 'file_count': len(entries), 'total_bytes': sum(e['size'] for e in entries),
                 'files': entries}
-    (output / 'romfs-manifest.json').write_text(json.dumps(manifest, indent=1) + '\n')
+    (output / 'romfs-manifest.json').write_text(json.dumps(manifest, indent=1) + '\n', encoding='utf-8', newline='\n')
     return manifest
 
 

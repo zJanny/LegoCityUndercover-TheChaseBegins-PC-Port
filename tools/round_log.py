@@ -63,9 +63,9 @@ def name_uses(root: Path, name: str) -> list[str]:
             continue
         for number, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
             if line.startswith(("- ", "| ")) and pattern.search(line):
-                uses.append(f"{path.relative_to(root)}:{number}")
+                uses.append(f"{path.relative_to(root).as_posix()}:{number}")
     if (root / ROUND_FOLDERS / name).exists():
-        uses.append(str(ROUND_FOLDERS / name) + " (local)")
+        uses.append((ROUND_FOLDERS / name).as_posix() + " (local)")
     return uses
 
 

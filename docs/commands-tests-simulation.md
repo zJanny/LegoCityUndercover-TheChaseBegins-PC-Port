@@ -73,6 +73,8 @@ Back to the [documentation list](../README.md#more-documentation).
 | `party-manager` | The disguise party: the party a level starts with, adding and removing members, the swap to the next member, SetPartyCharacter, UnlockCharacter and LockCharacter, with made-up parties and scripts, no game data needed |
 | `object-rooms` | The rule that moves an object to another room when it leaves its room's box, and which rooms are checked each update, with made-up rooms, no game data needed |
 | `save-core` | Save file checks, synthetic data, no SDL |
+| `save-default-path` | Default save path from `XDG_DATA_HOME` and `HOME`; skipped on Windows, where the save folder is not built yet |
+| `file-replace` | Atomic replacement of the save file on the platform of the build (POSIX or Windows): new file, replace, no temporary file left, errors for a missing folder and a folder as target |
 | `save-real-data` | Completion totals from the game tables; needs `artifacts/romfs`, skips with code 77 otherwise |
 
 ## Other test pages

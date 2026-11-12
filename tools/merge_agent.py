@@ -76,7 +76,7 @@ class MergeError(Exception):
 
 def keep_both_sides(path: Path) -> None:
     lines = path.read_text(encoding="utf-8").split("\n")
-    path.write_text("\n".join(line for line in lines if not CONFLICT_MARKER.match(line)), encoding="utf-8")
+    path.write_text("\n".join(line for line in lines if not CONFLICT_MARKER.match(line)), encoding="utf-8", newline='\n')
 
 
 def resolve_progress_conflicts(text: str) -> str | None:
@@ -115,13 +115,13 @@ def resolve_generated(root: Path, unmerged: list[str]) -> list[str]:
         resolved = resolve_progress_conflicts((root / "README.md").read_text(encoding="utf-8"))
         if resolved is None:
             return remaining
-        (root / "README.md").write_text(resolved, encoding="utf-8")
+        (root / "README.md").write_text(resolved, encoding="utf-8", newline='\n')
         remaining.remove("README.md")
     if "docs/progress-trend.svg" in remaining:
         run(["git", "checkout", "--ours", "--", "docs/progress-trend.svg"], root)
         remaining.remove("docs/progress-trend.svg")
     if readme_files:
-        run(["python3", "tools/progress_report.py", "--update-readme", "README.md"], root)
+        run([sys.executable, "tools/progress_report.py", "--update-readme", "README.md"], root)
         run(["git", "add", "README.md", "docs/progress-trend.svg"], root)
     return remaining
 
@@ -233,7 +233,8 @@ def described(bad: list[tuple[str, str]]) -> str:
 
 
 def build_warning_free(root: Path, env: dict[str, str] | None = None) -> None:
-    run(["cmake", "-S", ".", "-B", "build", "-DCMAKE_BUILD_TYPE=RelWithDebInfo"], root, capture=True, env=env)
+    run(["cmake", "-S", ".", "-B", "build", "-DCMAKE_BUILD_TYPE=RelWithDebInfo", f"-DPython3_EXECUTABLE={sys.executable}"],
+        root, capture=True, env=env)
     result = run(["cmake", "--build", "build", "-j", str(JOBS)], root, check=False, capture=True, env=env)
     output = result.stdout + result.stderr
     if result.returncode != 0:
@@ -244,7 +245,7 @@ def build_warning_free(root: Path, env: dict[str, str] | None = None) -> None:
 
 
 def fix_docs(root: Path) -> None:
-    run(["python3", "tools/check_doc_links.py", "--root", ".", "--fix"], root)
+    run([sys.executable, "tools/check_doc_links.py", "--root", ".", "--fix"], root)
     run(["git", "add", "-A", "--", "docs"], root)
 
 
@@ -280,7 +281,7 @@ def refresh_census(root: Path) -> None:
 
 
 def update_priorities(root: Path) -> None:
-    run(["python3", "tools/priority_report.py", "--update", PRIORITIES], root, capture=True)
+    run([sys.executable, "tools/priority_report.py", "--update", PRIORITIES], root, capture=True)
     run(["git", "add", PRIORITIES], root)
 
 
@@ -297,7 +298,7 @@ def fingerprint(root: Path) -> str:
 
 def recorded_fingerprint(root: Path) -> str | None:
     path = verified_path(root)
-    return path.read_text().strip() if path.exists() else None
+    return path.read_text(encoding='utf-8').strip() if path.exists() else None
 
 
 def run_checks(root: Path, skip_heavy: bool = False) -> None:
@@ -315,9 +316,9 @@ def run_checks(root: Path, skip_heavy: bool = False) -> None:
     print("== doc fixes (session log rotation, closed items, anchors)")
     fix_docs(root)
     print("== doc links")
-    run(["python3", "tools/check_doc_links.py", "--root", "."], root)
+    run([sys.executable, "tools/check_doc_links.py", "--root", "."], root)
     print("== README progress section")
-    run(["python3", "tools/progress_report.py", "--update-readme", "README.md"], root)
+    run([sys.executable, "tools/progress_report.py", "--update-readme", "README.md"], root)
     run(["git", "add", "README.md", "docs/progress-trend.svg"], root)
     print("== priorities")
     update_priorities(root)
@@ -325,8 +326,8 @@ def run_checks(root: Path, skip_heavy: bool = False) -> None:
         print("== ctest")
         run(["ctest", "--test-dir", "build", "--output-on-failure", "-j", str(JOBS)], root)
         print("== python tests")
-        run(["python3", "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"], root)
-        verified_path(root).write_text(fingerprint(root) + "\n")
+        run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"], root)
+        verified_path(root).write_text(fingerprint(root) + "\n", encoding='utf-8', newline='\n')
     print("== staged")
     print(git(root, "diff", "--cached", "--stat").rstrip())
     print("checks passed")
@@ -433,7 +434,7 @@ def remove_worktree_and_branch(root: Path, branch: str) -> None:
 
 def read_message(message_file: Path) -> str:
     try:
-        message = message_file.read_text().rstrip()
+        message = message_file.read_text(encoding='utf-8').rstrip()
     except OSError as error:
         raise MergeError(f"--message: cannot read '{message_file}': {error.strerror}")
     if not message:
@@ -501,7 +502,7 @@ def append_log_line(root: Path, progress: Path, text: str) -> None:
     entry = f"- {datetime.now().astimezone().isoformat(timespec='seconds')} — {text}"
     while lines and not lines[-1].strip():
         lines.pop()
-    progress.write_text("\n".join(lines + [entry]) + "\n", encoding="utf-8")
+    progress.write_text("\n".join(lines + [entry]) + "\n", encoding="utf-8", newline='\n')
     run(["git", "add", "--", relative], root)
     print(f"appended the round-end line to {relative}")
 
@@ -509,7 +510,7 @@ def append_log_line(root: Path, progress: Path, text: str) -> None:
 def bookkeeping(root: Path, holders: list[str], log: list[str] | None) -> None:
     logged = read_log_line(root, log[0], Path(log[1])) if log else None
     for holder in holders_to_release(root, holders):
-        run(["python3", "tools/check_doc_links.py", "--root", ".", "--release", holder], root, capture=True)
+        run([sys.executable, "tools/check_doc_links.py", "--root", ".", "--release", holder], root, capture=True)
         run(["git", "add", "--", RESERVATIONS], root)
         print(f"released the ID ranges of {holder}")
     if logged:
@@ -538,8 +539,8 @@ def close(root: Path, message_file: Path, holders: list[str], log: list[str] | N
         raise MergeError("main has uncommitted changes")
     bookkeeping(root, holders, log)
     fix_docs(root)
-    run(["python3", "tools/check_doc_links.py", "--root", "."], root)
-    run(["python3", "tools/progress_report.py", "--update-readme", "README.md"], root)
+    run([sys.executable, "tools/check_doc_links.py", "--root", "."], root)
+    run([sys.executable, "tools/progress_report.py", "--update-readme", "README.md"], root)
     run(["git", "add", "README.md", "docs/progress-trend.svg"], root)
     subprocess.run(["git", "commit", "-q", "-F", "-"], cwd=root, input=message + "\n", text=True, check=True)
     print(git(root, "log", "--oneline", "-1").rstrip())
@@ -657,7 +658,7 @@ def pull_request_checks(tree: Path, env: dict[str, str]) -> list[str]:
 def remove_tree(place: Path) -> None:
     def writable_again(function, path, _error):
         os.chmod(os.path.dirname(path), 0o700)
-        if os.path.isdir(path) and not os.path.islink(path):
+        if os.path.lexists(path) and not os.path.islink(path):
             os.chmod(path, 0o700)
         function(path)
 

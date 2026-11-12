@@ -51,7 +51,7 @@ def regenerate(root, write):
         changed.append(README)
         current = section
         if write:
-            readme_path.write_text(progress_report.replace_section(readme, section), encoding='utf-8')
+            readme_path.write_text(progress_report.replace_section(readme, section), encoding='utf-8', newline='\n')
     if not progress_trend.trend_is_current(root, current):
         changed.append(str(TREND))
         if write:
@@ -62,7 +62,7 @@ def regenerate(root, write):
     if not priorities_path.exists() or priorities_path.read_text(encoding='utf-8') != priorities:
         changed.append(str(PRIORITIES))
         if write:
-            priorities_path.write_text(priorities, encoding='utf-8')
+            priorities_path.write_text(priorities, encoding='utf-8', newline='\n')
     return changed
 
 

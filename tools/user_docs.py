@@ -80,7 +80,7 @@ def user_doc_errors(root):
         known = repository_options(root, files)
         for path in docs:
             for number, fragment in code_fragments(path):
-                where = f"{path.relative_to(root)}:{number}"
+                where = f"{path.relative_to(root).as_posix()}:{number}"
                 for option in OPTION.findall(fragment):
                     if option not in known:
                         errors.append(f"{where}: user-doc-option-unknown: {option} is in no source, tool or test; remove it from the doc or fix its name")
@@ -91,5 +91,5 @@ def user_doc_errors(root):
         for number, fragment in code_fragments(path):
             for target in PATH.findall(fragment):
                 if "*" not in target and not (root / target).exists():
-                    errors.append(f"{path.relative_to(root)}:{number}: user-doc-path-missing: {target} does not exist")
+                    errors.append(f"{path.relative_to(root).as_posix()}:{number}: user-doc-path-missing: {target} does not exist")
     return errors

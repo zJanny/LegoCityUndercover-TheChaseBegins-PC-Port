@@ -6,6 +6,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 import check_local_data
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fixtures import isolate_git_environment  # noqa: E402
+
+isolate_git_environment()
 
 
 def problems(name, text):
@@ -37,7 +41,7 @@ class CheckLocalDataTest(unittest.TestCase):
     def test_exemption_is_narrow(self) -> None:
         self.assertEqual(problems("docs/commands.md", "Screenshots go to `artifacts/oracle/out/`."), [])
         self.assertEqual(problems("docs/commands.md", "Open artifacts/oracle/r40-servant-out/a.png"), [1])
-        self.assertEqual(problems("tests/save_test.cpp", 'setenv("HOME", "/home/u/x", 1)'), [])
+        self.assertEqual(problems("tests/save_default_path_test.cpp", 'setenv("HOME", "/home/u/x", 1)'), [])
         self.assertEqual(problems("tests/other.cpp", 'setenv("HOME", "/home/u/x", 1)'), [1])
 
     def test_concrete_paths_fail_in_every_exempt_file_class(self) -> None:
@@ -132,10 +136,10 @@ class CheckLocalDataTest(unittest.TestCase):
             root = Path(tmp)
             subprocess.run(["git", "init", "-q"], cwd=root, check=True)
             (root / "tools" / "oracle").mkdir(parents=True)
-            (root / "tools" / "oracle" / "make.txt").write_text("frames 2\nsavestate made-here\n")
-            (root / "tools" / "oracle" / "use.txt").write_text("loadstate made-here\nloadstate @ROLE\nloadstate user-state\n")
+            (root / "tools" / "oracle" / "make.txt").write_text("frames 2\nsavestate made-here\n", encoding='utf-8', newline='\n')
+            (root / "tools" / "oracle" / "use.txt").write_text("loadstate made-here\nloadstate @ROLE\nloadstate user-state\n", encoding='utf-8', newline='\n')
             (root / "docs").mkdir()
-            (root / "docs" / "a.md").write_text("--state made-here\n--state other-state\n")
+            (root / "docs" / "a.md").write_text("--state made-here\n--state other-state\n", encoding='utf-8', newline='\n')
             subprocess.run(["git", "add", "tools", "docs"], cwd=root, check=True)
             errors = check_local_data.check(root)
             self.assertEqual(len(errors), 2)
@@ -148,7 +152,7 @@ class CheckLocalDataTest(unittest.TestCase):
             root = Path(tmp)
             subprocess.run(["git", "init", "-q"], cwd=root, check=True)
             (root / "docs" / "re").mkdir(parents=True)
-            (root / "docs" / "re" / "x.md").write_text("measured on this machine\n")
+            (root / "docs" / "re" / "x.md").write_text("measured on this machine\n", encoding='utf-8', newline='\n')
             subprocess.run(["git", "add", "docs"], cwd=root, check=True)
             self.assertEqual(check_local_data.check(root), [])
             self.assertEqual(len(check_local_data.check_warnings(root)), 1)
@@ -161,9 +165,9 @@ class CheckLocalDataTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             subprocess.run(["git", "init", "-q"], cwd=root, check=True)
-            (root / "bad.md").write_text("x\nartifacts/oracle/states/a.cst\n")
-            (root / "good.md").write_text("artifacts/game\n")
-            (root / "untracked.md").write_text("artifacts/scratch/z\n")
+            (root / "bad.md").write_text("x\nartifacts/oracle/states/a.cst\n", encoding='utf-8', newline='\n')
+            (root / "good.md").write_text("artifacts/game\n", encoding='utf-8', newline='\n')
+            (root / "untracked.md").write_text("artifacts/scratch/z\n", encoding='utf-8', newline='\n')
             subprocess.run(["git", "add", "bad.md", "good.md"], cwd=root, check=True)
             errors = check_local_data.check(root)
             self.assertEqual(len(errors), 1)

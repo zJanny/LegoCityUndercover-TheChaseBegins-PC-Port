@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <sstream>
@@ -139,7 +140,7 @@ void writeBindingFile(const std::string& path, const std::vector<BindingEntry>& 
             throw std::runtime_error("Cannot write " + temporary);
         }
     }
-    if (std::rename(temporary.c_str(), path.c_str()) != 0) {
+    if (std::error_code error; std::filesystem::rename(temporary, path, error), error) {
         std::remove(temporary.c_str());
         throw std::runtime_error("Cannot replace " + path);
     }

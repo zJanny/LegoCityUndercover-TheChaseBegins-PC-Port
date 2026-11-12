@@ -10,6 +10,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parents[1] / 'tools'))
 import progress_report as report  # noqa: E402
 import progress_trend as trend  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fixtures import isolate_git_environment  # noqa: E402
+
+isolate_git_environment()
 
 
 def section(script=(34, 239), objects=(104, 506), open_work=(208, 106), code=(1087, 7575, '14.3'), date='2026-10-14', commit='5cf4da3'):
@@ -41,7 +45,7 @@ def git(directory, *args):
 def make_repo(directory, versions):
     git(directory, 'init', '-q')
     for number, text in enumerate(versions):
-        (directory / 'README.md').write_text(readme(text), encoding='utf-8')
+        (directory / 'README.md').write_text(readme(text), encoding='utf-8', newline='\n')
         git(directory, 'add', 'README.md')
         git(directory, 'commit', '-q', '-m', 'version %d' % number)
 
@@ -157,7 +161,7 @@ class TrendCheckTests(unittest.TestCase):
             make_repo(root, [current])
             (root / 'docs').mkdir()
             readme_path = root / 'README.md'
-            readme_path.write_text(readme(current), encoding='utf-8')
+            readme_path.write_text(readme(current), encoding='utf-8', newline='\n')
             original_collect = report.collect
             report.collect = lambda *args: fake
             arguments = ['--root', str(root), '--check', str(readme_path)]
@@ -165,7 +169,7 @@ class TrendCheckTests(unittest.TestCase):
                 with contextlib.redirect_stdout(io.StringIO()) as output:
                     self.assertEqual(report.main(arguments), 1)
                 self.assertIn('docs/progress-trend.svg is stale', output.getvalue())
-                (root / 'docs' / 'progress-trend.svg').write_text('<svg/>\n', encoding='utf-8')
+                (root / 'docs' / 'progress-trend.svg').write_text('<svg/>\n', encoding='utf-8', newline='\n')
                 with contextlib.redirect_stdout(io.StringIO()):
                     self.assertEqual(report.main(arguments), 1)
                 trend.write_trend(root, current)

@@ -88,7 +88,7 @@ def extract(fib, output, names_csv=None):
                 'entry_count': entry_count, 'extracted': len(files),
                 'named': sum(r['named'] for r in files), 'codec_counts': codecs,
                 'unsupported': unsupported, 'files': files}
-    (output / 'fib-manifest.json').write_text(json.dumps(manifest, indent=1) + '\n')
+    (output / 'fib-manifest.json').write_text(json.dumps(manifest, indent=1) + '\n', encoding='utf-8', newline='\n')
     return manifest
 
 

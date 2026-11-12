@@ -1,11 +1,42 @@
 import json
+import os
 import struct
 import subprocess
 import sys
+import tempfile
+import unittest
 import zlib
 from pathlib import Path
 
 TOOLS = Path(__file__).parents[1] / 'tools'
+
+KEPT_GIT_VARIABLES = frozenset(('GIT_EXEC_PATH', 'GIT_TERMINAL_PROMPT'))
+
+
+def is_git_environment_variable(name):
+    return name.upper().startswith('GIT_') and name.upper() not in KEPT_GIT_VARIABLES
+
+
+def without_git_environment(environment):
+    return {name: value for name, value in environment.items() if not is_git_environment_variable(name)}
+
+
+def isolate_git_environment():
+    for name in [name for name in os.environ if is_git_environment_variable(name)]:
+        del os.environ[name]
+
+
+def symlinks_allowed():
+    with tempfile.TemporaryDirectory() as scratch:
+        try:
+            (Path(scratch) / 'link').symlink_to(Path(scratch), target_is_directory=True)
+        except (OSError, NotImplementedError):
+            return False
+    return True
+
+
+requires_symlinks = unittest.skipUnless(
+    symlinks_allowed(), 'creating symbolic links needs a privilege the current user lacks (Windows without Developer Mode)')
 
 
 def pooled(blocks):

@@ -71,10 +71,10 @@ class RoundNameTest(unittest.TestCase):
             root = Path(tmp)
             plans = root / "docs" / "plans"
             (plans / "features").mkdir(parents=True)
-            (plans / "linux-port.progress.md").write_text(LOG)
+            (plans / "linux-port.progress.md").write_text(LOG, encoding='utf-8', newline='\n')
             (plans / "features" / "id-reservations.md").write_text(
                 "# ID reservations\n\nHeld by agents named like `20261021-docs-A`.\n\n"
-                "| F | 1 | 2 | 20261020-cars-B | 2026-10-20T10:00:01+02:00 |\n")
+                "| F | 1 | 2 | 20261020-cars-B | 2026-10-20T10:00:01+02:00 |\n", encoding='utf-8', newline='\n')
             (root / "artifacts" / "rounds" / "20261019-docs").mkdir(parents=True)
             code, out, _ = run(root, "name", "20261021-audio")
             self.assertEqual(code, 1)
@@ -101,8 +101,8 @@ class AuditTest(unittest.TestCase):
     def make(self, tmp, log=LOG, archive=ARCHIVE):
         plans = Path(tmp) / "docs" / "plans"
         plans.mkdir(parents=True)
-        (plans / "linux-port.progress.md").write_text(log)
-        (plans / "linux-port.progress-archive.md").write_text(archive)
+        (plans / "linux-port.progress.md").write_text(log, encoding='utf-8', newline='\n')
+        (plans / "linux-port.progress-archive.md").write_text(archive, encoding='utf-8', newline='\n')
         return Path(tmp)
 
     def test_counts_old_and_new_round_ends_once(self) -> None:

@@ -3,6 +3,10 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fixtures import isolate_git_environment  # noqa: E402
+
+isolate_git_environment()
 
 SCRIPT = Path(__file__).resolve().parent.parent / "tools" / "check_on_main.py"
 

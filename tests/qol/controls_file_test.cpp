@@ -184,12 +184,16 @@ void fileIsWrittenAtomically() {
         old << "Up key W hold\n";
     }
     qol::writeBindingFile(path, sampleEntries(), resolve);
-    std::ifstream written(path);
-    require(parse(std::string(std::istreambuf_iterator<char>(written), {})) == sampleEntries(), "the file holds the entries");
+    {
+        std::ifstream written(path);
+        require(parse(std::string(std::istreambuf_iterator<char>(written), {})) == sampleEntries(), "the file holds the entries");
+    }
     require(!std::filesystem::exists(path + ".tmp"), "no temporary file left");
     require(throws([&] { qol::writeBindingFile(path, {{"Jump", "key", "W", "hold"}}, resolve); }), "bad entries rejected");
-    std::ifstream kept(path);
-    require(parse(std::string(std::istreambuf_iterator<char>(kept), {})) == sampleEntries(), "a rejected write keeps the old file");
+    {
+        std::ifstream kept(path);
+        require(parse(std::string(std::istreambuf_iterator<char>(kept), {})) == sampleEntries(), "a rejected write keeps the old file");
+    }
     require(throws([&] { qol::writeBindingFile((directory / "missing" / "controls.cfg").string(), sampleEntries(), resolve); }), "unwritable folder");
     std::filesystem::remove_all(directory);
 }
