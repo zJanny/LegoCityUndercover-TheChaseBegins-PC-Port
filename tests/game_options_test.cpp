@@ -107,6 +107,10 @@ void testValidValues() {
     requireEqual(std::to_string(*parseArgs({"--super-bricks", "0"}).superBricks), "0", "--super-bricks 0");
     requireEqual(std::to_string(*parseArgs({"--super-bricks", "4294967295"}).superBricks), "4294967295", "--super-bricks maximum");
 
+    if (parseArgs({}).extras) fail("--extras set by default");
+    requireEqual(std::to_string(*parseArgs({"--extras", "524288"}).extras), "524288", "valid --extras");
+    requireEqual(std::to_string(*parseArgs({"--extras", "4294967295"}).extras), "4294967295", "--extras maximum");
+
     const game_options::Options front = parseArgs({"--front-script", "until language 60; run 0.5; press A; shot x"});
     requireEqual(front.frontScript, "until language 60; run 0.5; press A; shot x", "valid --front-script text");
 }
@@ -140,6 +144,10 @@ void testRejections() {
     expectRejected({"--super-bricks"}, "--super-bricks: missing value: ''");
     expectRejected({"--super-bricks", "many"}, "--super-bricks: not a whole number: 'many'");
     expectRejected({"--super-bricks", "-1"}, "--super-bricks: out of range, allowed 0 to 4294967295: '-1'");
+    expectRejected({"--extras"}, "--extras: missing value: ''");
+    expectRejected({"--extras", "all"}, "--extras: not a whole number: 'all'");
+    expectRejected({"--extras", "-1"}, "--extras: out of range, allowed 0 to 4294967295: '-1'");
+    expectRejected({"--extras", "4294967296"}, "--extras: out of range, allowed 0 to 4294967295: '4294967296'");
     expectRejected({"--super-bricks", "4294967296"}, "--super-bricks: out of range, allowed 0 to 4294967295: '4294967296'");
     expectRejected({"--super-bricks", "2.5"}, "--super-bricks: not a whole number: '2.5'");
 

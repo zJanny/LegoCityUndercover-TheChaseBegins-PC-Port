@@ -252,6 +252,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     superBricks.setTotal(shared.progress.superBricks);
     const chase::save::SlotStart saved = game_save::slotStartFor(shared.progress, archive, level, options.level);
     game_save::apply(saved, levelScripts);
+    if (options.extras) levelScripts.setRedBrickExtrasActive(*options.extras);
     saveLevelId = saved.level;
     fastTravelState.storyProgress = saved.storyProgress;
     saveLevelState = game_save::levelStateInput(saved, levelScripts);
@@ -316,6 +317,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     loadAttack(archive, placedCollisions);
     loadCharacterTakedowns(archive);
     loadCharacterArrest(archive);
+    loadCopWhistle(archive);
     loadObjectiveBoxes(placedCollisions);
     runtime::applyObjectCollisionState(collision, objectState);
     doors = game_doors::loadDoors(archive, level, classOf, placedCollisions, placedInstances);

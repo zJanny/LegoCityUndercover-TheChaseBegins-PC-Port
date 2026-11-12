@@ -7,6 +7,7 @@ Subtopic of [traffic-ai-driver-calls.md](traffic-ai-driver-calls.md). Feature fi
 - The push of one gathered character by a car (0x2baef0, the hook `push` of the contact slide) is read in full and ported as `makeTrafficCarPush`; its geometry call 0x1f49d8 (whether and how far a character is pushed) and the squash 0x233594 are not read and stay hooks (TRAFFIC-45, TRAFFIC-46). [§2026-11-12T00:04:45+01:00](#ts-20261112-000445)
 - The character's handler of message 45 (0x18e4c8 case 45, tail call 0x283d0c) is ported as `receiveCarPush`: event 17 to the character's state stack, event 18 back to a character sender, and for a vehicle of kind 179, 183 or 243 that has a forward speed of 5 or more (a reversing car never hits) with the character in front of it, message 0 (a hit of kind 3, weapon 1, force = the forward speed). What the states do with events 17 and 18 is not read (TRAFFIC-46). [§2026-11-12T00:04:45+01:00](#ts-20261112-000445)
 - The player state 0x1b2 COPWHISTLE: requested by the D-pad Down press edge in the player's idle state when the extras bit 19 is set, which is 0 after every load; its enter starts the clip row 709 and the traffic stop (until = clock + random % 60 + 120); its update returns to idle when the clip ends. The game clock 0x241098 is taken as one unit per update, a stand-in (TRAFFIC-S33): the unit conflicts with SCRIPT-S247 / SCRIPT-S297 (2 per update) and is unread (SCRIPT-384). Ported as `copWhistleRequested`, `enterCopWhistle`, `updateCopWhistle`; not connected to the game (TRAFFIC-47). [§2026-11-12T00:04:45+01:00](#ts-20261112-000445)
+- The cop whistle is connected in `chase-game`: `PlayerCopWhistle` with the D-pad Down edge, the clip row 709 and the clock of `TrafficDriveStep::clock`; ctrl +0x13c is the carried object; `--extras MASK` sets the extras mask, so bit 19 (524288) is the only way to start it. The clock unit and the character row byte +0x20 stay open (TRAFFIC-59, TRAFFIC-60). [§2026-11-12T08:05:53+01:00](#ts-20261112-080553)
 
 <a id="ts-20261112-000445"></a>
 
@@ -32,3 +33,19 @@ Evidence: round 20261111-chase, agent 20261111-chase-F, 2026-11-12; llvm-objdump
 Unknowns:
 - 0x1f49d8 (the push vector and the shape test; it calls 0x287ac4, 0x21bb78, 0x250da8, 0x23f50c, 0x22ec3c and more), the squash 0x233594, and what the states do with events 17 and 18 (0x21e1d4 chain).
 - The clock value at the level start, the clip row 709 length, the menu toggle of extra 19 (what it is called) and the meaning of ctrl +0x13c and of the character row byte +0x20 = 3.
+
+<a id="ts-20261112-080553"></a>
+
+## 2026-11-12T08:05:53+01:00 — The cop whistle request, state and clock connected in chase-game (llvm-objdump of game.arm.elf only; no REA session, no emulator)
+
+Agent 20261112-traffic-E. Read again: the request in the player input 0x200354, 0x2008a4..0x200924, in order: 0x2369a8(20) (an unrelated call to 0x2840d4), then 0x2369a8(19) = 0, skip; ctrl +0x6c (hword at 108) = 1; the press count of pad slot 1 (halfword at record +0x10 of the pad table with stride 20) non-zero; the word ctrl +0x13c = 0; the byte +0x20 of the row `ctrl +0x2cc` x 0x28 of the character table (*0x372e10) = 3; then 0x2414b4(entity, ctrl +0x50, state, 0) asks for the state 0x1b2. This confirms the entry above.
+
+- **ctrl +0x13c is the carried object.** [carrying.md](carrying.md) (and carrying-animation.md) set it from the attach hook 0x2ce4a4 and read it as "something is carried". So the whistle needs empty hands; the port's `carry.carryingMode() != 0` stands for it.
+- **The byte +0x20 of the character row** is indexed by ctrl +0x2cc, the character enum of the player. Its meaning is not read; the port plays one player character and takes the byte as 3 (TRAFFIC-S43, TRAFFIC-60).
+- **The extras mask** `*0x374724` is 0 after a load, so the whistle never starts in a normal run, as in the original. The development option `--extras MASK` sets the mask for a run (bit 19 = 524288); the same mask answers `IsRedBrickExtraActive`. The menu that toggles bit 19 is not recovered.
+
+**Port.** `src/runtime/player_cop_whistle.*` (`PlayerCopWhistle`: the request through `copWhistleRequested`, the enter through `enterCopWhistle`, the update through `updateCopWhistle`); glue `src/game_cop_whistle.cpp`: the D-pad Down press edge is pad slot 1, the state is `playerControllerState` (idle only with free hands, outside vehicles and scripts), the clip row 709 is loaded from the player's animations and its length in updates ends the state (the arrest's rule), the clock is `gameClockAfter(update)` for the enter and for `TrafficDriveStep::clock`. While the state runs the player stands and plays the clip. The clip `whistle` (row 709) is in the player's class folder `models/char_minifig/class_police/` and is 22 updates long in the port's decoding; that it lives with the police class fits the character row byte +0x20 = 3 but is an inference, not read. Log lines: `cop whistle: player state 434 at update N`, `cop whistle: player state 1 IDLE at update N`. No binding is added: D-pad Down already has its keyboard binding ([controls.md](../controls.md)).
+
+Unknowns:
+- The clock unit and its value at the level start (TRAFFIC-59); the meaning of the character row byte +0x20 = 3 and the menu toggle of extra 19 (TRAFFIC-60).
+- Whether the clip's slot reports finished (kind 6) on the update the port ends the state; measured in neither.

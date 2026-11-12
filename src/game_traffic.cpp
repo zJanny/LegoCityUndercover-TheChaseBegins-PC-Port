@@ -211,6 +211,7 @@ void LevelSession::driveTrafficCars(float dt) {
     };
     chase::runtime::TrafficDriveStep step;
     step.dt = dt;
+    step.clock = chase::runtime::gameClockAfter(updatesForLog);
     step.lights = &trafficCarLights;
     std::vector<std::optional<std::size_t>> carOfVehicle(boardingVehicles.size());
     for (std::size_t car = 0; car < trafficBoarding.size(); ++car)

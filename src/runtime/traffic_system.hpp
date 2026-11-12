@@ -119,6 +119,7 @@ public:
     std::size_t pointOfCell(std::size_t cellIndex) const { return cellPoints_.at(cellIndex); }
     TrafficVec3 carPosition(std::size_t car) const { return manager_.cars().at(car).position; }
     const TrafficDrivers& drivers() const { return drivers_; }
+    TrafficDrivers& drivers() { return drivers_; }
 
 private:
     struct SpawnPoint {

@@ -365,9 +365,11 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
         const std::optional<runtime::ScriptRootStep> scriptRoot = scriptStep == runtime::PlayerStateStep::UserAnimation ? playerScriptAnimation.rootMotion(player->motion.facing) : std::nullopt;
         if (scriptRoot) runtime::applyScriptRootStep(*scriptRoot, player->motion, player->vertical, collision, dt);
         rideGroundEntity();
+        const std::optional<game_player::PlayerAnimation> whistling = scriptClip || boardingStep.takesControl ? std::nullopt : updateCopWhistle(!controlTaken);
         game_player::PlayerAnimation shown =
             boardingStep.takesControl ? applyBoarding(boardingStep)
             : scriptClip              ? game_player::PlayerAnimation{}
+            : whistling               ? *whistling
                                       : arrestMovePlayer(runtime::stickIntent(stick), !controlTaken && carry.allowsJump() && !detective.modeActive() && pad.slot(kSlotJumpButton).press > 0,
                                                          !controlTaken && pad.slot(kSlotConfirmButton).press > 0, pad.slot(kSlotButtonY).value > 0.0f, pad.slot(kSlotButtonA).value > 0.0f,
                                                          !controlTaken && carry.carryingMode() == 0 && !detective.modeActive(), dt);

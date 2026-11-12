@@ -188,7 +188,7 @@ if(EPOXY_FOUND)
   target_link_libraries(chase-viewer PRIVATE chase_render chase_audio chase_input chase_pad_events)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
   if(FFMPEG_FOUND)
-    add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_traffic_lights.cpp src/game_level.cpp src/game_pause_menu.cpp src/game_award_viewer.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_chase.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_pedestrians.cpp src/game_pedestrian_fade.cpp src/game_semi_trans.cpp src/game_pedestrian_rooms.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_shadows.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_ladder.cpp src/game_fence_vault.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp src/game_fast_travel.cpp src/game_key_pickup.cpp)
+    add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_traffic_lights.cpp src/game_level.cpp src/game_pause_menu.cpp src/game_award_viewer.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_chase.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_pedestrians.cpp src/game_pedestrian_fade.cpp src/game_semi_trans.cpp src/game_pedestrian_rooms.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_shadows.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_ladder.cpp src/game_fence_vault.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp src/game_fast_travel.cpp src/game_key_pickup.cpp src/game_cop_whistle.cpp)
     target_sources(chase-game PRIVATE src/game_pedestrian_blocking.cpp src/game_traffic.cpp src/game_traffic_bodies.cpp src/game_traffic_car_lights.cpp)
     target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/runtime/game_character_hit.cpp src/runtime/game_character_takedown.cpp src/runtime/game_character_arrest.cpp src/runtime/game_arrest_after_crash.cpp src/runtime/game_fall_arrest.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
     target_sources(chase-game PRIVATE src/game_debris_pickup.cpp)
@@ -2619,7 +2619,15 @@ if(TARGET chase-game)
     --script "0 0 80")
   set_tests_properties(game-traffic-bodies PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
     PASS_REGULAR_EXPRESSION "traffic car Traffic05: spawned at point 419 [^\n]* at update 0\n.*traffic car Traffic05: body joins the physics world at update 0\n.*traffic car Traffic03: removed at update 69\n.*traffic car Traffic03: body leaves the physics world at update 69")
-  set_property(TEST game-traffic game-traffic-natives game-traffic-path game-traffic-bodies APPEND PROPERTY LABELS needs-game-data slow)
+  # The whistle clip of the player's class folder is found and its length in updates read from the file (20261112-traffic-E, 2026-11-12: the port's own run).
+  add_test(NAME game-cop-whistle COMMAND chase-game
+    --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+    --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+    --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --save-out "${CMAKE_BINARY_DIR}/game-cop-whistle.dat"
+    --extras 524288 --script "0 0 2")
+  set_tests_properties(game-cop-whistle PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
+    PASS_REGULAR_EXPRESSION "cop whistle: clip 709, 22 updates")
+  set_property(TEST game-traffic game-traffic-natives game-traffic-path game-traffic-bodies game-cop-whistle APPEND PROPERTY LABELS needs-game-data slow)
 endif()
 
 target_sources(chase_runtime PRIVATE src/runtime/ai_driver_input.cpp src/runtime/vehicle_chase_events.cpp)
@@ -2658,11 +2666,15 @@ add_executable(traffic-character-gather-test tests/traffic_character_gather_test
 target_link_libraries(traffic-character-gather-test PRIVATE chase_runtime)
 target_compile_options(traffic-character-gather-test PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 add_test(NAME traffic-character-gather COMMAND traffic-character-gather-test)
-target_sources(chase_runtime PRIVATE src/runtime/traffic_car_push.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/traffic_car_push.cpp src/runtime/player_cop_whistle.cpp)
 add_executable(traffic-car-push-test tests/traffic_car_push_test.cpp)
 target_link_libraries(traffic-car-push-test PRIVATE chase_runtime)
 target_compile_options(traffic-car-push-test PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 add_test(NAME traffic-car-push COMMAND traffic-car-push-test)
+add_executable(player-cop-whistle-test tests/player_cop_whistle_test.cpp)
+target_link_libraries(player-cop-whistle-test PRIVATE chase_runtime)
+target_compile_options(player-cop-whistle-test PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
+add_test(NAME player-cop-whistle COMMAND player-cop-whistle-test)
 add_executable(node-view-cull-test tests/node_view_cull_test.cpp)
 target_link_libraries(node-view-cull-test PRIVATE chase_runtime)
 target_compile_options(node-view-cull-test PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)

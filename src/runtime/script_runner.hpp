@@ -147,6 +147,7 @@ public:
     float variable(const std::string& name) const;
     std::optional<float> variable(std::uint32_t nameHash) const;
     void setProgress(const ScriptProgress& progress) { progress_ = progress; }
+    void setRedBrickExtrasActive(std::uint32_t mask) { progress_.redBrickExtrasActive = mask; }
     void setVariable(std::uint32_t nameHash, float value) { variables_[nameHash] = value; }
     // Calls of functions without a handler, by lower-case name, in the order they were first called.
     const std::vector<std::string>& unhandledFunctions() const { return unhandledOrder_; }

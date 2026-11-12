@@ -25,7 +25,7 @@ constexpr double kAnyRealLow = std::numeric_limits<double>::lowest(), kAnyRealHi
 
 const char* const kUsage = "usage: chase-game [--fib F] [--names CSV] [--config CFG] [--gameplay] "
                            "[--level levels/levels/<name>/<name>_main.blvl] [--screenshot OUT.bmp] [--frames N] "
-                           "[--script \"X Y COUNT [BUTTONS];at X Y Z [FACING];touch X Y COUNT;...\"] [--save savegame.dat] [--save-out FILE] [--front-save savegame.dat] [--slot 0|1] [--start \"X Y Z\"] [--particle \"DEFINITION X Y Z\"] [--facing DEGREES] [--hide-room N] [--no-camera-collision] [--no-start-cutscenes] [--set-variable NAME=VALUE] [--super-bricks N] [--debug-overlay] [--sound-volume 0-10] [--music-volume 0-10] "
+                           "[--script \"X Y COUNT [BUTTONS];at X Y Z [FACING];touch X Y COUNT;...\"] [--save savegame.dat] [--save-out FILE] [--front-save savegame.dat] [--slot 0|1] [--start \"X Y Z\"] [--particle \"DEFINITION X Y Z\"] [--facing DEGREES] [--hide-room N] [--no-camera-collision] [--no-start-cutscenes] [--set-variable NAME=VALUE] [--super-bricks N] [--extras MASK] [--debug-overlay] [--sound-volume 0-10] [--music-volume 0-10] "
                            "[--front-script \"run 5; press A; until slot; ...\"] [--language 1-9] [--returning] [--window WIDTHxHEIGHT]";
 
 std::uint32_t buttonOf(char letter) {
@@ -139,6 +139,7 @@ bool applyOption(Options& o, const std::string& arg, const std::function<std::st
     else if (arg == "--call-script") o.callScripts.push_back(value());
     else if (arg == "--set-variable") parseVariable(o, value());
     else if (arg == "--super-bricks") o.superBricks = std::uint32_t(strict::integer(value(), 0, kMaxSuperBricks));
+    else if (arg == "--extras") o.extras = std::uint32_t(strict::integer(value(), 0, kMaxSuperBricks));
     else if (arg == "--save") { o.saveFile = value(); o.gameplay = true; }
     else if (arg == "--save-out") o.saveOut = value();
     else if (arg == "--front-save") o.frontSave = value();

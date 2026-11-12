@@ -55,6 +55,7 @@
 #include "runtime/vehicle_damage.hpp"
 #include "game_carry.hpp"
 #include "runtime/carry.hpp"
+#include "runtime/player_cop_whistle.hpp"
 #include "runtime/scanner.hpp"
 #include "runtime/switch_set.hpp"
 #include "runtime/ai_spawner.hpp"
@@ -360,6 +361,11 @@ private:
     game_player::PlayerAnimation arrestMovePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, bool attackHeld, bool arrestHeld,
                                                   bool attackAllowed, float dt);
     void updateCharacterArrests(float dt);
+    // The cop whistle state 0x1b2 (runtime/player_cop_whistle.hpp; glue src/game_cop_whistle.cpp).
+    chase::runtime::PlayerCopWhistle copWhistle;
+    bool copWhistleClipLoaded = false;
+    void loadCopWhistle(chase::assets::FuseArchive& archive);
+    std::optional<game_player::PlayerAnimation> updateCopWhistle(bool playerFree);
     // The arrest of a character that left a wrecked car (runtime/arrest_after_crash.hpp; glue src/runtime/game_arrest_after_crash.cpp).
     chase::runtime::CrashArrestTargets crashArrests;
     void characterLeftVehicle(const chase::runtime::CharacterLeftVehicle& event);

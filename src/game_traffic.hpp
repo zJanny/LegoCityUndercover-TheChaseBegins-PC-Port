@@ -50,6 +50,8 @@ public:
     // call disables the car's entity. Returns the node matrices to set.
     std::vector<runtime::TrafficCarMove> driveCars(const runtime::TrafficDriveStep& step, std::uint32_t update, assets::PlacedObjectState& state);
 
+    runtime::TrafficWhistleStop& whistle() { return system_.drivers().whistle(); }
+    runtime::GameRandom& random() { return random_; }
     std::size_t carCount() const { return system_.slots().size(); }
     const std::string& instance(std::size_t car) const { return system_.slots()[car].instance; }
     // The fade byte of a car (message 0x80000007).
