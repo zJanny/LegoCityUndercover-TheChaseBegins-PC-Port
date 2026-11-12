@@ -87,7 +87,7 @@ void QolWindow::syncControls(const std::string& controlsFile, InputState& input)
 void QolWindow::syncSeatedControls(const std::string& controlsFile, InputState& input, bool seated, bool screenOpen) {
     const auto vehicle = seatedControls_.update(enabled(Feature::PcControls), seated && !screenOpen);
     if (!vehicle) return;
-    input.rebind(*vehicle ? readVehicleBindings(controlsFile) : readActiveBindings(controlsFile));
+    input.rebindKeepingHeld(*vehicle ? readVehicleBindings(controlsFile) : readActiveBindings(controlsFile));
     std::cout << "PC vehicle controls " << (*vehicle ? "on" : "off") << '\n';
 }
 

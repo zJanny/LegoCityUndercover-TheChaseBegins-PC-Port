@@ -26,6 +26,7 @@ public:
     void event(Source source, int code, bool down, bool repeat = false);
     void reset();
     void rebind(std::vector<Binding> bindings);
+    void rebindKeepingHeld(std::vector<Binding> bindings);
     void fix(Action action, Source source, int code);
     void retargetFixed(Source source, int code, Action action);
     bool active(Action action) const;

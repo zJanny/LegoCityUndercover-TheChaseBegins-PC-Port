@@ -50,6 +50,7 @@ The user's words: "The controls should generally be rehauled as a QoL feature. S
 - Return key (the user, 2026-11-01, "Return = confirm (A)"): Return is A's second key next to E; pause (Start) is Escape only, with Keypad Enter as Start's second.
 - An existing `config/controls.pc.cfg` when the built-in set grows (the user, 2026-11-02, "Add missing keys"): the lead asked which rule applies when the built-in key set grows and the file already exists; every binding the user has is kept, and only the new actions are added with their default keys, each only if the key is free.
 - Vehicle set (the user, 2026-11-02, "Accept"): in a vehicle the PC set keeps the camera, Select, Start, Walk, F3 and F11 keys of the on-foot set and drops E, Return, the left mouse button, R and Up/Down as stick; W, S, Up and Down are pedals only.
+- Held keys across the set switch (the user, 2026-11-12, "Key stays held"): a key held through the switch between the on-foot and the vehicle set acts at once in the new set (W held on foot, the car accelerates); the F3 toggle carries over when action, key and mode match.
 - Keys while a screen is open (the user, 2026-11-02, "Accept"): while the pause screen or the award viewer is open and the player sits in a vehicle, the on-foot keys are used.
 - An action cleared completely (the user, 2026-11-02, "Comes back is fine"): an action with no key in `config/controls.pc.cfg` comes back with its default key at the next start.
 

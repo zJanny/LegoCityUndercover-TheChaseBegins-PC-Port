@@ -44,6 +44,17 @@ void InputState::reset() {
         }
 }
 void InputState::rebind(std::vector<Binding> bindings) { bindings_ = std::move(bindings); }
+void InputState::rebindKeepingHeld(std::vector<Binding> bindings) {
+    for (auto& next : bindings) {
+        for (const auto& old : bindings_) {
+            if (old.source != next.source || old.code != next.code) continue;
+            next.down = next.down || old.down;
+            if (next.mode == Mode::Toggle && old.mode == Mode::Toggle && old.action == next.action)
+                next.toggled = next.toggled || old.toggled;
+        }
+    }
+    bindings_ = std::move(bindings);
+}
 void InputState::fix(Action action, Source source, int code) {
     fixed_.push_back({action, source, code, Mode::Hold});
 }

@@ -254,6 +254,11 @@ if(TARGET chase_qol_paint)
   add_test(NAME qol-ui-menu COMMAND qol-ui-menu-test)
 endif()
 
+add_executable(qol-held-keys-switch-test held_keys_switch_test.cpp)
+target_link_libraries(qol-held-keys-switch-test PRIVATE chase_qol)
+target_compile_options(qol-held-keys-switch-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME qol-held-keys-switch COMMAND qol-held-keys-switch-test)
+
 if(TARGET chase_qol_window)
   add_executable(qol-escape-pc-controls-test escape_pc_controls_test.cpp)
   target_link_libraries(qol-escape-pc-controls-test PRIVATE chase_qol)

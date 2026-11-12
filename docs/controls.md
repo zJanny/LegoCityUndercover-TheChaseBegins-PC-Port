@@ -80,7 +80,7 @@ While the character sits in a vehicle (and no pause screen or award viewer is op
 | Turn the camera, Select, Start, Walk, debug overlay, full screen | as on foot |
 
 - E, Return, the left mouse button and R do nothing in a vehicle. There are no hand brake and siren keys because the game has no player input for them.
-- The keys switch when the character sits down and when he leaves. A key held at that moment has to be pressed again.
+- The keys switch when the character sits down and when he leaves. A key you hold at that moment stays held in the new set, and the debug overlay (F3) keeps its state, so nothing has to be pressed again.
 - The development runtime prints `PC vehicle controls on` and `PC vehicle controls off` at the switch.
 
 ### When the built-in set grows
