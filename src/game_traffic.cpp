@@ -165,6 +165,7 @@ void LevelSession::loadTraffic() {
             if (boardingVehicles[i].instance == name) trafficBoarding[car] = i;
     }
     loadTrafficBodies();
+    loadTrafficContact();
     setupTrafficCarLights();
 }
 
@@ -239,10 +240,15 @@ void LevelSession::driveTrafficCars(float dt) {
         body.halfExtents = {vehicle.boxHalf[0], vehicle.boxHalf[1], vehicle.boxHalf[2]};
         body.radius = std::sqrt(body.halfExtents[0] * body.halfExtents[0] + body.halfExtents[1] * body.halfExtents[1] + body.halfExtents[2] * body.halfExtents[2]);
         body.gearSpeed = levelScripts.vehicles().records()[boardingRecords[*index]].topSpeed;
+        readTrafficBody(car, body);
         return body;
     };
     step.bodies = trafficBodies.hooks(trafficBodyWorld);
-    for (const chase::runtime::TrafficCarMove& move : traffic.driveCars(step, updatesForLog, objectState)) {
+    step.now = trafficClock();
+    syncTrafficDriverFields(true);
+    const std::vector<chase::runtime::TrafficCarMove> moves = traffic.driveCars(step, updatesForLog, objectState);
+    syncTrafficDriverFields(false);
+    for (const chase::runtime::TrafficCarMove& move : moves) {
         const std::optional<std::size_t> index = trafficBoarding[move.car];
         if (!index) continue;
         chase::render::Mat4 matrix{};

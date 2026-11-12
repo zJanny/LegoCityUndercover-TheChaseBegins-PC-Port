@@ -23,4 +23,10 @@ assets::Matrix bodyOriginMatrix(const VehicleRigidBody& body);
 assets::Matrix wheelPoseMatrix(const WheelSuspension& suspension, const WheelSpinState& spin, std::size_t index, float distance,
                                const assets::Matrix& bodyMatrix);
 
+// The kinematic branch of 0x33aea8 (0x33afc4..0x33b084), docs/re/traffic-car-body.md: the wheel node's local matrix is the identity, turned by
+// pi about y and spun the other way when the mount x is negative, turned by the spin angle (w+0x80) about x, with the node's own local
+// position kept; times the matrix of the car's node. STAND-IN TRAFFIC-S38: the sign of the turn about x is the one of wheelPoseMatrix
+// (the dynamic pose 0x33929c), not read from 0x2354b4 for this branch.
+assets::Matrix kinematicWheelPoseMatrix(float spinAngle, float mountX, const std::array<float, 3>& localPosition, const assets::Matrix& nodeMatrix);
+
 }

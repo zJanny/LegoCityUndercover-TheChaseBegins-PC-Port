@@ -189,7 +189,7 @@ if(EPOXY_FOUND)
   target_compile_options(chase-viewer PRIVATE -Wall -Wextra -Wpedantic)
   if(FFMPEG_FOUND)
     add_executable(chase-game src/game.cpp src/game_options.cpp src/game_player.cpp src/game_carry.cpp src/game_scanner.cpp src/game_doors.cpp src/game_prop_parts.cpp src/game_traffic_lights.cpp src/game_level.cpp src/game_pause_menu.cpp src/game_award_viewer.cpp src/game_level_update.cpp src/game_vehicle.cpp src/game_vehicle_break.cpp src/game_vehicle_chase.cpp src/game_vehicle_place.cpp src/game_vehicle_camera.cpp src/game_level_rooms.cpp src/game_cutscene.cpp src/game_level_cutscene.cpp src/game_characters.cpp src/game_pedestrians.cpp src/game_pedestrian_fade.cpp src/game_semi_trans.cpp src/game_pedestrian_rooms.cpp src/game_particles.cpp src/game_level_natives.cpp src/game_detective.cpp src/game_use_spot.cpp src/game_objective_markers.cpp src/game_hand_items.cpp src/game_effects.cpp src/game_shadows.cpp src/game_vehicle_effects.cpp src/game_zipline.cpp src/game_brick_grab.cpp src/game_climb_bar.cpp src/game_acrobat_pole.cpp src/game_pole.cpp src/game_ladder.cpp src/game_fence_vault.cpp src/game_animals.cpp src/game_object_visibility.cpp src/game_nested_props.cpp src/game_super_buildit.cpp src/game_fast_travel.cpp src/game_key_pickup.cpp src/game_cop_whistle.cpp)
-    target_sources(chase-game PRIVATE src/game_pedestrian_blocking.cpp src/game_traffic.cpp src/game_traffic_bodies.cpp src/game_traffic_car_lights.cpp)
+    target_sources(chase-game PRIVATE src/game_pedestrian_blocking.cpp src/game_traffic.cpp src/game_traffic_bodies.cpp src/game_traffic_contact.cpp src/game_traffic_car_lights.cpp)
     target_sources(chase-game PRIVATE src/game_props_destructible.cpp src/game_prop_destroy.cpp src/game_character_death.cpp src/runtime/game_character_hit.cpp src/runtime/game_character_takedown.cpp src/runtime/game_character_arrest.cpp src/runtime/game_arrest_after_crash.cpp src/runtime/game_fall_arrest.cpp src/game_fall_apart.cpp src/game_stud_drops.cpp src/game_super_bricks.cpp)
     target_sources(chase-game PRIVATE src/game_debris_pickup.cpp)
     target_sources(chase-game PRIVATE src/game_switch.cpp src/game_switch_use.cpp)
@@ -1969,15 +1969,17 @@ if(BUILD_TESTING)
       PASS_REGULAR_EXPRESSION "script 1-3_Push_Done ended at update [0-9]+\n.*buildit 1-3_crane_bits: stud drop mode.*script 1-3_Crane_Build_it_done started at update [0-9]+\n.*switch 1-3_crane_switch: used at update [0-9]+\n.*switch 1-3_crane_switch: state 3 at update [0-9]+\n.*script 1-3_Start_Rescue_Lawnmower_man started at update [0-9]+\n.*player AI move: started at update [0-9]+ from [0-9. ]+\n.*player AI move: ended at update [0-9]+ at 987.288 [0-9.]+ 1077.79, [0-9]+ updates\n.*player AI move: 60 updates after the end the player is at 987.288 16.80[0-9]* 1077.79\n.*script 1-4_MissionStart started at update [0-9]+")
     # Mission 1-4, the chase (SCRIPT-422, 20261111-chase-B, 2026-11-12): 1-4_Hatch_Open plays cutscene 1_4_c, enables 1-4_Stolen_Vehicle and starts
     # 1-4_Car_Chase, whose VehicleSetChased puts the car's AI driver into state 5 along the level path 1-4_Vehicle_Path at speed 29; the car drives off
-    # on its physics body into the next room and breaks a lamp post. The update numbers are the port's, not measured in the original. VehicleSetChased
-    # also fills the target display with the car's hearts and portrait (0x230f04, 20261112-traffic-D, 2026-11-12; 5 hearts from the vehicle table row).
+    # on its physics body into the next room. Traffic04 spawns on its way at update 823 and the car hits it at update 826 (TRAFFIC-39, 20261112-traffic-A, 2026-11-12), which
+    # sends the traffic car into driver state 4 as a free body; the lamp post breaks at update 884. The update numbers are the port's, not measured in the original.
+    # VehicleSetChased also fills the target display with the car's hearts and portrait (0x230f04, 20261112-traffic-D, 2026-11-12; 5 hearts from the vehicle table row).
     add_test(NAME game-chase-1-4 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --save-out "${CMAKE_BINARY_DIR}/game-chase-1-4.dat"
       --call-script 1-4_Hatch_Open --script "0 0 900")
     set_tests_properties(game-chase-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
-      PASS_REGULAR_EXPRESSION "script 1-4_Car_Chase started at update [0-9]+\n.*target hearts 1-4_stolen_vehicle: 5 of 5 shown, portrait Sprites/portraits/musclecars_falchiongt.png at update 770 \\(not drawn, SCRIPT-455\\)\n.*vehicle 1-4_stolen_vehicle: driver state 5 at update 770\n.*vehicle 1-4_Stolen_Vehicle: room 17 -> 16 at update 832\n.*prop Lampost_42: smashed by 1-4_stolen_vehicle at update 881")
+      PASS_REGULAR_EXPRESSION "script 1-4_Car_Chase started at update [0-9]+\n.*target hearts 1-4_stolen_vehicle: 5 of 5 shown, portrait Sprites/portraits/musclecars_falchiongt.png at update 770 \\(not drawn, SCRIPT-455\\)\n.*vehicle 1-4_stolen_vehicle: driver state 5 at update 770\n.*traffic car Traffic04: hit, driver requests state 4 at update 826\n.*vehicle 1-4_Stolen_Vehicle: room 17 -> 16 at update 841\n.*prop Lampost_42: smashed by traffic04 at update 884"
+      FAIL_REGULAR_EXPRESSION "heart lost")
     # Mission 1-4, the arrival at the car showroom (SCRIPT-410): the player walks into the waypoint 1-4_Waypoint_01 from 13 units away, which starts
     # 1-4_ShowroomArrival; cutscene 1_4_a, the booster on the roof, the end of the script with the player at 1-4_P1_GoTo (577.484, 27.5656, 967.533 from the
     # placement of that dummy in the level data, read by 20261101-mission-C on 2026-11-01). The update numbers are the port's, not measured in the original.
@@ -2748,6 +2750,11 @@ add_executable(traffic-car-body-test tests/traffic_car_body_test.cpp)
 target_link_libraries(traffic-car-body-test PRIVATE chase_runtime chase_assets)
 target_compile_options(traffic-car-body-test PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
 add_test(NAME traffic-car-body COMMAND traffic-car-body-test)
+target_sources(chase_runtime PRIVATE src/runtime/traffic_car_contact_world.cpp)
+add_executable(traffic-car-contact-world-test tests/traffic_car_contact_world_test.cpp)
+target_link_libraries(traffic-car-contact-world-test PRIVATE chase_runtime chase_assets)
+target_compile_options(traffic-car-contact-world-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME traffic-car-contact-world COMMAND traffic-car-contact-world-test)
 add_executable(entity-update-list-test tests/entity_update_list_test.cpp)
 target_link_libraries(entity-update-list-test PRIVATE chase_runtime)
 target_compile_options(entity-update-list-test PRIVATE -Wall -Wextra -Wpedantic)

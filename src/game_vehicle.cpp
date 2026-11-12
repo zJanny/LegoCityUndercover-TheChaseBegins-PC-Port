@@ -100,7 +100,13 @@ void LevelSession::driveVehicles(float dt) {
         if (drive.wreck.active) continue;
         const runtime::VehicleAiRecord* chasedAi = levelScripts.vehicleAi().find(vehicle.instance);
         const bool chased = chasedAi && chasedAi->chased && !chasedAi->kinematic;
-        if (!runtime::vehicleHasDynamicBody(record, driven || drive.started || chased, objectState.isDisabled(vehicle.instance))) continue;
+        const std::optional<std::size_t> trafficCar = trafficCarOf(i);
+        const bool trafficDynamic = trafficCar && trafficBodyDynamic(*trafficCar);
+        if (trafficCar && !trafficDynamic && !driven && !chased) {
+            drive.started = drive.awake = drive.settled = drive.moved = false;
+            continue;
+        }
+        if (!runtime::vehicleHasDynamicBody(record, driven || drive.started || chased || trafficDynamic, objectState.isDisabled(vehicle.instance))) continue;
         const float massScale = chased ? runtime::kChasedCarMassScale : runtime::vehicleMassScale(massScaled && *massScaled == i);
         if (!drive.started) {
             drive.started = true;
@@ -109,6 +115,10 @@ void LevelSession::driveVehicles(float dt) {
             drive.massScale = massScale;
             drive.rigid = runtime::vehicleRigidBody(record, {vehicle.matrix[12], vehicle.matrix[13], vehicle.matrix[14]}, runtime::vehicleHeading(vehicle),
                                                     drive.shape.shapeLow, drive.shape.shapeHigh, massScale);
+            if (trafficCar) {
+                const runtime::AiVec3& carried = trafficBodies.body(*trafficCar).velocity;
+                drive.rigid.velocity = {carried[0], carried[1], carried[2]};
+            }
             drive.drivetrain = runtime::vehicleDrivetrain(record);
             drive.boxContacts = runtime::vehicleBoxContacts(drive.shape.collisionLow, drive.shape.collisionHigh, &vehicleBoxes);
             std::cout << "vehicle " << vehicle.instance << ": Bullet body, mass scale " << massScale << " at update " << updatesForLog << '\n';
@@ -129,16 +139,20 @@ void LevelSession::driveVehicles(float dt) {
                                                   runtime::vehicleCollisionBody(scaled.back(), drive.shape.collisionLow, drive.shape.collisionHigh, massScale), &drive.boxContacts};
         runtime::VehicleWorldBody body{i, &drive.rigid, &drive.drivetrain, &drive.awake, &scaled.back(), runtime::bodyInputs(command), floors.back() ? &*floors.back() : nullptr, &drive.wheels};
         body.controls.driver = driven;
+        body.playerVehicle = driven;
         if (const std::optional<runtime::BodyInputs> inputs = driveScriptCar(i, dt)) body.controls = *inputs;
+        if (trafficCar) body.controls = trafficBodyInputs[*trafficCar];
         body.destroyed = record.destroyed;
         if (driven) body.impact = [this, i](float speed, const runtime::ContactOther& other, const runtime::Vector3& point) { vehicleImpact(i, speed, other, point); };
         else if (const runtime::VehicleAiRecord* ai = levelScripts.vehicleAi().find(vehicle.instance); ai && ai->chased)
             body.impact = [this, i](float speed, const runtime::ContactOther& other, const runtime::Vector3&) { chasedCarImpact(i, speed, other); };
+        else if (trafficCar) body.impact = [this, car = *trafficCar](float, const runtime::ContactOther& other, const runtime::Vector3&) { trafficCarContact(car, other); };
         runtime::tickVehicleDamage(record, dt);
         bodies.push_back(body);
         members.push_back(i);
     }
     for (const std::size_t i : members) smashProps(i);
+    addTrafficContactBodies(bodies, scaled, floors);
     runtime::stepVehicleBodies(bodies, vehiclePairs,
                                [this](const runtime::Vector3& from, const runtime::Vector3& to) {
                                    return runtime::castWheelRay(collision, from, to, [this](const runtime::CollisionWorld::Entry& entry) { return std::any_of(boardingVehicles.begin(), boardingVehicles.end(), [&](const runtime::BoardingVehicle& vehicle) { return vehicle.instance == entry.owner; }); });
@@ -160,7 +174,7 @@ void LevelSession::driveVehicles(float dt) {
         }
         if (!drive.awake) drive.settled = true;
         runtime::VehicleRecord& record = *levelScripts.vehicles().mutableRecord(boardingRecords[i]);
-        if (drive.moved && runtime::updateStuckTimer(record.stuckTimer, 1.0f, false, std::fabs(runtime::forwardSpeed(drive.rigid)), dt))
+        if (drive.moved && !trafficCarOf(i) && runtime::updateStuckTimer(record.stuckTimer, 1.0f, false, std::fabs(runtime::forwardSpeed(drive.rigid)), dt))
             levelScripts.vehicles().requestState(boardingRecords[i], runtime::kVehicleStateStuck);
         boardingVehicles[i].matrix = runtime::vehicleNodeMatrix(drive.rigid, record.centreOfMass);
         drive.returnPlaceGood = runtime::vehicleReturnPlaceGood(std::size_t(std::count_if(drive.wheels.begin(), drive.wheels.end(), [](const runtime::WheelState& w) { return w.contact; })),
@@ -194,6 +208,7 @@ void LevelSession::poseVehicleWheels(std::size_t vehicleIndex) {
         if (wheelSceneIndex[w].first != drive.placedIndex) continue;
         const std::size_t number = wheelNumbers[w];
         const bool simulated = number < drive.wheels.size() && number < drive.drivetrain.wheels.size();
+        if (!simulated && poseTrafficWheel(vehicleIndex, w)) continue;
         scene.setTransform(wheelSceneIndex[w].second,
                            simulated ? runtime::wheelPoseMatrix(record.wheels[number].suspension, drive.drivetrain.wheels[number], number, drive.wheels[number].distance, origin)
                                      : chase::assets::multiply(placementMatrix(wheelLocalPlacements[w]), boardingVehicles[vehicleIndex].matrix));

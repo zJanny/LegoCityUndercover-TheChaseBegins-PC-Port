@@ -203,6 +203,11 @@ TrafficDriveResult TrafficSystem::driveCars(const TrafficDriveStep& step, GameRa
     return result;
 }
 
+void TrafficSystem::carContact(std::size_t car, bool rigidKinematic, const TrafficCarContactMessage& message, TrafficCarContactHooks hooks) {
+    hooks.leaveSignalQueue = [this, car](std::uint32_t) { drivers_.leaveQueue(car, junctions_.world); };
+    trafficCarContact(drivers_.mutableCar(car).driver, rigidKinematic, message, hooks);
+}
+
 std::vector<TrafficJunctionLightEvent> TrafficSystem::updateJunctions(float dt) {
     junctions_.world.routes = manager_.routeTable();
     return runTrafficJunctionUpdates(junctions_.world, dt);

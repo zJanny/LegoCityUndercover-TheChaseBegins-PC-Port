@@ -306,6 +306,25 @@ void synthetic() {
     for (int i = 0; i < 10; ++i) spawnedLater += count(fourth.update(closedStep, fourthRandom), TrafficEventKind::Spawn);
     require(spawnedLater > 0, "EnableTrafficPath(route, 1) after the load lets cars spawn on it again");
 
+    // The contact message 0x80000002 (0x1797c4 at 0x179cec..0x179db0, 20261112-traffic-A, read 2026-11-12): a car in state 2 or 3 gets +0x79 = 4,
+    // its kinematic body goes dynamic by the queue and +0xa8 = the clock; the next vehicle update enters state 4.
+    for (int i = 0; i < 3; ++i) drive(fourth, closed, fourthRandom);
+    const std::vector<TrafficCar>& liveCars = fourth.manager().cars();
+    std::size_t hit = 0;
+    while (hit < liveCars.size() && (liveCars[hit].disabled || liveCars[hit].driveState < 2)) ++hit;
+    require(hit < liveCars.size(), "a car in state 2 or 3");
+    TrafficCarContactMessage hitMessage;
+    hitMessage.otherEntity = true;
+    hitMessage.now = 3.0f;
+    int queuedDynamic = 0;
+    TrafficCarContactHooks hitHooks;
+    hitHooks.dynamicQueued = [&queuedDynamic] { ++queuedDynamic; };
+    fourth.carContact(hit, true, hitMessage, hitHooks);
+    require(queuedDynamic == 1 && fourth.drivers().car(hit).driver.requestedState == 4 && fourth.drivers().car(hit).driver.contactTime == 3.0f,
+            "the contact message requests state 4, queues the dynamic switch and stamps the time");
+    drive(fourth, closed, fourthRandom);
+    require(fourth.drivers().car(hit).driver.state == 4, "the driver enters state 4 at the next vehicle update");
+
     assets::Level withoutJunction = level;
     withoutJunction.objects.erase(withoutJunction.objects.begin());
     TrafficSceneEnter plainEnter = enter;

@@ -9,6 +9,7 @@
 #include "runtime/pedestrian_manager.hpp"
 #include "runtime/pregen_derive.hpp"
 #include "runtime/room_layers.hpp"
+#include "runtime/traffic_car_contact_world.hpp"
 #include "runtime/traffic_driver_connect.hpp"
 #include "runtime/traffic_junction_update.hpp"
 #include "runtime/traffic_manager.hpp"
@@ -119,6 +120,10 @@ public:
     std::size_t pointOfCell(std::size_t cellIndex) const { return cellPoints_.at(cellIndex); }
     TrafficVec3 carPosition(std::size_t car) const { return manager_.cars().at(car).position; }
     const TrafficDrivers& drivers() const { return drivers_; }
+    // The contact message 0x80000002 as far as the car's driver goes (trafficCarContact), with the junction queue of the car's signal.
+    void carContact(std::size_t car, bool rigidKinematic, const TrafficCarContactMessage& message, TrafficCarContactHooks hooks);
+    // The vehicle record fields the driver writes (the input provider and the steering step).
+    AiDriverVehicle& driverVehicle(std::size_t car) { return drivers_.mutableCar(car).vehicle; }
     TrafficDrivers& drivers() { return drivers_; }
 
 private:

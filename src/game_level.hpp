@@ -266,6 +266,16 @@ private:
     void loadTrafficBodies();
     const chase::runtime::FloorMesh* trafficBodyFloor();
     void stepTrafficBodies(int worldSteps);
+    void loadTrafficContact();
+    float trafficClock() const;
+    std::optional<std::size_t> trafficCarOf(std::size_t vehicle) const { return vehicle < trafficOfVehicle.size() ? trafficOfVehicle[vehicle] : std::nullopt; }
+    bool trafficBodyDynamic(std::size_t car) const;
+    void syncTrafficDriverFields(bool toDriver);
+    void addTrafficContactBodies(std::vector<chase::runtime::VehicleWorldBody>& bodies, std::vector<chase::runtime::VehicleRecord>& scaled,
+                                 std::vector<std::optional<chase::runtime::VehicleFloor>>& floors);
+    void trafficCarContact(std::size_t car, const chase::runtime::ContactOther& other);
+    void readTrafficBody(std::size_t car, chase::runtime::TrafficCarBody& body) const;
+    bool poseTrafficWheel(std::size_t vehicleIndex, std::size_t wheel);
     void updateTrafficJunctions(float dt);
     void driveTrafficCars(float dt);
     void applyTrafficFades();
@@ -671,6 +681,17 @@ private:
     std::vector<int> trafficFadeShown;
     chase::runtime::TrafficCarBodies trafficBodies;
     chase::runtime::TrafficCarBodies::World trafficBodyWorld;
+    struct TrafficContactBody {
+        chase::runtime::VehicleRigidBody rigid;
+        chase::runtime::DrivetrainState drivetrain;
+        chase::runtime::VehicleBoxContacts boxContacts;
+        chase::runtime::VehicleShapeBoxes shape;
+        bool awake = true;
+        bool shapeReady = false;
+    };
+    std::vector<TrafficContactBody> trafficContactBodies;
+    std::vector<chase::runtime::BodyInputs> trafficBodyInputs;
+    std::vector<std::optional<std::size_t>> trafficOfVehicle;
     std::optional<chase::runtime::FloorMesh> trafficFloorMesh;
     chase::runtime::TrafficCarLights trafficCarLights;
     std::vector<bool> trafficLightsDisabled;

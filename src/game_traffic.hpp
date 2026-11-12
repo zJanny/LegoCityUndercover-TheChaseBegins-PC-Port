@@ -50,6 +50,13 @@ public:
     // call disables the car's entity. Returns the node matrices to set.
     std::vector<runtime::TrafficCarMove> driveCars(const runtime::TrafficDriveStep& step, std::uint32_t update, assets::PlacedObjectState& state);
 
+    // The contact message 0x80000002 for a car's driver and the vehicle record fields the driver writes.
+    void carContact(std::size_t car, bool rigidKinematic, const runtime::TrafficCarContactMessage& message, runtime::TrafficCarContactHooks hooks) {
+        system_.carContact(car, rigidKinematic, message, std::move(hooks));
+    }
+    runtime::AiDriverVehicle& driverVehicle(std::size_t car) { return system_.driverVehicle(car); }
+    const runtime::AiDriverRecord& driverRecord(std::size_t car) const { return system_.drivers().car(car).driver; }
+
     runtime::TrafficWhistleStop& whistle() { return system_.drivers().whistle(); }
     runtime::GameRandom& random() { return random_; }
     std::size_t carCount() const { return system_.slots().size(); }

@@ -66,10 +66,15 @@ void TrafficDrivers::start(std::size_t car, std::uint32_t route, std::uint32_t s
     driver.path = node;
 }
 
-void TrafficDrivers::removed(std::size_t car, TrafficJunctionWorld& junctions) {
+void TrafficDrivers::leaveQueue(std::size_t car, TrafficJunctionWorld& junctions) {
     TrafficDriverCar& entry = cars_.at(car);
     if ((entry.driver.flags & kAiDriverFlagAi) != 0 && entry.driver.signal != 0)
         leaveTrafficJunctionQueue(needJunction(junctions, entry.driver.signal), entry.driver, static_cast<std::uint32_t>(car));
+}
+
+void TrafficDrivers::removed(std::size_t car, TrafficJunctionWorld& junctions) {
+    TrafficDriverCar& entry = cars_.at(car);
+    leaveQueue(car, junctions);
     TrafficRaceTrimCar trim;
     trim.entity = static_cast<std::uint32_t>(car + 1);
     trim.driver = &entry.driver;
@@ -185,6 +190,8 @@ TrafficDriveResult TrafficDrivers::drive(TrafficManager& manager, TrafficJunctio
         AiDriverStateFrame change;
         change.node = node;
         change.body = bodyBasis(node);
+        change.bodySpeed = body->forwardSpeed;
+        change.activationState = body->activationState;
         change.routes = &routes;
         runAiDriverStateChange(car.driver, car.vehicle, change, hooks, random);
         if (car.driver.state != stateBefore && car.driver.state == kAiStateJunction)
@@ -196,10 +203,16 @@ TrafficDriveResult TrafficDrivers::drive(TrafficManager& manager, TrafficJunctio
         AiDriverPostFrame post;
         post.node = node;
         post.dt = step.dt;
+        post.bodySpeed = body->forwardSpeed;
+        post.bodyMoveSpeed = body->moveSpeed;
+        post.now = step.now;
+        post.wheelCount = body->wheelCount;
+        post.groundedWheels = body->groundedWheels;
         post.routes = &routes;
         runAiDriverPostStep(car.driver, car.vehicle, post, hooks, random);
-        if (brakeBefore != 1.0f && car.vehicle.brakeInput == 1.0f) result.events.push_back({TrafficDriveEventKind::Stop, index, car.driver.signal});
-        if (brakeBefore == 1.0f && car.vehicle.brakeInput != 1.0f) result.events.push_back({TrafficDriveEventKind::Go, index, car.driver.signal});
+        const bool lightsStop = car.driver.state != kAiStateKnocked;
+        if (lightsStop && brakeBefore != 1.0f && car.vehicle.brakeInput == 1.0f) result.events.push_back({TrafficDriveEventKind::Stop, index, car.driver.signal});
+        if (lightsStop && brakeBefore == 1.0f && car.vehicle.brakeInput != 1.0f) result.events.push_back({TrafficDriveEventKind::Go, index, car.driver.signal});
 
         TrafficCar& view = views[index];
         view.aiDriven = (car.driver.flags & kAiDriverFlagAi) != 0;

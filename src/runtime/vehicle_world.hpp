@@ -30,6 +30,12 @@ struct VehicleWorldBody {
     std::vector<WheelState>* lastWheels = nullptr;
     VehicleImpactSink impact = nullptr;
     bool destroyed = false;  // entity word +0xc bit 0x10, what the other side of a pair contact sees
+    bool playerVehicle = false;  // its entity is the vehicle the player drives (0x24255c of the player); what the other side of a pair contact sees
+    // A kinematic body (rigid +0xcc bit 1, mass 0, collision group 2 and mask 61): it takes part in the pair contacts of the dynamic bodies and
+    // in nothing else of the step (its body step is 0x33aea8's kinematic branch, run by the traffic bodies). Its group 2 is also the static
+    // group, so two kinematic bodies do not collide. `groundedWheels` is its body +0xda0, which the pair rule reads.
+    bool kinematic = false;
+    int groundedWheels = 0;
 };
 
 // The boxes of a vehicle's Bullet shape from its entity box (modelCollisionBox): `shape` (vehicleShapeBox, the inertia) and `collision`

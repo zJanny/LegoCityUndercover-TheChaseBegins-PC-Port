@@ -56,4 +56,17 @@ assets::Matrix wheelPoseMatrix(const WheelSuspension& suspension, const WheelSpi
     return assets::multiply(local, bodyMatrix);
 }
 
+assets::Matrix kinematicWheelPoseMatrix(float spinAngle, float mountX, const std::array<float, 3>& localPosition, const assets::Matrix& nodeMatrix) {
+    assets::Matrix local = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+    if (mountX < 0.0f) {
+        spinAngle = -spinAngle;
+        rotateY(local, kPi);
+    }
+    rotateX(local, spinAngle);
+    local[12] = localPosition[0];
+    local[13] = localPosition[1];
+    local[14] = localPosition[2];
+    return assets::multiply(local, nodeMatrix);
+}
+
 }

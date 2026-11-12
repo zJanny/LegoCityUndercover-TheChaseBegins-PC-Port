@@ -26,6 +26,7 @@ float vehicleMassScale(bool playerVehicle) { return playerVehicle ? kVehicleBody
 namespace {
 
 bool wheelsOnGround(const VehicleWorldBody& entry) {
+    if (entry.kinematic) return entry.groundedWheels > 1;
     if (!entry.lastWheels || entry.lastWheels->empty()) return true;
     int grounded = 0;
     for (const WheelState& wheel : *entry.lastWheels) grounded += wheel.contact ? 1 : 0;
@@ -56,6 +57,7 @@ void applyPairContactRule(ManifoldPoint& point, const VehicleWorldBody& a, const
 void stepVehicleBodies(std::vector<VehicleWorldBody>& bodies, VehiclePairManifolds& pairs, const WheelRay& ray, int steps) {
     for (int step = 0; step < steps; ++step) {
         for (VehicleWorldBody& entry : bodies) {
+            if (entry.kinematic) continue;
             VehicleRigidBody& body = *entry.body;
             DrivetrainState& drive = *entry.drive;
             if (entry.floor) trackFloorCell(entry.floor->mesh, entry.floor->tracker, body.position);
@@ -77,7 +79,7 @@ void stepVehicleBodies(std::vector<VehicleWorldBody>& bodies, VehiclePairManifol
             if (entry.lastWheels) *entry.lastWheels = std::move(wheels);
         }
         for (VehicleWorldBody& entry : bodies) {
-            if (!*entry.awake || !entry.floor || !entry.floor->boxes) continue;
+            if (entry.kinematic || !*entry.awake || !entry.floor || !entry.floor->boxes) continue;
             const ManifoldPointObserver observer = [&entry](ManifoldPoint& point) {
                 if (entry.impact) entry.impact(manifoldImpactSpeed(*entry.body, true, point, nullptr), ContactOther{}, point.worldA);
                 return false;
@@ -87,11 +89,11 @@ void stepVehicleBodies(std::vector<VehicleWorldBody>& bodies, VehiclePairManifol
         std::vector<std::pair<std::size_t, std::size_t>> active;
         for (std::size_t i = 0; i < bodies.size(); ++i) {
             for (std::size_t j = 0; j < bodies.size(); ++j) {
-                if (i == j || bodies[i].id >= bodies[j].id) continue;
+                if (i == j || bodies[i].id >= bodies[j].id || (bodies[i].kinematic && bodies[j].kinematic)) continue;
                 if (!bodies[i].floor || !bodies[i].floor->boxes || !bodies[j].floor || !bodies[j].floor->boxes) continue;
                 if (!*bodies[i].awake && !*bodies[j].awake) continue;
                 std::optional<ContactManifold>& manifold = pairs[{bodies[i].id, bodies[j].id}];
-                const auto otherOf = [&](const VehicleWorldBody& entry) { return ContactOther{true, entry.destroyed, true, false, entry.controls.driver}; };
+                const auto otherOf = [&](const VehicleWorldBody& entry) { return ContactOther{true, entry.destroyed, true, false, entry.playerVehicle}; };
                 const ManifoldPointObserver observer = [&](ManifoldPoint& point) {
                     applyPairContactRule(point, bodies[j], bodies[i]);
                     if (bodies[j].impact) bodies[j].impact(manifoldImpactSpeed(*bodies[j].body, true, point, bodies[i].body), otherOf(bodies[i]), point.worldA);
@@ -119,7 +121,7 @@ void stepVehicleBodies(std::vector<VehicleWorldBody>& bodies, VehiclePairManifol
         for (std::size_t i = 0; i < bodies.size(); ++i)
             if (activated[i]) *bodies[i].awake = true;
         for (VehicleWorldBody& entry : bodies)
-            if (*entry.awake) *entry.awake = updateVehicleActivation(*entry.body, kVehicleWorldStep);
+            if (!entry.kinematic && *entry.awake) *entry.awake = updateVehicleActivation(*entry.body, kVehicleWorldStep);
     }
 }
 

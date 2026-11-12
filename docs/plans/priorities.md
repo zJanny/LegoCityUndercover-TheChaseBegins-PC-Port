@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1135 open items and stand-ins, 201 linked to game usage, 934 with unknown reach.
+Items: 1137 open items and stand-ins, 201 linked to game usage, 936 with unknown reach.
 
 ## Top 50 overall
 
@@ -155,7 +155,7 @@ Items: 1135 open items and stand-ins, 201 linked to game usage, 934 with unknown
 
 ## World and levels
 
-6 of 111 items linked.
+6 of 113 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -235,7 +235,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [level-transitions.md](features/level-transitions.md): TRANS-3 (+4), TRANS-13 (+2), TRANS-15 (+2), TRANS-8 (+2), TRANS-10 (+1), TRANS-12 (+1), TRANS-14 (+1), TRANS-16 (+1), TRANS-S1, TRANS-S3, TRANS-S4, TRANS-S5, TRANS-S6
 - [movies-cutscenes.md](features/movies-cutscenes.md): MOVIE-22 (+1), MOVIE-24 (+1), MOVIE-36 (+1), MOVIE-37 (+1), MOVIE-S33 (+1), MOVIE-1, MOVIE-12, MOVIE-20, MOVIE-21, MOVIE-3, MOVIE-35, MOVIE-4, MOVIE-40, MOVIE-41, MOVIE-S10, MOVIE-S11, MOVIE-S2, MOVIE-S21, MOVIE-S3, MOVIE-S30, MOVIE-S31, MOVIE-S32, MOVIE-S34, MOVIE-S36
 - [particles.md](features/particles.md): PART-4 (+1), PART-6 (+1), PART-5, PART-7, PART-S1, PART-S2, PART-S3, PART-S4
-- [pedestrians-traffic-cars-driver-body.md](features/pedestrians-traffic-cars-driver-body.md): TRAFFIC-39 (+1), TRAFFIC-40 (+1), TRAFFIC-41 (+1), TRAFFIC-S28, TRAFFIC-S29
+- [pedestrians-traffic-cars-driver-body.md](features/pedestrians-traffic-cars-driver-body.md): TRAFFIC-50 (+3), TRAFFIC-41 (+1), TRAFFIC-51 (+1), TRAFFIC-S28, TRAFFIC-S29, TRAFFIC-S37, TRAFFIC-S38
 - [pedestrians-traffic-cars-driver.md](features/pedestrians-traffic-cars-driver.md): TRAFFIC-35 (+1), TRAFFIC-42 (+1), TRAFFIC-48 (+1), TRAFFIC-49 (+1), TRAFFIC-S27, TRAFFIC-S32, TRAFFIC-S33, TRAFFIC-S34, TRAFFIC-S35, TRAFFIC-S36
 - [pedestrians-traffic-cars-gather.md](features/pedestrians-traffic-cars-gather.md): TRAFFIC-53 (+3), TRAFFIC-52 (+1), TRAFFIC-S39
 - [pedestrians-traffic-cars-junction.md](features/pedestrians-traffic-cars-junction.md): TRAFFIC-38 (+2), TRAFFIC-31 (+1), TRAFFIC-S13, TRAFFIC-S17, TRAFFIC-S20

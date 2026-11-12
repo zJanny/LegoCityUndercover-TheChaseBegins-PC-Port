@@ -75,6 +75,10 @@ void LevelSession::stepTrafficBodies(int worldSteps) {
             if ((body.rigidFlags & runtime::kRigidFlagOutOfWorld) != 0) continue;
             runtime::stepTrafficBody(body, runtime::kVehicleWorldStep, trafficBodyWorld.floor);
         }
+    for (std::size_t car = 0; car < trafficBodies.size(); ++car) {
+        const runtime::TrafficBodyState& body = trafficBodies.body(car);
+        if (trafficBoarding[car] && (body.rigidFlags & (runtime::kRigidFlagKinematic | runtime::kRigidFlagOutOfWorld)) == runtime::kRigidFlagKinematic) poseVehicleWheels(*trafficBoarding[car]);
+    }
 }
 
 }
