@@ -1,6 +1,8 @@
 # Controls and the input laboratory
 
-`chase-input-lab` is a small program for testing keyboard and mouse controls. It shows every 3DS button, the D-pad and the lower touch screen. It is not the game.
+This page lists the keys and mouse controls of the PC port and how to change them. It also describes `chase-input-lab`, a small program for testing them. The input lab shows every 3DS button, the D-pad and the lower touch screen. It is not the game.
+
+Back to the [documentation list](../README.md#more-documentation).
 
 ```sh
 cd build && ./chase-input-lab
@@ -33,7 +35,7 @@ For example, `A key Space hold` makes Space press the A button.
 
 - You can give one action several bindings. Any of them works.
 - **`hold`:** the button is pressed while you hold the key.
-- **`toggle`:** each new press switches the button on or off.
+- **`toggle`:** each press switches the button on or off.
 - Pressing two opposite directions at once cancels them out.
 - When the window loses focus, every button is released.
 - The left mouse button acts as the touch screen inside the lower-screen area.
@@ -66,7 +68,7 @@ With PC controls on, `chase-game` reads the keys from `config/controls.pc.cfg` i
 
 ### Keys in a vehicle
 
-While the character sits in a vehicle (and no pause screen or award viewer is open), the keys follow a typical PC driving game. They are kept in `config/controls.pc.vehicle.cfg` next to the other files, created from the built-in set the first time. You can change it in the Controls tab (choose Vehicle in the switch at the top, see [Rebind the keys](#rebind-the-keys)) or by editing the file (same line format as above). The built-in set:
+While the character sits in a vehicle (and no pause screen or award viewer is open), the keys follow a typical PC driving game. They are kept in `config/controls.pc.vehicle.cfg` next to the other files, created from the built-in set the first time. You can change it in the Controls tab: choose Vehicle in the switch at the top (see [Rebind the keys](#rebind-the-keys)). You can also edit the file, in the same line format as above. The built-in set:
 
 | Action | Keys |
 |---|---|
@@ -83,7 +85,7 @@ While the character sits in a vehicle (and no pause screen or award viewer is op
 
 ### When the built-in set grows
 
-If `config/controls.pc.cfg` or `config/controls.pc.vehicle.cfg` already exists, the program keeps every binding in it. It adds only the actions the file has no line for, with their built-in keys, and skips a key that the file already uses for another action. It then writes the file again. An action you cleared completely comes back with its built-in keys at the next start.
+If `config/controls.pc.cfg` or `config/controls.pc.vehicle.cfg` already exists, the program keeps every binding in it. It adds only the actions the file has no line for, with their built-in keys. It skips a key that the file already uses for another action. It then writes the file again. An action you cleared completely comes back with its built-in keys at the next start.
 
 ## Rebind the keys
 
@@ -94,11 +96,11 @@ Every action has two key slots (Slot 1 and Slot 2): either key does the action. 
 1. Open the PC settings menu: press **PC Settings** on the slot list of the start screens, or in play open it from the pause menu. Go to the Controls tab.
 2. Only with PC controls on: choose On foot or Vehicle in the first row (see below).
 3. Click a slot (Slot 1 or Slot 2) of the action, or select it with the keys and press Enter.
-4. The menu shows "Press a key... (Esc cancel, Del clear)". Press the new key, click a mouse button or press a gamepad button.
+4. The menu shows "Press a key... (Esc cancel, Del clear)". Press the key, click a mouse button or press a gamepad button you want.
 5. Escape cancels without a change. Delete clears the slot.
 6. If another action of the same set already uses the key, the menu asks "Swap" or "Cancel". Swap exchanges the two bindings.
 7. The Mode column switches an action between Hold and Toggle.
-8. "Reset to defaults" at the end of the list asks first, then restores the built-in keys of the chosen set only and sets the Mouse sensitivity back to x1.0.
+8. "Reset to defaults" at the end of the list asks first. It restores the built-in keys of the chosen set only. It sets the Mouse sensitivity back to x1.0.
 
 The menu keys (Escape, Q, E, Page Up, Page Down, the arrows, Enter) cannot be bound.
 
@@ -122,7 +124,7 @@ The menu keys (Escape, Q, E, Page Up, Page Down, the arrows, Enter) cannot be bo
 
 In the [development runtime](commands.md#development-runtime), after you pressed A on the built helipad pad and the helicopter idles:
 
-- Click the exit button on the lower screen (the hexagon with an arrow at the top centre of the lower screen) to leave the console. The six level buttons are locked.
+- Click the exit button on the lower screen to leave the console. It is the hexagon with an arrow at the top centre. The six level buttons are locked.
 
 ## Map buttons
 
@@ -146,12 +148,12 @@ In `chase-game`, Escape never closes the program. It is a fixed second key for *
 - While you play, it opens the pause menu, like Start.
 - In the pause menu it acts as **B** on every page: on the main wheel it closes the pause menu (with the back sound); on the options and language pages it goes back one page (after a change on the options page it first saves, as B does); a second Escape on the main wheel then closes the pause menu.
 - In the PC settings menu it goes back: it first closes an open list, prompt or question, then the menu.
-- On the start screens it skips the Fusion Games movie when you have played before, like Start. It does nothing on the logos, the language list, the question pages and the slot list, and nothing in cutscenes and movies of a level, because the original has no skip there.
+- On the start screens it skips the Fusion Games movie when you have played before, like Start. It does nothing on the logos, the language list, the question pages and the slot list. It does nothing in cutscenes and movies of a level either, because the original has no skip there.
 - To quit, close the window, or choose Quit game in the [PC settings menu](#pc-settings-menu). The model viewer, the movie player and the input laboratory keep Escape = quit.
 
 ## Start screens with the mouse
 
-While the widened view is on (`master Improved`, or `widened_view on` under `master Custom`) the bottom page of the start screens is a panel in the middle of the window, and you click it with the left mouse button:
+With `master Improved`, or `widened_view on` under `master Custom`, the view is widened. The bottom page of the start screens is then a panel in the middle of the window. You click it with the left mouse button:
 
 - Click a row of the language list or the slot list: it selects that row and presses **A**.
 - Click an **A**, **B** or **Y** picture (the buttons of the question and notice pages, the Select and Delete pictures at the bottom): it is that button. The Delete picture does nothing yet, because the delete page is missing.
@@ -164,7 +166,7 @@ While the widened view is on (`master Improved`, or `widened_view on` under `mas
 In the [development runtime](commands.md#development-runtime), while you play:
 
 - **Start** (Return, or Keypad Enter with PC controls on; Escape in both) opens the pause menu. The game stops.
-- The lower screen shows Resume, Options, Credits, Exit and PC Settings on a wheel. Turn it with **left and right** (A and D, or the arrow keys), or click the button left or right of the middle one, or swipe sideways with the mouse.
+- The lower screen shows Resume, Options, Credits, Exit and PC Settings on a wheel. Turn it with **left and right** (A and D, or the arrow keys). You can also click the button left or right of the middle one, or swipe sideways with the mouse.
 - **A** (Space), or a click on the middle button, chooses the entry in the middle. Resume goes back to the game.
 - **B** (Q or right mouse) or **Start** go back to the game.
 - Options opens the options wheel: SFX, Music, Invert Camera and Language. Turn it like the pause wheel. On SFX and Music, **up and down** (W and S, or the arrow keys) change the volume from 0 to 10. On Invert Camera, up, down or **A** switch it on or off. **B** goes back to the pause wheel; after a change it first saves the options.
@@ -176,16 +178,16 @@ In the [development runtime](commands.md#development-runtime), while you play:
 
 In the [development runtime](commands.md#development-runtime), on the slot list of the start screens:
 
-- The **PC Settings** bar under the two slots is a third entry of the list. It has the same size and look as a slot bar, with the label "PC Settings" and, in smaller letters below it, the hint "Select or click"; its glow lies a little over the bottom of slot 2. Press the **Down** button on the last slot to move onto it; the slot highlight goes and the bar is highlighted. Press the **A** button (its key is in [Default controls](#default-controls)) to open the menu. **Up** returns to the last slot. Closing the menu leaves the highlight on the bar. A click with the left mouse button on the bar opens it too. It slides in with the slots. During play the [pause menu](#pause-menu) has a PC Settings entry that opens the same menu; there the Game tab holds only **Quit game** (the volumes, Invert camera and Language are on the Options page of the pause menu).
-- The menu covers the whole window with tabs across the top (Game, Display, Controls, Quality of life), the rows of the tab in the middle, a help line under them and a key-hint bar with a **Back** button at the bottom. It is drawn in its own font, sharp at the window's size. The start screens stop behind it, and the last picture of the game or start screen is shown dimmed behind the menu (a black background where no such picture was kept).
+- The **PC Settings** bar under the two slots is a third entry of the list. It has the same size and look as a slot bar. It has the label "PC Settings" and, in smaller letters below it, the hint "Select or click". Its glow lies a little over the bottom of slot 2. Press the **Down** button on the last slot to move onto it; the slot highlight goes and the bar is highlighted. Press the **A** button (its key is in [Default controls](#default-controls)) to open the menu. **Up** returns to the last slot. Closing the menu leaves the highlight on the bar. A click with the left mouse button on the bar opens it too. It slides in with the slots. During play the [pause menu](#pause-menu) has a PC Settings entry that opens the same menu; there the Game tab holds only **Quit game** (the volumes, Invert camera and Language are on the Options page of the pause menu).
+- The menu covers the whole window. Tabs run across the top (Game, Display, Controls, Quality of life). The rows of the tab are in the middle, and a help line sits under them. A key-hint bar with a **Back** button is at the bottom. It is drawn in its own font, sharp at the window's size. The start screens stop behind it. The last picture of the game or start screen is shown dimmed behind the menu, or a black background where no such picture was kept.
 - Keyboard: **Up and Down** move between rows, **Left and Right** change the value of the row. **Q and E** or **Page Up and Page Down** switch tabs; the last tab wraps to the first. **Up** on the first row moves onto the tab bar, where Left and Right switch tabs and Down goes back to the rows. **Enter** switches an On/Off row, opens the resolution list or presses a button. **Escape** closes the menu, or first closes an open list, prompt or dialog. Greyed-out rows are skipped.
 - The menu opens again on the tab it was closed on.
 - Mouse: moving onto a row or tab selects it; a click on a tab switches to it; click the `<` and `>` arrows or the value to change a choice; click or drag a slider; the wheel scrolls the rows; a **right-click** or a click on **Back** goes back.
 - Gamepad: **leftshoulder / rightshoulder** switch tabs, the **D-pad** moves, **a** selects, **b** goes back.
 - These keys are fixed. They do not follow `config/controls.cfg`.
-- Game tab: SFX volume and Music volume (0 to 100 in steps of 10; the sound changes at once), Invert camera (On or Off), Language (`< English >`), Quit game and Reset to defaults. **Quit game** asks "Quit the game?" with Yes and No; the question opens on No, **Enter** declines, **Left** moves to Yes, **Escape** cancels, and Yes closes the program. This is the way to quit the game: from the start screens open the PC Settings menu from the slot list, in play open it from the pause menu. Before the slot list (logos, movie, language list) only the window's close button quits. The options are stored in the save file when you close the menu, if you changed one. A new language is passed on when the menu closes, but the game does not switch to it yet (a line in the terminal says so).
+- Game tab: SFX volume and Music volume (0 to 100 in steps of 10; the sound changes at once), Invert camera (On or Off), Language (`< English >`), Quit game and Reset to defaults. **Quit game** asks "Quit the game?" with Yes and No; the question opens on No, **Enter** declines, **Left** moves to Yes, **Escape** cancels, and Yes closes the program. This is the way to quit the game: from the start screens open the PC Settings menu from the slot list, in play open it from the pause menu. Before the slot list (logos, movie, language list) only the window's close button quits. The options are stored in the save file when you close the menu, if you changed one. A chosen language is passed on when the menu closes. The game does not switch to it (a line in the terminal says so).
 - Display tab: Window mode (Windowed or Fullscreen) and Resolution (a list of the monitor's sizes; greyed out as "Desktop resolution" in full screen). A change applies at once and asks "Keep these settings?": **Enter** or Keep keeps it, **Escape**, Revert or 15 seconds without an answer go back to the old setting.
-- Display tab, View distance: a slider from x1.0 to x20.0: steps of 0.25 up to x4.0, then whole steps up to x20.0 (**Left and Right**, or click or drag). It makes the game draw further: the far edge of the picture and the fog move out by that factor for every camera, people in the street appear and fade further away, and above x1.0 the rooms of the town within that distance are loaded too. It works in the Improved and Custom presets; with the preset Original it shows x1.0, is greyed out and is skipped, and the value you set comes back when you leave Original. A change applies at once, without "Keep these settings?". Reset to defaults on this tab sets x1.0. The row has no help text yet.
+- Display tab, View distance: a slider from x1.0 to x20.0: steps of 0.25 up to x4.0, then whole steps up to x20.0 (**Left and Right**, or click or drag). It makes the game draw further. The far edge of the picture and the fog move out by that factor for every camera. People in the street appear and fade further away. Above x1.0 the rooms of the town within that distance are loaded too. It works in the Improved and Custom presets; with the preset Original it shows x1.0, is greyed out and is skipped, and the value you set comes back when you leave Original. A change applies at once, without "Keep these settings?". Reset to defaults on this tab sets x1.0. The row has no help text.
 - Controls tab: one row per action with the columns Action, Slot 1, Slot 2 and Mode; with PC controls on a switch for the set (On foot or Vehicle) comes first. How to rebind, step by step: [Rebind the keys](#rebind-the-keys).
 - Quality of life tab: the preset (Original, Improved, Custom) and one On/Off row per feature (Widened view, [PC controls](#pc-controls)). Changing a feature by hand switches the preset to Custom.
 - The help line under the rows says what the focused row does and its default. Every tab ends with a **Reset to defaults** button, which asks first (Yes or No). The question opens on No: **Enter** declines, **Left** moves to Yes.
@@ -196,7 +198,7 @@ In the [development runtime](commands.md#development-runtime), on the slot list 
 In the [development runtime](commands.md#development-runtime), in the police station:
 
 - Stand on the award viewer's use marker and press **A** (Space). The awards screen opens and the game stops.
-- The lower screen shows Overview and the seven areas on a wheel. Turn it like the pause menu: **left and right** (A and D, or the arrow keys), a click on the button left or right of the middle one, or a swipe sideways with the mouse.
+- The lower screen shows Overview and the seven areas on a wheel. Turn it like the pause menu. Press **left and right** (A and D, or the arrow keys). Or click the button left or right of the middle one. Or swipe sideways with the mouse.
 - The upper screen shows how many bronze, silver and gold awards you have of the area in the middle.
 - **B** (Q or right mouse) goes back to the game. Start does nothing here. Clicking the Back button on the lower screen does not work yet.
 

@@ -2,6 +2,8 @@
 
 `chase-soundtest` plays sounds from your extracted game data. It needs the extracted RomFS in `artifacts/romfs` (see [Extracting game data](extracting-game-data.md)).
 
+Back to the [documentation list](../README.md#more-documentation).
+
 ```sh
 build/chase-soundtest music/act_bass_break.bwav sounds/lego_heart_collected_01.bwav
 build/chase-soundtest --id 1 --id 5

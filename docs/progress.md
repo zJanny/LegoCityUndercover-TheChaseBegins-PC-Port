@@ -2,6 +2,8 @@
 
 The README shows a small progress table. It is made by one command. Each number compares what the port does with a total that comes from the original game, not from our own plans.
 
+Back to the [documentation list](../README.md#more-documentation).
+
 There is no single percentage for "how far is the port". The game has no list of features to count. So the table has separate measures. Each has its own meaning.
 
 ## The measures

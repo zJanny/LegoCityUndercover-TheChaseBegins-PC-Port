@@ -1,0 +1,83 @@
+# Development runtime: what works
+
+The parts of the original game that `chase-game` reproduces, one list item per feature. The [development runtime guide](game-runtime.md) says how to start it.
+
+Back to the [documentation list](../README.md#more-documentation).
+
+- The speeds, the walk, run and sprint change, and the turning follow the original game.
+- The camera follows behind the character, as in the original.
+- The sky is drawn. The level's sky dome (clouds and the skyline gradient) follows the camera, as in the original. It rises a little when the character is high above the sea. Where the dome ends below the horizon the plain background colour shows. The depth the original gives the sky is a stand-in: the sky is always behind everything. A level with two sky objects uses the first.
+- Shadows are drawn from the level's shadow light, as in the original. The player, the level characters and the objects whose class casts a shadow darken the ground of the street. They also darken the objects that receive a shadow. This works within 15 m around a point ahead of the camera. The shadow has hard edges where the original's are soft. It also darkens fog and see-through things drawn over it. People walking in the street and traffic cast no shadow. In the scanner view there are no shadows.
+- Models are drawn in the original's order: solid parts first, then see-through parts from the farthest to the nearest, so glass, light columns and fading objects overlap as in the original. Particle effects are still drawn after everything else.
+- The waypoint light columns and their badges in the first level turn see-through. This happens when the camera comes within 8 units of them on its way to the character, as in the original. They fade back in when it moves away.
+- In some places the camera is fixed, as in the original: the police station and every area the level marks with a fixed camera. There it does not turn when you press the camera buttons. A crossed-out camera picture shows at the bottom left of the top screen while you press them. In the two areas the levels mark as camera blockers (one in Fort Meadows, one in Downtown), the camera stops where it was. It stays there while the character is inside, as the original's code does. This was not compared with the running original. Details such as the smooth change between fixed cameras are not done.
+- While a script runs a camera sequence (a camera that flies along a path), the character cannot be controlled: the stick and the buttons do nothing, and other characters stop too unless the script keeps them running. When the sequence ends you can move again at once. In mission 1-1 this is why X does not let you out of the police car for the first 9 seconds. Other effects of the sequence (hidden display, stopped clocks) are not done yet.
+- The camera keeps out of the level's walls. Near a wall it moves closer to the character and slides to the side, as measured in the original.
+- The floor and walls come from the level. The character climbs steps and kerbs, and slides along walls.
+- Many objects of the level block the character and the camera like the original: lamp posts, traffic lights, benches, bins, crates, barriers, doors and signs. The character is stopped by them and slides along them.
+- The level's other people stand where the level puts them, with their own heads and clothes. They do not talk or react, and they do not walk by themselves (the pedestrians below do). They play their idle animations, and the animations the mission scripts ask for (for example the van driver stuck in the mailbox in mission 1-1). A script that waits for such an animation waits until it has played, as in the original. Animations that scripts ask of the main character or of objects such as doors are not played yet.
+- Pedestrians appear in the street of Cherry Tree Hills once the level's scripts switch traffic and pedestrians on. Up to five appear in front of the camera, fade in and walk along their paths with the walk animation. They change rooms as the streets load. They stop for vehicles. They make no sound.
+- Traffic cars: the cars of the level's traffic (`Traffic01` and so on) appear on the roads around the player, where the original puts them. They follow the rules of the original's traffic manager:
+  - One new car appears at a time, 50 to 130 metres from the camera. The first cars of a level appear closer, up to 76 metres.
+  - Never are two cars on the same road within 16 metres.
+  - Cars appear only on the roads of the level's junctions that scripts have not switched off (`EnableTrafficPath`).
+  - The level has a car limit: ten cars in Cherry Tree Hills, set again by mission scripts.
+  - A car leaves when it is further than 50 metres from the player. It must also have been outside the camera's view for one to three seconds (a random time). A car you can see stays.
+  - Every car leaves when a script switches traffic off.
+  - The cars drive along their roads at 8 to 12 metres per second, as the original's traffic driver does. They:
+    - stop behind a car or the player in front of them,
+    - stop at a red light of the junction ahead and go on when their light lets them pass,
+    - take a lane through the junction to a random open road out of it,
+    - leave when their road leads into no junction.
+  - A braking or waiting car shows the red brake light of its rear while it is in view. It also shows a glow at each rear light. The light fades out over half a second after the car goes on.
+  - Each car has a physics body that follows it while it drives, as in the original.
+  - The player's car and the other cars with a physics body of the level collide with it. The car that is hit is switched to a free physics body and asks its driver for the original's knocked state. It goes back to its road when it is slow and has had its wheels on the ground. This is not compared with the original in play.
+  - People do not push the traffic cars.
+  - The wheels of a driving car turn with its speed.
+  - The program prints a line for each of these events ([command reference](commands.md#development-runtime)):
+    - a car appears or leaves
+    - a car's body joins or leaves the physics world
+    - a car is hit by a car (`traffic car NAME: hit, driver requests state 4 at update U`)
+    - a car stops at or goes on from a light
+    - a car takes a junction lane
+- Traffic lights: each junction with two or more light pairs runs the original's light cycle (green 6 seconds, yellow 2 seconds, all red 3 seconds). Then the next pair turns green. Each traffic light shows the colour part of its pair (green, yellow or red) and follows the cycle. Every junction runs the cycle at every update, whatever room it is in; the original runs it only for junctions in certain rooms. The program prints a line for each change, for example `traffic junction 3: pair 0 yellow at update 181`.
+- The character jumps, falls off ledges and lands as in the original, including the short pause after landing. Running uphill slows the character down. At some ledges the character first slides down a steep edge before it falls. Two details of that slide are not exact yet: how it ends and the short pause after landing from it.
+- The character makes the sounds of the original: footsteps while walking, running and sprinting, a sound when jumping, and landing sounds that depend on how far the character fell. Picking up a stud plays its coin sound. Sounds come from the place where they happen and are quieter and panned to the side as in the original. See [Sound](game-runtime.md#sound).
+- In the level, the top screen shows the 3D view with the display of the original game on top of it. The bottom screen shows the map. See [The display during play](game-runtime.md#the-display-during-play).
+- Doors that open by themselves swing open when the character comes close. They wait while he stands there and close again, with the same timing as the original. This works for the hinged doors and the sliding doors of the police station. Doors that a script has to open (for example the front doors in the street) stay shut, because no running script asks for it. Doors make their opening and closing sounds.
+- The street level loads and unloads its rooms while you walk, by the rule found in the original: the room you stand in, its neighbours and up to three rooms ahead of the camera. Rooms that are not loaded are not drawn. The room you stand in is found from the room models' size, a stand-in. The loading time (9 updates) is the one measured for one room. Characters and coins of unloaded rooms are still drawn. Other levels show all their rooms. The program prints `room streaming:`, `room A -> B` and `rooms loaded:` lines.
+- The level's own scripts run while you play, with the same timing rules as the original.
+  - A script that waits continues later.
+  - A script can wait for another one.
+  - Scripts start:
+    - when the level starts,
+    - when the character walks into or out of some marked places of the level,
+    - when a script switches an object.
+  - Events of the story and many other kinds of starts do not start scripts. The program prints `script trigger event without check` for those once.
+  - Doors answer the script commands that open and close them, but no running script sends one.
+- The question box of the police station door works: walk into the door area (after the first mission is switched on) and the game stops with the box "If you are on a mission...". A (OK) moves the character to the station door, B (Cancel) closes it. The box is drawn from measurements of one picture, so sizes may differ slightly. Screen fades from scripts darken the picture over half a second.
+- You can walk out of the police station and back in. Leaving: walk to the lobby exit. A page with "Continue (A)" appears. Press A and you stand in the street where the original puts you. Entering: walk into the door area (after the first mission is switched on), answer the box with A, and press A again on the page. You stand in the lobby. The page is a stand-in: the picture on the top screen is a plain background, not the original's key art. The camera after the change is not the original's yet. The street level needs `--call-script 1-1_MissionSkip` for the door, unless you start with `--save` from a save that is past the first mission.
+- Scripts can walk the player. After you answer the police station box with A, the character walks into the station by itself. It walks at a speed measured in the original, in a straight line. The straight line is a stand-in: the original follows a path. Other placed people do not walk by script. The AI commands of the scripts (enable, ignore player, invulnerable, pursuit and so on) are accepted and remembered but have no visible effect.
+- Waypoints (the light columns of the missions) work on foot. Walk into an active one and the player stops for about half a second. Then the mission script it names starts (for example the donut shop of mission 1-1 starts `1-1_VanBreakdown`), and the waypoint switches off. The dev log prints `waypoint started script NAME at update N`. Waypoints for vehicles work too: they fire when the vehicle you sit in (or jump into) reaches them. A vehicle waypoint that stops you (for example the shop of the donut van) brakes the vehicle until its script starts. A normal waypoint does nothing while you are in a vehicle and shows a hint text instead. The use-an-object waypoints do not work. A small waypoint shows its police badge turning and hopping inside the light column, as in the original. When a script switches a waypoint off, its column fades out as in the original and the badge goes at once.
+- Gang spawners: characters that a level's spawner holds (the goons of the missions) are hidden from the start of the level.
+  - When a script switches the spawner on, it sends its characters out one after the other, where the level places them. The waits between them are the original's. A second switch turns it off again.
+  - Once all of its characters were sent out and are beaten or arrested, the spawner starts the next step of the story. Arresting works for the goons of mission 1-4. Beating them does not.
+  - Each character gets the first order of its spawner when it comes out, as in the original. Most goons stand idle. Others run or jump to the spot the spawner names for them. In mission 1-4 the goons of the second and third wave jump to their places. Some first orders of the original are not done (the character then just stands).
+  - A standing goon notices Chase when he comes within its view distance and stands inside the goon's fight area (in mission 1-4 the showroom). It gets ready to fight him, but it does not fight or move. At most six goons at a time are ready to fight, as in the original.
+  - A goon that stands at least 2 units from the place where it was set up waits about half a second. Then it walks back to that place with the game's path finder (at the port's stand-in walking speed) and stands idle there again. If a target comes in sight while it waits or walks, it gets ready to fight instead.
+  - A path the finder cannot find makes it try again after about a third to two thirds of a second.
+  - Spawners that should send goons out only when they are off screen do so at once.
+  - The program prints these lines ([command reference](commands.md#development-runtime)):
+    - a line for each spawner change, each character sent out and the first order it got,
+    - `ai conduct NAME: sees player1 at D, AI state 2 (not ported) at update U` when a goon notices Chase,
+    - lines for the walk back (`ai conduct NAME: AI state 14 (walk back)`, `walks to its spawn point`, `walk ended, idle`).
+- Build-its (piles of bricks the story switches on) can be built: stand next to them and hold A.
+  - One brick is built per press and it takes the same number of updates as the original.
+  - After the last brick the finished object appears and the story script that waits for it starts. For the donut van of mission 1-1 the script switches the broken van off and the driveable van on. You can drive the van, see the vehicle entry below.
+  - The six bricks lie scattered around the pile and each flies to its place while it is built. Then the finished object rises out of the pile.
+  - The character plays the building animation while you hold A. A sound plays when each brick and the whole build is done.
+  - The bricks hop while you stand next to them (without their sound).
+  - The camera does not frame the build. The studs and the saved state of a finished build-it are missing.
+- Scripts can remove a prop (`DestroyProp`), fade an object in or out (`EffectFadeObject`) and wait for a room to load (`StreamRoomIn`). Far objects do not fade out with distance and models near the camera do not turn see-through yet. `SetPartyCharacter` only prints `party character ... swap not ported` when a script asks for another character than the one you play.
+- Most script commands are not worked out. The first time a script uses one of them, the program prints `script function without handler` and the command's name. The script goes on as if the command had finished.
+- The coins (studs) of the level spin where the level puts them. Walk close to one and it is picked up. It flies up to the stud counter. After one second the counter goes up (silver 10, gold 100, blue 1000, purple 10000). It shows the new total for a few seconds and slides away again. The program also prints the counter at the end of a `--script` run.

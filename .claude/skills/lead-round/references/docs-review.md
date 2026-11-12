@@ -93,6 +93,7 @@ The lead gives you the worktree, the branch, the worker's brief and the worker's
   - controls are in `docs/controls.md`
 - **Top-level `docs/*.md`:** the owner list is in CLAUDE.md "User docs". For each file the branch's behaviour change makes wrong, check the statement, not only the option names the checker sees: `commands.md` (options, programs, test names, and the meaning of existing ones), `controls.md`, `game-runtime.md`, and `status.md` against the feature file's Status (a missing update is a quick fix when the feature file states the behaviour, otherwise RETURN).
 - **They describe the current version,** not its history. They link instead of duplicating.
+- **The guide:** every changed user doc (`README.md`, `CONTRIBUTING.md`, top-level `docs/*.md`) is checked against the numbered rules of [user-docs-guide.md](../../../../docs/design/user-docs-guide.md): README opening, state line, at most 4 badges and 12 KB, numbered quick start with expected results, 40 KB page limit, sentences of at most 25 words, no dates or history, no marketing words, code marking, relative links, no copied text. A violation is a quick fix when mechanical, otherwise RETURN.
 - **QoL options:** a new QoL feature is documented for the user with its toggle and that it is off by default.
 - **README:** if setup, build, extraction, start commands or controls changed, the README's path from checkout to game start is updated. Its state line still says the port is not playable yet.
 

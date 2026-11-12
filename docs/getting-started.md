@@ -6,7 +6,7 @@ The [README](../README.md) has the short path from a fresh checkout to a running
 
 - The project builds a PC port of *LEGO City Undercover: The Chase Begins* (Nintendo 3DS). The goal is a port that plays exactly like the original, from start to finish.
 - It runs on Linux first. A Windows version is planned for after the Linux version is finished.
-- The game is not playable on PC yet. Today the project can extract and decode the game's files, show models, levels and animated characters in development tools, and let you walk the main character around a level and play parts of the first missions. See [Project status](status.md).
+- The game is not playable on PC yet. Today the project can extract and decode the game's files. Development tools show models, levels and animated characters. You can walk the main character around a level and play parts of the first missions. See [Project status](status.md).
 - Game data is never stored in this repository. You need your own decrypted `.cci` image.
 
 ## What `chase-game` is

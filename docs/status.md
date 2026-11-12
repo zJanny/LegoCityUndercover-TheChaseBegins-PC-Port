@@ -7,42 +7,177 @@
 - Extracting the executable and the game files from your own decrypted image.
 - Unpacking the asset archive.
 - Converting textures to PNG and sounds to WAV.
-- Reading models, level layouts, navigation grids, skeletons, character animations, cutscene cameras, data tables, menu layouts, particle effect definitions, level camera settings and the game text.
+- Reading many file types.
+  - Models, level layouts, navigation grids and skeletons.
+  - Character animations and cutscene cameras.
+  - Data tables, menu layouts, particle effect definitions and level camera settings.
+  - The game text.
 - Showing models, levels, animated characters and in-engine cutscenes in the [model viewer](model-viewer.md).
 - Playing sounds in the [sound test](sound-test.md).
 - Playing the cutscene videos with subtitles in the [video player](fmv-player.md).
-- Running a level in the [development runtime](game-runtime.md). It is a test program, not gameplay. Today it does this:
-  - The main character walks, runs, sprints, jumps and falls with the speeds measured in the original game. The level's floor and walls, and many objects (lamp posts, crates, barriers, doors, the helipad of mission 1-3 before and after its build), stop him. Walking slowly off a ledge differs from the original.
-  - The camera follows him like the original and keeps out of walls. In places with a fixed camera it stays fixed and shows the crossed-out camera picture (the smooth change between fixed cameras is missing).
-  - Studs spin, can be picked up and fly to the stud counter. The display of the original game is shown: the character's picture, the hearts, the stud counter and the map on the bottom screen (each level's map with the original's numbers; the zoom is fixed) with the map buttons, which slide in and react to clicks; the characters panel opens without its portraits, and the fast travel page of the helipad opens and closes. What the buttons lead to (character change, scanner, red bricks, freeplay, hint, the trip) is not there yet. Start opens the pause menu. Its Options page changes the sound effects and music volume and Invert camera and saves them. The Language row opens the original's grid of nine flags; choosing one stores it in the save file, but texts and pictures stay English. Credits and Exit do nothing yet.
-  - The character's footsteps, jump and landing sounds and the coin sound play, with distance and left/right position as in the original. The sounds of his climbs on ladders play too, from the sound tracks of his animations; they are not yet compared with the original.
-  - You can walk out of the police station into the street and back in (the loading page is a stand-in).
-  - Parts of missions 1-1 to 1-3 run: their scripts, the waypoints, the build-it, carrying the donut box, picking up the key of mission 1-3, putting it into its keyhole and turning it to open the garage, breaking the parts crate and carrying it to the base plate of mission 1-3, building the generator switch and pulling it (the crane scene plays and the crane lowers its girder), and after the lawnmower scene, with the runaway lawn mower driving round the park, vaulting over the fence, breaking the cart crate, building and pushing the push cart, building the crane and pulling its switch, which runs the end of mission 1-3 (the end scene is not compared with the original), riding the ledge lift of mission 1-3 up after pulling its switch, the super build-it and fast travel pad of the helipad, the sound scanner, the dog cage and the detective spots (with their marker on the ground), the TV crew of mission 1-3 holding its cameras and booms in the hand (not compared with the original). Chase can punch smashable props, ride ziplines, use trampolines, climb bricks, flag poles, rails and ladders.
-  - Mission 1-4 starts: after mission 1-3 the waypoint at the car showroom runs its arrival scene (the cutscene, then the two hints). The gang members stay hidden until the arrival scene sends in the first two, who then appear where the level places them. The goons notice Chase in the showroom but do not fight back yet: the first two stand there and the goons of the later waves jump to their target spots. Each can be thrown twice and then arrested with A; once the first two are arrested the next wave comes out. The roof scene's slow motion slows the game and plays its sounds, and the ladder kick starts its particle effect; after the skylight scene the booster chaser jumps into the stolen car; in the chase the stolen car drives off along its route through the streets on its own (its speed and line are not yet checked against the original); the player's police car can hit it: each hit above 3 m/s takes one of its five hearts and slows it, the fifth ends the chase and the booster chaser steps out of the car (reaching the car takes a development teleport, see the [gap list](plans/features/script-system-missions-1-4.md); the arrest after that is a stand-in); the bricks of the skylight burst are spawned (the [gap list](plans/features/script-system-missions-1-4.md)).
-  - He can get into and drive a car. The car drives like the original and smashes breakable props into bricks and super bricks. While he sits in the car, the super bricks fly to him and are counted. The car's sounds and horn are missing.
-  - In the first level up to five passers-by appear in front of the camera, fade in and walk along the city's paths. Some of their inputs are stand-ins. The level's other people stand in place.
-  - In the first level cars appear on the city's roads around the player, drive along them, stop at red lights and behind other cars, turn at the junctions and disappear again, at most as many as the level allows. The player's car bumps into them and bounces off; a car that is hit leaves its road and moves like a free car until it settles. This is built from the original's code but not yet compared with the original in play, and other things that touch the cars (people, other cars of the level) do not push them yet.
-  - In the police station the award viewer shows how many bronze, silver and gold awards the save slot has; the award trophies of its upper screen are not drawn yet.
+- Running a level in the [development runtime](game-runtime.md). It is a test program, not gameplay. It does the following.
+  - The main character walks, runs, sprints, jumps and falls with the speeds measured in the original game.
+    - The level's floor and walls stop him.
+    - Many objects stop him: lamp posts, crates, barriers, doors and the helipad of mission 1-3 before and after its build.
+    - Walking slowly off a ledge differs from the original.
+  - The camera follows him like the original and keeps out of walls.
+    - In places with a fixed camera it stays fixed and shows the crossed-out camera picture.
+    - The smooth change between fixed cameras is missing.
+  - Studs spin, can be picked up and fly to the stud counter.
+  - The display of the original game is shown.
+    - It shows the character's picture, the hearts, the stud counter and the map on the bottom screen.
+    - Each level's map uses the original's numbers; the zoom is fixed.
+    - The map buttons slide in and react to clicks.
+    - The characters panel opens without its portraits.
+    - The fast travel page of the helipad opens and closes.
+    - What the buttons lead to is missing: character change, scanner, red bricks, freeplay, hint and the trip.
+  - Start opens the pause menu.
+    - Its Options page changes the sound effects and music volume and Invert camera, and saves them.
+    - The Language row opens the original's grid of nine flags.
+    - Choosing a flag stores the language in the save file, but texts and pictures stay English.
+    - Credits and Exit do nothing.
+  - The character's footsteps, jump and landing sounds and the coin sound play, with distance and left/right position as in the original.
+  - The sounds of his climbs on ladders play from the sound tracks of his animations; they are not compared with the original.
+  - You can walk out of the police station into the street and back in; the loading page is a stand-in.
+  - Parts of missions 1-1 to 1-3 run.
+    - Their scripts and the waypoints run.
+    - The build-it, carrying the donut box and picking up the key of mission 1-3 work.
+    - He puts the key into its keyhole and turns it to open the garage.
+    - He breaks the parts crate and carries it to the base plate of mission 1-3.
+    - He builds the generator switch and pulls it; the crane scene plays and the crane lowers its girder.
+    - The lawnmower scene runs, with the runaway lawn mower driving round the park and vaulting over the fence.
+    - After it he breaks the cart crate, builds and pushes the push cart, builds the crane and pulls its switch.
+    - That switch runs the end of mission 1-3; the end scene is not compared with the original.
+    - The ledge lift of mission 1-3 rides up after its switch is pulled.
+    - The super build-it and fast travel pad of the helipad, the sound scanner, the dog cage and the detective spots work.
+    - The detective spots have their marker on the ground.
+    - The TV crew of mission 1-3 holds its cameras and booms in the hand; this is not compared with the original.
+    - Chase can punch smashable props, ride ziplines, use trampolines, and climb bricks, flag poles, rails and ladders.
+  - Mission 1-4 starts after mission 1-3.
+    - The waypoint at the car showroom runs its arrival scene: the cutscene, then the two hints.
+    - The gang members stay hidden until the arrival scene sends in the first two, who appear where the level places them.
+    - The goons notice Chase in the showroom but do not fight back.
+    - The first two stand there; the goons of the later waves jump to their target spots.
+    - Each can be thrown twice and then arrested with A; once the first two are arrested the next wave comes out.
+    - The roof scene's slow motion slows the game and plays its sounds, and the ladder kick starts its particle effect.
+    - After the skylight scene the booster chaser jumps into the stolen car.
+    - In the chase the stolen car drives off along its route through the streets on its own.
+    - Its speed and line are not checked against the original.
+    - The player's police car can hit it: each hit above 3 m/s takes one of its five hearts and slows it.
+    - The fifth hit ends the chase, and the booster chaser steps out of the car.
+    - Reaching the car takes a development teleport (see the [gap list](plans/features/script-system-missions-1-4.md)). The arrest after that is a stand-in.
+    - The bricks of the skylight burst are spawned (see the [gap list](plans/features/script-system-missions-1-4.md)).
+  - He can get into and drive a car.
+    - The car drives like the original and smashes breakable props into bricks and super bricks.
+    - While he sits in the car, the super bricks fly to him and are counted.
+    - The car's sounds and horn are missing.
+  - In the first level up to five passers-by appear in front of the camera, fade in and walk along the city's paths.
+    - Some of their inputs are stand-ins.
+    - The level's other people stand in place.
+  - In the first level cars appear on the city's roads around the player and drive along them.
+    - They stop at red lights and behind other cars, turn at the junctions and disappear again, at most as many as the level allows.
+    - The player's car bumps into them and bounces off.
+    - A car that is hit leaves its road and moves like a free car until it settles.
+    - This is built from the original's code but is not compared with the original in play.
+    - Other things that touch the cars, such as people and other cars of the level, do not push them.
+  - In the police station the award viewer shows how many bronze, silver and gold awards the save slot has.
+  - The award trophies of its upper screen are not drawn.
   - Nothing else of the game works.
-- Showing the start screens of the original game in the [development runtime](game-runtime.md): loading page, logos, TT Games movie, language list, StreetPass and HOME pages, autosave notice, slot list, saving page, loading screen, intro movie with subtitles and the title card. Some parts are stand-ins. The slots of a save file are shown only with `--front-save`, and the delete page is missing.
-- Window mode in the [development runtime](game-runtime.md#window-mode-and-size): borderless full screen by default, windowed from `config/qol.cfg`, F11 switches. With `master Improved` (or `widened_view on` under `master Custom`) in that file the 3D view is widened over the whole window and the HUD parts sit at its corners. While the view is widened the bottom screen is hidden and the top picture is centred in the whole window and a round minimap (the original map, rotating with the camera, one fifth of the window height) sits at the right edge under the studs and counters; it is hidden in cutscenes and movies, in the scanner, in dialog and speech boxes, on the scene change page, on the fast-travel map and in the pause menu; the pause menu, map, scanner, build-it and award viewer pages live on the bottom screen and cannot be used then (the panels are not built yet); the front end shows the bottom page of every page that has one ("Preparing", language list, prompts, autosave notice, slot page, "Saving Game", loading screen with a small spinning icon, mission card) as a panel over the darkened top picture, and its rows and A, B and Y pictures are clicked with the mouse; logos and movies show no panel, and their subtitles are the original bubble over the lower part of the movie.
-- View distance (Display tab of the PC settings menu, x1.0 to x20.0, not in Original): the far edge of the picture, the fog and the distances at which people in the street appear and fade move out by the chosen factor, for every camera. Above x1.0 every room within that distance is loaded too (at x20 a whole district); traffic is not scaled yet (open item). See [the PC settings menu](controls.md#pc-settings-menu).
-- PC controls (Quality of life tab, on in Improved): on foot the keys follow a typical PC game (WASD, Space jump, E interact, left mouse punch, F vehicle, Z and C camera, middle mouse re-centre, Tab Select), kept in `config/controls.pc.cfg` apart from the 3DS mapping. See [PC controls](controls.md#pc-controls). Moving the mouse sideways turns the camera (fixed sensitivity). In a vehicle the keys switch to a driving set (W or Up accelerate, S, Down or Space brake, A and D steer, H horn, F leave), kept in `config/controls.pc.vehicle.cfg` and changed in the Controls tab with the On foot / Vehicle switch. Escape is a fixed second key for Start in every mode.
-- The [PC settings menu](controls.md#pc-settings-menu) in the development runtime: a "PC Settings" bar on the slot list opens it (click it, or move onto it with Down and press A) over the whole window, and the start screens stop behind it. It is a modern full-window menu with tabs Game, Display, Controls and Quality of life, its own font and keyboard, mouse and gamepad control. Its Display, Controls and Quality of life tabs store and apply their changes (`config/qol.cfg`, `config/controls.cfg`, the window, with "Keep these settings?" after a display change); its Game rows show your save's options, change the volumes and Invert camera and store them when the menu closes (a new language is not applied yet), and its Quit game row (Yes or No) ends the program; in play the Game tab holds only Quit game. Escape never closes the game: it is a second key for Start (pause menu) and goes back in menus, one page at a time on the pause screen ([Escape](controls.md#escape)). The menu is drawn over the dimmed last picture of the start screen or pause screen (black where none was kept). The pause menu has a "PC Settings" entry (last on the wheel) that opens the same menu over the paused game.
+- Showing the start screens of the original game in the [development runtime](game-runtime.md).
+  - The screens are the loading page, logos, TT Games movie, language list, StreetPass and HOME pages, and autosave notice.
+  - They also include the slot list, saving page, loading screen, intro movie with subtitles and the title card.
+  - Some parts are stand-ins.
+  - The slots of a save file are shown only with `--front-save`.
+  - The delete page is missing.
+- Window mode in the [development runtime](game-runtime.md#window-mode-and-size).
+  - It is borderless full screen by default, and windowed from `config/qol.cfg`.
+  - F11 switches.
+  - With `master Improved` (or `widened_view on` under `master Custom`) in that file, the 3D view is widened over the whole window.
+  - The HUD parts then sit at the corners of the window.
+  - While the view is widened, the bottom screen is hidden and the top picture is centred in the whole window.
+  - A round minimap sits at the right edge under the studs and counters.
+    - It shows the original map, rotating with the camera, at one fifth of the window height.
+    - It is hidden in cutscenes and movies, in the scanner, and in dialog and speech boxes.
+    - It is hidden on the scene change page, on the fast-travel map and in the pause menu.
+  - The pause menu, map, scanner, build-it and award viewer pages live on the bottom screen and cannot be used then.
+  - Panels for these pages are not built.
+  - The front end shows the bottom page of every page that has one as a panel over the darkened top picture.
+    - These pages are "Preparing", language list, prompts, autosave notice, slot page, "Saving Game", loading screen and mission card.
+    - The loading screen has a small spinning icon.
+    - Its rows and A, B and Y pictures are clicked with the mouse.
+  - Logos and movies show no panel.
+  - Their subtitles are the original bubble over the lower part of the movie.
+- View distance (Display tab of the PC settings menu, x1.0 to x20.0, not in Original).
+  - It moves out the far edge of the picture, the fog and the distances at which people in the street appear and fade.
+  - It scales these by the chosen factor, for every camera.
+  - Above x1.0 every room within that distance is loaded too; at x20 that is a whole district.
+  - Traffic is not scaled (open item).
+  - See [the PC settings menu](controls.md#pc-settings-menu).
+- PC controls (Quality of life tab, on in Improved). See [PC controls](controls.md#pc-controls).
+  - On foot the keys follow a typical PC game.
+    - The keys are WASD, Space jump, E interact, left mouse punch, F vehicle, Z and C camera, middle mouse re-centre and Tab Select.
+    - They are kept in `config/controls.pc.cfg`, apart from the 3DS mapping.
+  - Moving the mouse sideways turns the camera, with a fixed sensitivity.
+  - In a vehicle the keys switch to a driving set.
+    - The keys are W or Up accelerate, S, Down or Space brake, A and D steer, H horn and F leave.
+    - They are kept in `config/controls.pc.vehicle.cfg`.
+    - You change them in the Controls tab with the On foot / Vehicle switch.
+  - Escape is a fixed second key for Start in every mode.
+- The [PC settings menu](controls.md#pc-settings-menu) in the development runtime.
+  - A "PC Settings" bar on the slot list opens it over the whole window.
+  - You click the bar, or move onto it with Down and press A.
+  - The start screens stop behind it.
+  - It is a modern full-window menu with its own font and keyboard, mouse and gamepad control.
+  - Its tabs are Game, Display, Controls and Quality of life.
+  - The Display, Controls and Quality of life tabs store and apply their changes.
+    - They write `config/qol.cfg` and `config/controls.cfg`, and change the window.
+    - A display change asks "Keep these settings?".
+  - The Game rows show your save's options.
+    - They change the volumes and Invert camera and store them when the menu closes.
+    - A new language is not applied.
+  - Its Quit game row (Yes or No) ends the program.
+  - In play the Game tab holds only Quit game.
+  - Escape never closes the game.
+    - It is a second key for Start (pause menu).
+    - It goes back in menus, one page at a time on the pause screen ([Escape](controls.md#escape)).
+  - The menu is drawn over the dimmed last picture of the start screen or pause screen, black where none was kept.
+  - The pause menu has a "PC Settings" entry, last on the wheel, that opens the same menu over the paused game.
 - Testing keyboard and mouse controls in the [input laboratory](controls.md).
 - Showing how complete a save file is, with `chase-savecheck`. See the [command reference](commands.md#programs).
 
 ## Not recovered yet
 
-- Gameplay and menus. The level scripts run and some of them start when the character walks into marked places, but most script commands and many ways to start a script are not worked out yet.
-- The fade of far-away objects. Lighting, materials, the draw order and the reflections of shiny surfaces such as car windows follow the game; which lights apply in each room is approximated, and the reflections are not yet compared with the original. Shadows are drawn for the player, the level characters and the placed objects that cast one, with hard edges (the original's are soft); people walking in the street and traffic cast none yet.
+- Gameplay and menus.
+  - The level scripts run, and some start when the character walks into marked places.
+  - Most script commands and many ways to start a script are not worked out.
+- The fade of far-away objects.
+  - Lighting, materials, the draw order and the reflections of shiny surfaces such as car windows follow the game.
+  - Which lights apply in each room is approximated.
+  - The reflections are not compared with the original.
+  - Shadows are drawn for the player, the level characters and the placed objects that cast one.
+  - Their edges are hard; the original's are soft.
+  - People walking in the street and traffic cast no shadows.
 - Blending between different animations, and the real animation speed.
-- The pickup of the super bricks of broken props apart from the pull of a car (the pull runs whenever the player sits in a vehicle, which only approximates the original's conditions; walking over a brick is not checked), collision with people, most objects that break or move (props break only when punched or hit by a vehicle), the camera being placed again when it is stuck, and fighting enemies (Y near an enemy throws it down and a second throw makes it arrestable, but the arrest, the enemies' attacks and their movement during a throw are missing). Vehicles are only partly done.
-- Most music, and the sounds of other people, animals, vehicles and objects. For the character and the coins the sound for each event is known.
-- The rescued man at the end of the crane rescue of mission 1-3: he stays stuck in the air after the crane sequence.
-- Disguises. Chase always wears his police uniform; he cannot change into another disguise yet.
+- Super bricks of broken props, apart from the pull of a car.
+  - The pull runs whenever the player sits in a vehicle, which only approximates the original's conditions.
+  - Walking over a brick is not checked.
+- Collision with people, and most objects that break or move.
+  - Props break only when punched or hit by a vehicle.
+- The camera being placed again when it is stuck.
+- Fighting enemies.
+  - Y near an enemy throws it down, and a second throw makes it arrestable.
+  - The arrest, the enemies' attacks and their movement during a throw are missing.
+- Vehicles are only partly done.
+- Most music, and the sounds of other people, animals, vehicles and objects.
+  - For the character and the coins the sound for each event is known.
+- The rescued man at the end of the crane rescue of mission 1-3 stays stuck in the air after the crane sequence.
+- Disguises. Chase always wears his police uniform. He cannot change into another disguise.
 - Several smaller file types.
-- Most of what a save game contains. The save file can be checked, read and written safely. Only the completion totals, the last level, the missions done, unlocks, level variables, studs, super bricks and the play time are understood. `chase-game` writes the save at the original's save requests and `chase-game --save` starts from a slot; collected items and object states are not saved or loaded yet.
+- Most of what a save game contains.
+  - The save file can be checked, read and written safely.
+  - Only the completion totals, the last level, the missions done, unlocks, level variables, studs, super bricks and the play time are understood.
+  - `chase-game` writes the save at the original's save requests, and `chase-game --save` starts from a slot.
+  - Collected items and object states are not saved or loaded.
 
 ## For developers
 

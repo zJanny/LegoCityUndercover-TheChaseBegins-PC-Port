@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for your interest in this project. This page is for people who want to change the code or the docs.
+This page is for people who want to change the code or the docs of this project. It covers setup, tests, continuous integration, commit messages and documentation. Start with the [README](README.md) if you only want to run the game.
 
 ## Not affiliated
 
@@ -30,8 +30,11 @@ Before you open a pull request:
 
 - The build has no warnings.
 - The unit tests and the CTest tests pass.
-- Every new command-line option has a test that checks its rejection of bad input.
-- New files, tests, executables and libraries are named by what they do, never by a mission, round, agent or date, a number pair like `1_3` or a status word such as `fix`, `glue` or `temp`. The CTest test `file-names` (`tools/check_file_names.py`) checks it.
+- Give every command-line option a test that checks its rejection of bad input.
+- Name files, tests, executables and libraries by what they do.
+- Never use a mission, round, agent or date in a name.
+- Never use a number pair like `1_3` or a status word such as `fix`, `glue` or `temp`.
+- The CTest test `file-names` (`tools/check_file_names.py`) checks the names.
 
 ## Continuous integration
 
@@ -60,6 +63,7 @@ The workflows `.forgejo/workflows/ci.yml` and `.github/workflows/ci.yml` run on 
 ## Documentation
 
 - Document what you change. User-visible behaviour, options, controls and setup go into the top-level files of [docs/](docs/); keep them true to the code.
+- Write user docs by the [user docs guide](docs/design/user-docs-guide.md): short sentences, current state only, copy-paste commands.
 - Findings about the original game go into [docs/re/](docs/re/README.md).
 - Open items, stand-ins and the state of each feature go into the [feature pages](docs/plans/features/README.md).
 - After you edit docs, run `python3 tools/check_doc_links.py --fix`. It checks links and the documentation rules, and the CTest test `doc-links` runs it.
@@ -74,7 +78,9 @@ Claude Code loads the hooks in `.claude/settings.json`; they run `tools/claude_h
 - Before a commit: check the commit message, then run `check_doc_links.py --fix` and stage what it changed. On main the hook also regenerates a stale README progress section or `docs/plans/priorities.md`; in a branch it refuses them, because only `merge_agent.py` produces the generated files. Then stop the commit when the docs checks, `check_local_data.py` or staged game-derived or binary files fail (bundled fonts under `third_party/fonts/` are the one allowed binary). A commit with explicit paths is refused when the index holds other staged files, because git would leave them out.
 - After an edit: report the docs and local-data findings of the edited file.
 - Always: no push or `git config` change from an agent, `merge_agent.py finish` runs alone, a worker starts only from its brief, and a worktree gets its `artifacts` link.
-- Shared `artifacts/` folder: no second `ln -s` that would put a stray link into it, no C++ source files written into it (scratch code goes to the scratchpad), and no deletes, moves or `find -delete` there by an agent except its own scratch folders.
+- Shared `artifacts/` folder: no second `ln -s` that would put a stray link into it.
+- Shared `artifacts/` folder: no C++ source files in it (scratch code goes to the scratchpad).
+- Shared `artifacts/` folder: an agent deletes or moves nothing there, and runs no `find -delete`, except in its own scratch folders.
 - When a worker stops: a round worker cannot stop before the report file named in its brief exists.
 
 Their tests are in `tests/test_claude_hooks.py`. Contributors without Claude Code are not affected.

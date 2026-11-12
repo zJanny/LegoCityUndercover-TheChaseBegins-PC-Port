@@ -2,6 +2,8 @@
 
 `chase-viewer` shows models, levels and animated characters from your extracted game data. It is a tool for checking decoded assets. **It is not the game.** There is no gameplay. Materials, lighting and reflections follow the game. The lights come from the levels you pass with `--level`; models shown without a level have no lights, so lit models look dark.
 
+Back to the [documentation list](../README.md#more-documentation).
+
 The viewer needs the extracted RomFS in `artifacts/romfs` (see [Extracting game data](extracting-game-data.md)). Paths such as `models/char_bear/char_bear.bfnmdl` are names inside the game's asset archive.
 
 ## Show a model

@@ -1,5 +1,9 @@
 # Building the tools
 
+How to install the packages, build the programs and run the tests on Linux.
+
+Back to the [documentation list](../README.md#more-documentation).
+
 ## What you need
 
 - Python 3.11 or newer, for the extraction and conversion tools.
@@ -7,7 +11,7 @@
 - A C++17 compiler.
 - SDL2, found through pkg-config.
 - libepoxy, which is needed only for the [model viewer](model-viewer.md) and the [development runtime](commands.md#development-runtime). Without it, both are not built.
-- FFmpeg (libavformat, libavcodec, libswscale, libswresample, libavutil), which is needed for the [video player](fmv-player.md), `chase-frontshot` and the [development runtime](game-runtime.md), which plays the movies of the start screens. Without it, these are not built.
+- FFmpeg (libavformat, libavcodec, libswscale, libswresample, libavutil), which is needed for the [video player](fmv-player.md), `chase-frontshot` and the [development runtime](game-runtime.md). The runtime plays the movies of the start screens with it. Without FFmpeg, these are not built.
 - Optional, only for the [emulator comparison tool](commands.md#original-game-in-the-emulator-oracle): the Azahar 3DS emulator (version 2126.2 tested; `--rpc` needs a build with the RPC server), Xvfb, `libX11` and `libXtst`. The [requirements list](commands.md#original-game-in-the-emulator-oracle) has the details.
 
 ## Build

@@ -2,6 +2,8 @@
 
 `chase-fmv` plays the game's cutscene videos, with subtitles. It needs the extracted RomFS in `artifacts/romfs` (see [Extracting game data](extracting-game-data.md)) and FFmpeg (see [Building the tools](building.md)).
 
+Back to the [documentation list](../README.md#more-documentation).
+
 The videos are in `artifacts/romfs/romfs/cutscenes/` and end in `.moflex`.
 
 ```sh

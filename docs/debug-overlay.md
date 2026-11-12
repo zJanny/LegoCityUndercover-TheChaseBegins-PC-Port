@@ -2,6 +2,8 @@
 
 The debug overlay is a developer tool of the [development runtime](game-runtime.md) (`chase-game`). It shows how fast the program runs and a few values of the running level. It is not part of the original game and it does not change the game.
 
+Back to the [documentation list](../README.md#more-documentation).
+
 ## Use it
 
 - It is **off by default**. While it is off, nothing is drawn and the game update does not change.
