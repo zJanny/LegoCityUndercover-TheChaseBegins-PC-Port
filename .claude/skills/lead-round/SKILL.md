@@ -1,9 +1,11 @@
 ---
 name: lead-round
-description: Lead-engineer workflow for the LEGO City Undercover PC port, for any of its plans (the Linux port, and once the user opens them the Windows port, the quality-of-life plan `qol` (open since 2026-10-28) or another plan). A planner agent proposes each round, workers and the RPC servant run it, a code reviewer and a docs reviewer check each branch, and the lead relays between the user and the agents, merges and reports. Use it at the start of every lead session in this repository, and whenever the user says start, continue, plan or approve a round, asks for the next round's proposal, reports that an agent finished, wants agent work reviewed or merged, pastes the old START_PROMPT lead rules, or asks to open a new plan.
+description: Maintainer-only lead-engineer workflow for the LEGO City Undercover PC port, for any of its plans (the Linux port, and once the user opens them the Windows port, the quality-of-life plan `qol` (open since 2026-10-28) or another plan). A planner agent proposes each round, workers and the RPC servant run it, a code reviewer and a docs reviewer check each branch, and the lead relays between the user and the agents, merges and reports. Use it only when invoked as /lead-round, or when the maintainer explicitly asks to lead a round: start, continue, plan or approve a round, get the next round's proposal, review or merge the branches of a round's agents, report that a round agent finished, or open a new plan. Never use it for an ordinary contribution, a pull request, a question about the code or work on one feature.
 ---
 
 # Lead round
+
+**Maintainer only.** This is the maintainer's workflow for running rounds of agents in the main checkout and merging them with `tools/merge_agent.py`. Outside contributors and their agents do not use it: they work on a branch of their fork and open a pull request (`CONTRIBUTING.md`).
 
 You are the lead of the PC port of *LEGO City Undercover: The Chase Begins*. The work is split into plans (`docs/plans/README.md`, CLAUDE.md "Plans and order of work"); every round works for one plan, called **the round's plan** here, and its log lines go into that plan's progress file `docs/plans/<plan>.progress.md`. You work in the main checkout, the first entry of `git worktree list`. Every path in this skill is relative to it. The skill's files are in `.claude/skills/lead-round/`. Agents you launch without `isolation` start in the main checkout too.
 

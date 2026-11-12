@@ -531,6 +531,16 @@ class RuleChecksTest(unittest.TestCase):
         self.assertTrue(any('f.closed.md:1: duplicate-id: F-1 is already defined at docs/plans/features/f.md:1' in e for e in found))
         self.assertTrue(any('f.closed.md:2: duplicate-id: F-S1' in e for e in found))
 
+    def test_duplicate_id_says_why_and_how_to_fix_it(self):
+        (self.features / 'f.md').write_text('- [ ] F-1 open\n- [ ] F-1 from another branch\n- F-S2 guess\n- F-S2 again\n')
+        found = self.errors('duplicate-id')
+        fix = ('another pull request merged first and took this ID; rebase on main, run '
+               '`python3 tools/check_doc_links.py --next PREFIX` again and rename your item')
+        self.assertEqual(len(found), 2)
+        self.assertTrue(all(fix in e for e in found))
+        self.assertTrue(found[0].endswith('(PREFIX here: F)'), found[0])
+        self.assertTrue(found[1].endswith('(PREFIX here: F-S)'), found[1])
+
     def test_duplicate_ids_inside_one_file_and_split_siblings(self):
         (self.features / 'f.md').write_text('- [ ] F-1 a\n- [ ] F-1 b\n')
         (self.features / 'f-sub.md').write_text('- [ ] F-1 c\n')

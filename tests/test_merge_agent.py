@@ -1,10 +1,12 @@
 import contextlib
 import io
+import os
 import re
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parent.parent / "tools" / "merge_agent.py"
@@ -509,6 +511,240 @@ class VerifiedFingerprintTest(unittest.TestCase):
         with self.assertRaises(self.merge_agent.MergeError):
             self.merge_agent.run_checks(self.repo)
         self.assertIsNone(self.merge_agent.recorded_fingerprint(self.repo))
+
+
+CENSUS_STAND_IN = '''"""Stand-in for tools/generated_file_census.py of the CI round, only for these tests: the interface without game data."""
+ROWS = MEASURED
+
+
+def measure_census():
+    return ROWS
+
+
+def write_census(path, rows):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("section,key,value,provenance\\n" + "".join(",".join(map(str, row)) + "\\n" for row in sorted(rows)))
+'''
+
+
+class CensusRefreshTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self.tmp.name)
+        git(self.repo, "init", "-q", "-b", "main")
+        git(self.repo, "config", "user.email", "test@example.invalid")
+        git(self.repo, "config", "user.name", "Test")
+        (self.repo / "a.txt").write_text("a\n")
+        git(self.repo, "add", "a.txt")
+        git(self.repo, "commit", "-q", "-m", "init")
+        sys.path.insert(0, str(SCRIPT.parent))
+        import merge_agent
+        self.merge_agent = merge_agent
+        self.table = self.repo / merge_agent.CENSUS
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def stand_in(self, measured: str) -> None:
+        (self.repo / "tools").mkdir(exist_ok=True)
+        (self.repo / "tools" / "generated_file_census.py").write_text(CENSUS_STAND_IN.replace("MEASURED", measured))
+
+    def refresh(self) -> str:
+        captured = io.StringIO()
+        with contextlib.redirect_stdout(captured):
+            self.merge_agent.refresh_census(self.repo)
+        return captured.getvalue()
+
+    def test_measured_table_is_written_and_staged(self) -> None:
+        self.stand_in("[('readme_progress', 'files_total', 12, 'census 2026-11-12')]")
+        self.assertIn("census table refreshed and staged", self.refresh())
+        self.assertEqual(self.table.read_text(), "section,key,value,provenance\nreadme_progress,files_total,12,census 2026-11-12\n")
+        self.assertIn(self.merge_agent.CENSUS, output(self.repo, "diff", "--cached", "--name-only").split())
+
+    def test_unchanged_table_stays_out_of_the_commit(self) -> None:
+        self.stand_in("[('priorities', 'f.x.calls', 3, 'census 2026-11-12')]")
+        self.refresh()
+        git(self.repo, "commit", "-q", "-m", "table")
+        self.assertIn("census table unchanged", self.refresh())
+        self.assertEqual(output(self.repo, "diff", "--cached", "--name-only"), "")
+
+    def test_without_game_data_the_table_is_kept(self) -> None:
+        self.stand_in("None")
+        self.assertIn("census table kept: no game data", self.refresh())
+        self.assertFalse(self.table.exists())
+
+    def test_without_the_census_module_nothing_happens(self) -> None:
+        self.assertIn("tools/generated_file_census.py is missing", self.refresh())
+        self.assertFalse(self.table.exists())
+
+
+class CheckPullRequestTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        base = Path(self.tmp.name)
+        self.remote = base / "github.git"
+        git(base, "init", "-q", "--bare", "-b", "main", str(self.remote))
+        self.repo = base / "lead"
+        git(base, "clone", "-q", str(self.remote), str(self.repo))
+        git(self.repo, "config", "user.email", "test@example.invalid")
+        git(self.repo, "config", "user.name", "Test")
+        git(self.repo, "checkout", "-q", "-B", "main")
+        (self.repo / "a.txt").write_text("a\n")
+        git(self.repo, "add", "a.txt")
+        git(self.repo, "commit", "-q", "-m", "init")
+        git(self.repo, "push", "-q", "origin", "main")
+        (self.repo / "artifacts").mkdir()
+        self.scratch = base / "temp"
+        self.scratch.mkdir()
+        self.saved_tempdir = tempfile.tempdir
+        tempfile.tempdir = str(self.scratch)
+        sys.path.insert(0, str(SCRIPT.parent))
+        import merge_agent
+        self.merge_agent = merge_agent
+        self.saved_checks = merge_agent.pull_request_checks
+        self.checked: list[tuple[Path, dict]] = []
+        self.result: list[str] | BaseException = []
+        merge_agent.pull_request_checks = self.fake_checks
+
+    def tearDown(self) -> None:
+        self.merge_agent.pull_request_checks = self.saved_checks
+        tempfile.tempdir = self.saved_tempdir
+        self.tmp.cleanup()
+
+    def fake_checks(self, tree: Path, env: dict) -> list[str]:
+        self.checked.append((tree, env))
+        self.seen = {
+            "files": sorted(output(tree, "ls-files").split()),
+            "branch": output(tree, "rev-parse", "--abbrev-ref", "HEAD").strip(),
+            "main": output(tree, "rev-parse", "main").strip(),
+            "artifacts": (tree / "artifacts").resolve() if (tree / "artifacts").is_symlink() else None,
+            "hooks": sorted(path.name for path in (tree / ".git" / "hooks").glob("*")) if (tree / ".git" / "hooks").is_dir() else [],
+        }
+        if isinstance(self.result, BaseException):
+            raise self.result
+        return self.result
+
+    def open_pull_request(self, number: int, files: dict[str, bytes]) -> None:
+        fork = Path(self.tmp.name) / f"fork-{number}"
+        git(Path(self.tmp.name), "clone", "-q", str(self.remote), str(fork))
+        git(fork, "config", "user.email", "fork@example.invalid")
+        git(fork, "config", "user.name", "Fork")
+        for name, data in files.items():
+            (fork / name).parent.mkdir(parents=True, exist_ok=True)
+            (fork / name).write_bytes(data)
+        git(fork, "add", "-A")
+        git(fork, "commit", "-q", "-m", "contribution")
+        git(fork, "push", "-q", "origin", f"HEAD:refs/pull/{number}/head")
+
+    def check(self, number: int) -> tuple[list[str], str]:
+        captured = io.StringIO()
+        with contextlib.redirect_stdout(captured):
+            reasons = self.merge_agent.check_pr(self.repo, number, "origin")
+        return reasons, captured.getvalue()
+
+    def assertCleanedUp(self, number: int) -> None:
+        self.assertEqual(list(self.scratch.iterdir()), [])
+        self.assertEqual(output(self.repo, "for-each-ref", "refs/check-pr/").strip(), "")
+        self.assertEqual(output(self.repo, "worktree", "list").count("\n"), 1)
+
+    def test_game_derived_and_binary_files_stop_before_any_pull_request_code_runs(self) -> None:
+        self.open_pull_request(7, {"shot.bmp": b"BM\x00\x01", "tests/data/table.inc": b"\x01\x00\x02", "tools/run_me.py": b"print(1)\n"})
+        reasons, printed = self.check(7)
+        self.assertEqual(self.checked, [])
+        self.assertEqual(reasons, ["game-derived, build or binary files: shot.bmp (game-derived or build path, new in the pull request), "
+                                   "tests/data/table.inc (binary content, new in the pull request)"])
+        self.assertIn(f"Read the diff of pull request 7 first: https://github.com/{self.merge_agent.CANONICAL_REPO}/pull/7/files", printed)
+        self.assertIn("files changed against main that run code on this machine (read them first):\n  tools/run_me.py", printed)
+        self.assertCleanedUp(7)
+
+    def test_clean_pull_request_is_built_and_tested_in_a_separate_checkout(self) -> None:
+        self.open_pull_request(8, {"docs/notes.md": b"notes\n", "third_party/fonts/Font.ttf": b"\x00\x01\x00\x00"})
+        with mock.patch.dict(os.environ, {"SSH_AUTH_SOCK": "/agent.sock", "GH_TOKEN": "secret"}):
+            reasons, _printed = self.check(8)
+        self.assertEqual(reasons, [])
+        self.assertEqual(len(self.checked), 1)
+        tree, env = self.checked[0]
+        self.assertNotIn(self.repo, tree.parents)
+        self.assertEqual(self.seen["files"], ["a.txt", "docs/notes.md", "third_party/fonts/Font.ttf"])
+        self.assertEqual(self.seen["branch"], "pull-8")
+        self.assertEqual(self.seen["main"], output(self.repo, "rev-parse", "main").strip())
+        self.assertEqual(self.seen["artifacts"], (self.repo / "artifacts").resolve())
+        self.assertEqual(self.seen["hooks"], [])
+        for name in ("SSH_AUTH_SOCK", "GH_TOKEN"):
+            self.assertNotIn(name, env)
+        self.assertEqual(env["GIT_TERMINAL_PROMPT"], "0")
+        self.assertCleanedUp(8)
+
+    def test_pull_request_code_gets_no_agent_tokens_or_git_redirects(self) -> None:
+        names = {"SSH_AUTH_SOCK": "/a", "GPG_AGENT_INFO": "/b", "GIT_DIR": "/c", "GITHUB_TOKEN": "d", "MY_SECRET": "e", "DB_PASSWORD": "f"}
+        with mock.patch.dict(os.environ, {**names, "HOME": "/home/x", "PATH": "/usr/bin"}, clear=True):
+            env = self.merge_agent.pull_request_env()
+        self.assertEqual(env, {"HOME": "/home/x", "PATH": "/usr/bin", "GIT_TERMINAL_PROMPT": "0"})
+
+    def test_failed_checks_are_reported_and_the_checkout_removed(self) -> None:
+        self.open_pull_request(9, {"docs/notes.md": b"notes\n"})
+        self.result = ["ctest failed (exit 8); the failing tests are listed above"]
+        reasons, _printed = self.check(9)
+        self.assertEqual(reasons, self.result)
+        self.assertCleanedUp(9)
+        captured = io.StringIO()
+        with contextlib.redirect_stdout(captured):
+            self.assertEqual(self.merge_agent.report_pull_request(9, reasons), 1)
+        self.assertEqual(captured.getvalue(), "check-pr 9: FAIL\n- ctest failed (exit 8); the failing tests are listed above\n")
+
+    def test_interrupt_removes_the_checkout(self) -> None:
+        self.open_pull_request(10, {"docs/notes.md": b"notes\n"})
+        self.result = KeyboardInterrupt()
+        with self.assertRaises(KeyboardInterrupt):
+            self.check(10)
+        self.assertCleanedUp(10)
+
+    def test_own_artifacts_entry_stops_before_the_link_and_the_checks(self) -> None:
+        self.open_pull_request(12, {"artifacts": b"not a folder\n"})
+        with self.assertRaisesRegex(self.merge_agent.MergeError, "has its own top-level artifacts entry"):
+            self.check(12)
+        self.assertEqual(self.checked, [])
+        self.assertCleanedUp(12)
+
+    def test_missing_pull_request_is_named(self) -> None:
+        with self.assertRaisesRegex(self.merge_agent.MergeError, "check-pr: cannot fetch pull request 11 from origin: "):
+            self.check(11)
+        self.assertEqual(list(self.scratch.iterdir()), [])
+
+    def test_github_remote_is_found_by_its_url(self) -> None:
+        find = self.merge_agent.github_remote
+        canonical = self.merge_agent.CANONICAL_REPO
+        listing = "{0}\t{1} (fetch)\n{0}\t{1} (push)\n"
+        own = listing.format("origin", "ssh://git@example.invalid:222/owner/repo.git")
+        self.assertEqual(find(own + listing.format("hub", f"https://github.com/{canonical}.git")), "hub")
+        self.assertEqual(find(listing.format("gh", "git@github.com:someone/fork")), "gh")
+        both = listing.format("fork", "git@github.com:someone/LegoCityUndercover-TheChaseBegins-PC-Port.git") + listing.format(
+            "upstream", f"ssh://git@github.com/{canonical}")
+        self.assertEqual(find(both), "upstream")
+        with self.assertRaisesRegex(self.merge_agent.MergeError, "no git remote points to github.com; add one with: git remote add github "
+                                    f"https://github.com/{canonical}.git"):
+            find(own)
+        with self.assertRaisesRegex(self.merge_agent.MergeError, r"several remotes point to github.com \(a, b\)"):
+            find(listing.format("a", "https://github.com/x/one") + listing.format("b", "https://github.com/y/two"))
+
+    def test_arguments_are_parsed_strictly(self) -> None:
+        for value in ("0", "-3", "x", "1x", "07", "+4", "1.5"):
+            result = run_script(self.repo, "check-pr", value)
+            self.assertEqual(result.returncode, 2, value)
+            self.assertIn(f"argument N: expected a positive pull request number, got {value!r}", result.stderr)
+        result = run_script(self.repo, "check-pr")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("the following arguments are required: N", result.stderr)
+        for extra in (["1", "2"], ["5", "--foo"]):
+            result = run_script(self.repo, "check-pr", *extra)
+            self.assertEqual(result.returncode, 2, extra)
+            self.assertIn(f"unrecognized arguments: {extra[1]}", result.stderr)
+
+    def test_command_line_without_a_github_remote_stops_before_fetching(self) -> None:
+        result = run_script(self.repo, "check-pr", "5")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("check-pr: no git remote points to github.com", result.stderr)
+        self.assertEqual(list(self.scratch.iterdir()), [])
 
 
 if __name__ == "__main__":

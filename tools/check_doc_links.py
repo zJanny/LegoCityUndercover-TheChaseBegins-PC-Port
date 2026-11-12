@@ -337,6 +337,14 @@ def feature_base(stem, stems):
     return best
 
 
+DUPLICATE_ID_FIX = ("If the ID is new in your branch, another pull request merged first and took this ID; rebase on main, run "
+                    "`python3 tools/check_doc_links.py --next PREFIX` again and rename your item (PREFIX here: {prefix})")
+
+
+def id_prefix(item_id):
+    return item_id.rstrip("0123456789").removesuffix("-")
+
+
 def duplicate_id_errors(root):
     errors = []
     paths = feature_files(root)
@@ -354,7 +362,8 @@ def duplicate_id_errors(root):
                 key = (base, match.group(1))
                 where = f"{member.relative_to(root)}:{number + 1}"
                 if key in seen:
-                    errors.append(f"{where}: duplicate-id: {match.group(1)} is already defined at {seen[key]}; IDs are never reused")
+                    errors.append(f"{where}: duplicate-id: {match.group(1)} is already defined at {seen[key]}; IDs are never reused. "
+                                  + DUPLICATE_ID_FIX.format(prefix=id_prefix(match.group(1))))
                 else:
                     seen[key] = where
     return errors

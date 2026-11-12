@@ -22,6 +22,7 @@ class HookTest(unittest.TestCase):
         self.repo = Path(self.tmp.name) / "repo"
         (self.repo / "tools").mkdir(parents=True)
         shutil.copy(TOOLS / "claude_hooks.py", self.repo / "tools")
+        shutil.copy(TOOLS / "forbidden_files.py", self.repo / "tools")
         (self.repo / "CLAUDE.md").write_text("# Rules\n")
         (self.repo / ".gitignore").write_text("/ignored/\n")
         git(self.repo, "init", "-q", "-b", "main")
@@ -189,29 +190,71 @@ class HookTest(unittest.TestCase):
         self.assertAllowed(self.bash(f'git commit docs/notes.md -m "Add x" -m "{CO_AUTHOR}"'))
         self.assertEqual(self.staged(), [])
 
+    README = "# T\n\nSteps.\n<!-- progress:start -->\n| 5 tests |\n<!-- progress:end -->\n\nLinks.\n"
+
     def test_branch_commit_denies_staged_generated_files(self):
         for name in ("README.md", "docs/plans/priorities.md", "docs/progress-trend.svg"):
             path = self.repo / name
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text("old\n")
+            path.write_text(self.README if name == "README.md" else "old\n")
         git(self.repo, "add", ".")
         git(self.repo, "commit", "-q", "-m", "generated")
         commit = f'git commit -m "Add x" -m "{CO_AUTHOR}"'
-        for name in ("README.md", "docs/plans/priorities.md", "docs/progress-trend.svg"):
-            (self.repo / name).write_text("new\n")
+        changed = {"README.md": self.README.replace("5 tests", "6 tests"), "docs/plans/priorities.md": "new\n", "docs/progress-trend.svg": "new\n"}
+        for name, text in changed.items():
+            (self.repo / name).write_text(text)
             git(self.repo, "add", name)
             self.assertAllowed(self.bash(commit))
             git(self.repo, "reset", "-q", "--hard")
         git(self.repo, "checkout", "-q", "-b", "feature")
-        for name in ("README.md", "docs/plans/priorities.md", "docs/progress-trend.svg"):
-            (self.repo / name).write_text("new\n")
+        for name, text in changed.items():
+            (self.repo / name).write_text(text)
             git(self.repo, "add", name)
             self.assertDenied(self.bash(commit), name)
             self.assertDenied(self.bash(f'git commit -am "Add x" -m "{CO_AUTHOR}"'), name)
             git(self.repo, "reset", "-q", "--hard")
+        (self.repo / "README.md").write_text("# T\n\nSteps.\n")
+        git(self.repo, "add", "README.md")
+        self.assertDenied(self.bash(commit), "README.md (its progress section)")
+        git(self.repo, "reset", "-q", "--hard")
+        (self.repo / "README.md").write_text(self.README.replace("5 tests", "7 tests"))
+        self.assertDenied(self.bash(f'git commit -am "Add x" -m "{CO_AUTHOR}"'), "README.md (its progress section)")
+        git(self.repo, "reset", "-q", "--hard")
         (self.repo / "docs").mkdir(exist_ok=True)
         (self.repo / "docs" / "notes.md").write_text("x\n")
         git(self.repo, "add", "docs/notes.md")
+        self.assertAllowed(self.bash(commit))
+
+    def test_branch_commit_allows_readme_edits_outside_the_progress_section(self):
+        (self.repo / "README.md").write_text(self.README)
+        git(self.repo, "add", ".")
+        git(self.repo, "commit", "-q", "-m", "readme")
+        git(self.repo, "checkout", "-q", "-b", "feature")
+        (self.repo / "README.md").write_text(self.README.replace("Steps.", "Steps, now with a fix.").replace("Links.", "More links."))
+        git(self.repo, "add", "README.md")
+        self.assertAllowed(self.bash(f'git commit -m "Fix the quick start" -m "{CO_AUTHOR}"'))
+        (self.repo / "README.md").write_text(self.README.replace("Links.", "Other links."))
+        self.assertAllowed(self.bash(f'git commit -am "Fix the links" -m "{CO_AUTHOR}"'))
+
+    def test_commit_of_claude_md_needs_the_development_doc(self):
+        (self.repo / "docs").mkdir()
+        (self.repo / "docs" / "development.md").write_text("# Development\n")
+        git(self.repo, "add", ".")
+        git(self.repo, "commit", "-q", "-m", "docs")
+        commit = f'git commit -m "Change a rule" -m "{CO_AUTHOR}"'
+        for branch in ("main", "feature"):
+            git(self.repo, "checkout", "-q", "-B", branch)
+            (self.repo / "CLAUDE.md").write_text(f"# Rules\n\nA rule for {branch}.\n")
+            git(self.repo, "add", "CLAUDE.md")
+            self.assertDenied(self.bash(commit), "CLAUDE.md is staged without docs/development.md")
+            self.assertDenied(self.bash(f'git commit -am "Change a rule" -m "{CO_AUTHOR}"'), "Edit docs/development.md to match and stage it")
+            git(self.repo, "reset", "-q", "--hard")
+            (self.repo / "CLAUDE.md").write_text(f"# Rules\n\nA rule for {branch}.\n")
+            (self.repo / "docs" / "development.md").write_text(f"# Development\n\nThe rule for {branch}.\n")
+            self.assertAllowed(self.bash(f'git commit -am "Change a rule" -m "{CO_AUTHOR}"'))
+            git(self.repo, "reset", "-q", "--hard")
+        (self.repo / "docs" / "development.md").write_text("# Development\n\nOnly the human file.\n")
+        git(self.repo, "add", "docs/development.md")
         self.assertAllowed(self.bash(commit))
 
     def test_branch_commit_of_a_moved_feature_line_leaves_priorities_alone(self):
@@ -267,6 +310,15 @@ class HookTest(unittest.TestCase):
         (self.repo / "dump.raw").write_bytes(b"\0\1\2")
         git(self.repo, "add", "dump.raw")
         self.assertDenied(self.bash(f'git commit -m "Add x" -m "{CO_AUTHOR}"'), "dump.raw")
+
+    def test_checkout_without_the_rules_module_uses_the_hooks_own(self):
+        older = Path(self.tmp.name) / "older"
+        git(Path(self.tmp.name), "clone", "-q", str(self.repo), str(older))
+        git(older, "rm", "-q", "tools/forbidden_files.py")
+        (older / "dump.raw").write_bytes(b"\0\1\2")
+        git(older, "add", "dump.raw")
+        result = self.hook("pre-bash", {"cwd": str(older), "tool_input": {"command": f'git commit -m "Add x" -m "{CO_AUTHOR}"'}})
+        self.assertDenied(result, "dump.raw (binary content)")
 
     def test_commit_allows_only_bundled_fonts_as_binary_files(self):
         self.copy_tools("merge_agent.py", "merge_conflicts.py", "round_log.py")

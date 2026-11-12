@@ -382,7 +382,12 @@ def problem_lines(output, limit=MAX_FINDINGS):
     return "\n".join(lines[:limit]) + (f"\n... {len(lines) - limit} more" if len(lines) > limit else "")
 
 
-GENERATED_FILES = ("README.md", "docs/plans/priorities.md", "docs/progress-trend.svg")
+README = "README.md"
+GENERATED_FILES = (README, "docs/plans/priorities.md", "docs/progress-trend.svg")
+PROGRESS_START = "<!-- progress:start -->"
+PROGRESS_END = "<!-- progress:end -->"
+AGENT_RULES = "CLAUDE.md"
+DEVELOPMENT_RULES = "docs/development.md"
 MAIN_BRANCHES = ("main", "master")
 
 
@@ -399,14 +404,44 @@ def merge_head(root):
     return ["MERGE_HEAD"] if full.exists() else []
 
 
-def staged_generated(root, take_all=False):
+def committed_names(root, take_all, *paths, base=()):
     views = [["--cached"], []] if take_all else [["--cached"]]
-    base = merge_head(root)
     found = []
     for view in views:
-        names = git(root, "diff", *view, *base, "--name-only", "--", *GENERATED_FILES).stdout.split("\n")
+        names = git(root, "diff", *view, *base, "--name-only", "--", *paths).stdout.split("\n")
         found += [name for name in names if name and name not in found]
     return found
+
+
+def progress_section(text):
+    start, end = text.find(PROGRESS_START), text.find(PROGRESS_END)
+    return text[start:end + len(PROGRESS_END)] if 0 <= start < end else None
+
+
+def shown(root, spec):
+    result = git(root, "show", spec)
+    return result.stdout if result.returncode == 0 else ""
+
+
+def progress_section_changed(root, take_all, base):
+    before = progress_section(shown(root, f"{(base or ['HEAD'])[0]}:{README}"))
+    versions = [shown(root, f":{README}")]
+    if take_all and (root / README).is_file():
+        versions.append((root / README).read_text(encoding="utf-8", errors="replace"))
+    return any(progress_section(text) != before for text in versions)
+
+
+def staged_generated(root, take_all=False):
+    base = merge_head(root)
+    found = committed_names(root, take_all, *GENERATED_FILES, base=base)
+    if README in found and not progress_section_changed(root, take_all, base):
+        found.remove(README)
+    return [f"{name} (its progress section)" if name == README else name for name in found]
+
+
+def rules_without_development_doc(root, take_all=False):
+    names = committed_names(root, take_all, AGENT_RULES, DEVELOPMENT_RULES, base=merge_head(root))
+    return AGENT_RULES in names and DEVELOPMENT_RULES not in names
 
 
 def prepare_commit(root, take_all=False):
@@ -433,8 +468,13 @@ def prepare_commit(root, take_all=False):
     generated = staged_generated(root, take_all) if branch else []
     if generated:
         problems.append("generated files are staged in a branch: " + ", ".join(generated)
-                        + "\nOnly tools/merge_agent.py produces them, at the merge (CLAUDE.md \"Git\"). Unstage them with git restore --staged "
+                        + "\nOnly tools/merge_agent.py produces them, at the merge (CLAUDE.md \"Git\"); README.md may change outside its "
+                        f"{PROGRESS_START} ... {PROGRESS_END} section. Unstage them with git restore --staged "
                         "and drop the working changes with git checkout -- <file>")
+    if rules_without_development_doc(root, take_all):
+        problems.append(f"{AGENT_RULES} is staged without {DEVELOPMENT_RULES}: {DEVELOPMENT_RULES} is the human version of the rules, "
+                        f"so a change to {AGENT_RULES} makes the matching change there in the same commit (CLAUDE.md). Edit "
+                        f"{DEVELOPMENT_RULES} to match and stage it")
     checked = run_tool(root, env, "check_doc_links.py", "--root", ".")
     if checked and checked.returncode:
         found = [line for line in checked.stdout.split("\n") if line and ": warning: " not in line]
@@ -449,20 +489,36 @@ def prepare_commit(root, take_all=False):
     return problems
 
 
+def blob_head(root, probe, *specs):
+    for spec in specs:
+        process = subprocess.Popen(["git", "-C", str(root), "cat-file", "blob", spec], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        data = process.stdout.read(probe)
+        process.stdout.close()
+        if process.wait() == 0 or data:
+            return data
+    return None
+
+
+def working_head(root, probe, name):
+    path = root / name
+    if path.is_symlink():
+        return os.readlink(path).encode()
+    if path.is_file():
+        with open(path, "rb") as file:
+            return file.read(probe)
+    return blob_head(root, probe, f":{name}")
+
+
 def forbidden_staged(root, take_all=False):
-    merge_agent = load_tool(root, "merge_agent")
-    pattern = getattr(merge_agent, "FORBIDDEN", None)
-    allowed = getattr(merge_agent, "ALLOWED_BINARY", None)
-    views = [["--cached"], []] if take_all else [["--cached"]]
+    rules = load_tool(root, "forbidden_files") or load_tool(Path(__file__).resolve().parent.parent, "forbidden_files")
+    probe = rules.BINARY_PROBE
+    readers = [(["--cached"], lambda name: blob_head(root, probe, f":{name}", f"HEAD:{name}"))]
+    if take_all:
+        readers.append(([], lambda name: working_head(root, probe, name)))
     bad = []
-    for view in views:
-        names = git(root, "diff", *view, "--name-only").stdout.split("\n")
-        bad += [name for name in names if name and pattern and pattern.search(name) and name not in bad]
-        for line in git(root, "diff", *view, "--numstat").stdout.split("\n"):
-            parts = line.split("\t", 2)
-            if (len(parts) == 3 and parts[0] == "-" and parts[1] == "-" and parts[2] not in bad
-                    and not (allowed and allowed.match(parts[2]))):
-                bad.append(parts[2])
+    for view, read_head in readers:
+        names = [name for name in git(root, "diff", *view, "--name-only").stdout.split("\n") if name]
+        bad += [f"{name} ({reason})" for name, reason in rules.check_paths(names, read_head) if not any(b.startswith(name + " (") for b in bad)]
     return bad
 
 

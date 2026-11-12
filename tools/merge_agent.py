@@ -12,6 +12,11 @@
                                          with a warning and the commands to remove it later)
   merge_agent.py close -m FILE [--release WHO]... [--log PLAN LINE_FILE]
                                          the same bookkeeping as its own commit, for a round that ends without a merge
+  merge_agent.py check-pr N              fetch GitHub pull request N (refs/pull/N/head) from the remote that points to github.com,
+                                         refuse game-derived, build and binary files in its tree before any of its code runs,
+                                         then build it warning-free and run all tests (also needs-game-data) in a temporary
+                                         checkout outside this one, print PASS or FAIL with the reasons and remove the checkout;
+                                         it never pushes or merges
 
 sync and prepare compare main with its upstream, or with --upstream REMOTE/BRANCH; prepare --no-sync skips that for a
 session the user runs without a remote. When the upstream moved ahead and main has own commits, they stop: the user
@@ -24,32 +29,35 @@ section stops the merge like any other. Conflicts in a session log archive keep 
 docs/re entries) keep both sides (tools/merge_conflicts.py). Other conflicts stop the merge, docs/design ones included:
 its decisions are edited in place, so both sides of a conflict there need a manual resolution.
 
-Checks: no game-derived or binary files staged, warning-free build, docs/plans/priorities.md regenerated (its item links are checked by the doc fixes),
+Checks: no game-derived or binary files staged (rules in tools/forbidden_files.py), warning-free build, the census table
+tests/data/generated_file_census.csv measured again and staged where game data exists, docs/plans/priorities.md regenerated (its item links are checked by the doc fixes),
 doc fixes (check_doc_links.py --fix, restaged), doc links, README progress section and priorities regenerated,
 ctest, Python tests. Pushing stays a separate, explicitly authorized step.
 """
 from __future__ import annotations
 
 import argparse
+import contextlib
+import importlib.util
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
+import threading
 from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from forbidden_files import ALLOWED_BINARY, BINARY_PROBE, FORBIDDEN, check_paths  # noqa: E402,F401
 from merge_conflicts import resolve_append_only  # noqa: E402
 from round_log import name_error  # noqa: E402
 
 JOBS = max(1, (os.cpu_count() or 2) - 1)
 
-FORBIDDEN = re.compile(
-    r"(^|/)(artifacts|build(-[^/]*)?|graphify-out)/|\.(cci|3ds|cst|cia|bin|bmp|png|jpe?g|wav|bcstm|bcwav|fib|blvl|bfnmdl|dat|mem)$|(^|/)session\.json$",
-    re.IGNORECASE,
-)
-ALLOWED_BINARY = re.compile(r"^third_party/fonts/[^/]+\.ttf$")
 PRIORITIES = "docs/plans/priorities.md"
+CENSUS = "tests/data/generated_file_census.csv"
 GENERATED_FILES = ["README.md", "docs/progress-trend.svg", PRIORITIES]
 PROGRESS_START = "<!-- progress:start -->"
 PROGRESS_END = "<!-- progress:end -->"
@@ -118,8 +126,9 @@ def resolve_generated(root: Path, unmerged: list[str]) -> list[str]:
     return remaining
 
 
-def run(cmd: list[str], cwd: Path, check: bool = True, capture: bool = False) -> subprocess.CompletedProcess:
-    result = subprocess.run(cmd, cwd=cwd, text=True, capture_output=capture)
+def run(cmd: list[str], cwd: Path, check: bool = True, capture: bool = False,
+        env: dict[str, str] | None = None) -> subprocess.CompletedProcess:
+    result = subprocess.run(cmd, cwd=cwd, text=True, capture_output=capture, env=env)
     if check and result.returncode != 0:
         detail = (result.stdout or "") + (result.stderr or "") if capture else ""
         raise MergeError(f"command failed ({result.returncode}): {' '.join(cmd)}\n{detail}".rstrip())
@@ -159,21 +168,73 @@ def check_staged_content(root: Path) -> None:
     unstaged = git(root, "diff", "--name-only").split()
     if unstaged:
         raise MergeError("unstaged changes to tracked files (stage or drop them): " + ", ".join(unstaged))
-    files = staged_files(root)
-    if not files:
+    entries = staged_blobs(root)
+    if not entries:
         raise MergeError("nothing is staged")
-    bad = [name for name in files if FORBIDDEN.search(name)]
-    for line in git(root, "diff", "--cached", "--numstat").splitlines():
-        added, removed, name = line.split("\t", 2)
-        if added == "-" and removed == "-" and name not in bad and not ALLOWED_BINARY.match(name):
-            bad.append(name)
+    bad = forbidden_blobs(root, entries)
     if bad:
-        raise MergeError("game-derived, build or binary files are staged: " + ", ".join(bad))
+        raise MergeError("game-derived, build or binary files are staged: " + described(bad))
 
 
-def build_warning_free(root: Path) -> None:
-    run(["cmake", "-S", ".", "-B", "build", "-DCMAKE_BUILD_TYPE=RelWithDebInfo"], root, capture=True)
-    result = run(["cmake", "--build", "build", "-j", str(JOBS)], root, check=False, capture=True)
+ZERO_SHA = re.compile(r"0+")
+SUBMODULE_MODE = "160000"
+
+
+def staged_blobs(root: Path) -> dict[str, str | None]:
+    fields = run(["git", "diff", "--cached", "--raw", "-z", "--no-renames", "--no-abbrev"], root, capture=True).stdout.split("\0")
+    entries: dict[str, str | None] = {}
+    for header, path in zip(fields[0::2], fields[1::2]):
+        old_mode, new_mode, old_sha, new_sha = header.lstrip(":").split(" ")[:4]
+        deleted = ZERO_SHA.fullmatch(new_sha) is not None
+        mode, sha = (old_mode, old_sha) if deleted else (new_mode, new_sha)
+        entries[path] = None if mode == SUBMODULE_MODE else sha
+    return entries
+
+
+def blob_heads(root: Path, shas: list[str]) -> dict[str, bytes]:
+    wanted = sorted(set(shas))
+    if not wanted:
+        return {}
+    process = subprocess.Popen(["git", "cat-file", "--batch"], cwd=root, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    feeder = threading.Thread(target=feed_lines, args=(process.stdin, wanted))
+    feeder.start()
+    heads: dict[str, bytes] = {}
+    for sha in wanted:
+        header = process.stdout.readline().decode().split()
+        if len(header) != 3:
+            continue
+        size = int(header[2])
+        head = process.stdout.read(min(size, BINARY_PROBE))
+        left = size - len(head)
+        while left > 0:
+            left -= len(process.stdout.read(min(left, 1 << 20)))
+        process.stdout.read(1)
+        heads[sha] = head
+    feeder.join()
+    process.stdout.close()
+    process.wait()
+    return heads
+
+
+def feed_lines(stream, lines: list[str]) -> None:
+    try:
+        stream.write("".join(line + "\n" for line in lines).encode())
+    finally:
+        stream.close()
+
+
+def forbidden_blobs(root: Path, entries: dict[str, str | None]) -> list[tuple[str, str]]:
+    heads = blob_heads(root, [sha for path, sha in entries.items() if sha and not FORBIDDEN.search(path)])
+    return check_paths(entries, lambda path: heads.get(entries[path] or ""))
+
+
+def described(bad: list[tuple[str, str]]) -> str:
+    return ", ".join(f"{path} ({reason})" for path, reason in bad)
+
+
+def build_warning_free(root: Path, env: dict[str, str] | None = None) -> None:
+    run(["cmake", "-S", ".", "-B", "build", "-DCMAKE_BUILD_TYPE=RelWithDebInfo"], root, capture=True, env=env)
+    result = run(["cmake", "--build", "build", "-j", str(JOBS)], root, check=False, capture=True, env=env)
     output = result.stdout + result.stderr
     if result.returncode != 0:
         raise MergeError("build failed:\n" + output[-4000:])
@@ -185,6 +246,37 @@ def build_warning_free(root: Path) -> None:
 def fix_docs(root: Path) -> None:
     run(["python3", "tools/check_doc_links.py", "--root", ".", "--fix"], root)
     run(["git", "add", "-A", "--", "docs"], root)
+
+
+def root_module(root: Path, name: str):
+    path = root / "tools" / f"{name}.py"
+    if not path.is_file():
+        return None
+    tools = str(path.parent)
+    sys.path.insert(0, tools)
+    try:
+        spec = importlib.util.spec_from_file_location(f"merged_{name}", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+    finally:
+        sys.path.remove(tools)
+
+
+def refresh_census(root: Path) -> None:
+    census = root_module(root, "generated_file_census")
+    if census is None:
+        print("census table not refreshed: tools/generated_file_census.py is missing")
+        return
+    with contextlib.chdir(root):
+        rows = census.measure_census()
+    if rows is None:
+        print("census table kept: no game data or C++ library to measure it here")
+        return
+    census.write_census(root / CENSUS, rows)
+    run(["git", "add", "--", CENSUS], root)
+    changed = run(["git", "diff", "--cached", "--quiet", "HEAD", "--", CENSUS], root, check=False).returncode
+    print(f"census table {'refreshed and staged' if changed else 'unchanged'}: {CENSUS}")
 
 
 def update_priorities(root: Path) -> None:
@@ -216,6 +308,8 @@ def run_checks(root: Path, skip_heavy: bool = False) -> None:
     else:
         print("== build")
         build_warning_free(root)
+    print("== census table (the game-data numbers of the generated files)")
+    refresh_census(root)
     print("== priorities (before the doc fixes, which check its item links)")
     update_priorities(root)
     print("== doc fixes (session log rotation, closed items, anchors)")
@@ -452,6 +546,150 @@ def close(root: Path, message_file: Path, holders: list[str], log: list[str] | N
     print("committed; push with `git push` when authorized")
 
 
+CANONICAL_REPO = "zJanny/LegoCityUndercover-TheChaseBegins-PC-Port"
+GITHUB_URL = re.compile(r"github\.com[:/]+(.+?)(?:\.git)?/*$", re.IGNORECASE)
+PULL_NUMBER = re.compile(r"[1-9][0-9]*")
+RUNS_CODE = re.compile(r"^(tools/|cmake/|tests/.*\.(py|sh|cmake)$|(.*/)?CMakeLists\.txt$|\.claude/|\.github/|\.forgejo/|\.git[a-z]*$|.*\.sh$)")
+SECRET_NAME = re.compile(r"TOKEN|SECRET|PASSWORD|PASSPHRASE|CREDENTIAL|^SSH_|^GPG_|^GIT_", re.IGNORECASE)
+NO_HOOKS = ["-c", "core.hooksPath=/dev/null"]
+NO_LFS = ["-c", "filter.lfs.smudge=", "-c", "filter.lfs.process=", "-c", "filter.lfs.required=false"]
+
+
+def pull_request_number(text: str) -> int:
+    if not PULL_NUMBER.fullmatch(text):
+        raise argparse.ArgumentTypeError(f"expected a positive pull request number, got {text!r}")
+    return int(text)
+
+
+def github_remote(remote_listing: str) -> str:
+    found: dict[str, str] = {}
+    for line in remote_listing.splitlines():
+        parts = line.split()
+        if len(parts) == 3 and parts[2] == "(fetch)":
+            match = GITHUB_URL.search(parts[1])
+            if match:
+                found[parts[0]] = match.group(1)
+    if len(found) == 1:
+        return next(iter(found))
+    canonical = [name for name, path in found.items() if path.lower() == CANONICAL_REPO.lower()]
+    if len(canonical) == 1:
+        return canonical[0]
+    if not found:
+        raise MergeError(f"check-pr: no git remote points to github.com; add one with: git remote add github https://github.com/{CANONICAL_REPO}.git")
+    raise MergeError(f"check-pr: several remotes point to github.com ({', '.join(sorted(found))}) and not exactly one to {CANONICAL_REPO}")
+
+
+def pull_ref(number: int) -> str:
+    return f"refs/check-pr/{number}"
+
+
+def fetch_pull_request(root: Path, remote: str, number: int) -> str:
+    fetched = run(["git", *NO_HOOKS, "fetch", "-q", "--no-tags", "--no-recurse-submodules", "--no-write-fetch-head", remote,
+                   f"+refs/pull/{number}/head:{pull_ref(number)}"], root, check=False, capture=True)
+    if fetched.returncode != 0:
+        detail = (fetched.stderr.strip().splitlines() or ["no output"])[-1]
+        raise MergeError(f"check-pr: cannot fetch pull request {number} from {remote}: {detail}")
+    return git(root, "rev-parse", "--verify", "--quiet", f"{pull_ref(number)}^{{commit}}").strip()
+
+
+def tree_entries(root: Path, revision: str) -> dict[str, tuple[str, str]]:
+    entries = {}
+    for record in git(root, "ls-tree", "-r", "-z", "--full-tree", revision).split("\0"):
+        if record:
+            info, path = record.split("\t", 1)
+            mode, _kind, sha = info.split(" ")
+            entries[path] = (mode, sha)
+    return entries
+
+
+def pull_request_file_problems(root: Path, revision: str) -> list[tuple[str, str]]:
+    pull = tree_entries(root, revision)
+    main = tree_entries(root, "refs/heads/main")
+    bad = forbidden_blobs(root, {path: None if mode == SUBMODULE_MODE else sha for path, (mode, sha) in pull.items()})
+    return [(path, reason + (", already on main" if main.get(path) == pull[path] else ", new in the pull request")) for path, reason in bad]
+
+
+def code_paths(root: Path, revision: str) -> list[str]:
+    names = git(root, "diff", "--name-only", "-z", "--no-renames", "refs/heads/main", revision).split("\0")
+    return [name for name in names if name and RUNS_CODE.match(name)]
+
+
+def checkout_pull_request(root: Path, number: int, place: Path) -> Path:
+    tree = place / "tree"
+    branch = f"pull-{number}"
+    run(["git", "init", "-q", "--template=", "-b", branch, str(tree)], place, capture=True)
+    run(["git", *NO_HOOKS, "fetch", "-q", "--no-tags", "--no-recurse-submodules", str(root),
+         f"{pull_ref(number)}:refs/remotes/source/{branch}", "refs/heads/main:refs/remotes/source/main"], tree, capture=True)
+    run(["git", *NO_HOOKS, *NO_LFS, "checkout", "-q", "-B", branch, f"refs/remotes/source/{branch}"], tree, capture=True)
+    run(["git", "branch", "-q", "main", "refs/remotes/source/main"], tree, capture=True)
+    artifacts = root / "artifacts"
+    if os.path.lexists(tree / "artifacts"):
+        raise MergeError("check-pr: the pull request has its own top-level artifacts entry, where the game data link goes")
+    if artifacts.exists():
+        (tree / "artifacts").symlink_to(artifacts.resolve())
+    return tree
+
+
+def pull_request_env() -> dict[str, str]:
+    env = {name: value for name, value in os.environ.items() if not SECRET_NAME.search(name)}
+    env["GIT_TERMINAL_PROMPT"] = "0"
+    return env
+
+
+def pull_request_checks(tree: Path, env: dict[str, str]) -> list[str]:
+    print("== build (the pull request's own code runs from here on)")
+    try:
+        build_warning_free(tree, env)
+    except MergeError as error:
+        return [str(error)]
+    reasons = []
+    print("== ctest (all tests, also needs-game-data)")
+    tested = run(["ctest", "--test-dir", "build", "--output-on-failure", "-j", str(JOBS)], tree, check=False, env=env)
+    if tested.returncode:
+        reasons.append(f"ctest failed (exit {tested.returncode}); the failing tests are listed above")
+    print("== python tests")
+    tested = run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"], tree, check=False, env=env)
+    if tested.returncode:
+        reasons.append(f"Python tests failed (exit {tested.returncode}); the failures are listed above")
+    return reasons
+
+
+def remove_tree(place: Path) -> None:
+    def writable_again(function, path, _error):
+        os.chmod(os.path.dirname(path), 0o700)
+        if os.path.isdir(path) and not os.path.islink(path):
+            os.chmod(path, 0o700)
+        function(path)
+
+    try:
+        shutil.rmtree(place, onerror=writable_again)
+    except OSError as error:
+        print(f"warning: could not remove {place} ({error.strerror}); remove it by hand", file=sys.stderr)
+
+
+def check_pr(root: Path, number: int, remote: str) -> list[str]:
+    require_branch(root, "main")
+    print(f"Read the diff of pull request {number} first: https://github.com/{CANONICAL_REPO}/pull/{number}/files\n"
+          "Its build and tests run with your user rights once the file check passed. This command never pushes or merges.")
+    revision = fetch_pull_request(root, remote, number)
+    place = Path(tempfile.mkdtemp(prefix=f"check-pr-{number}-"))
+    try:
+        print(f"== pull request {number}: {revision} from {remote}")
+        running = code_paths(root, revision)
+        if running:
+            print("files changed against main that run code on this machine (read them first):\n  " + "\n  ".join(running))
+        print("== game-derived, build and binary files (the full tree of the pull request, before any of its code runs)")
+        bad = pull_request_file_problems(root, revision)
+        if bad:
+            return ["game-derived, build or binary files: " + described(bad)]
+        print(f"== temporary checkout in {place}")
+        tree = checkout_pull_request(root, number, place)
+        return pull_request_checks(tree, pull_request_env())
+    finally:
+        remove_tree(place)
+        run(["git", "update-ref", "-d", pull_ref(number)], root, check=False, capture=True)
+
+
 def add_bookkeeping_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("-m", "--message", required=True, type=Path)
     parser.add_argument("--release", action="append", default=[], metavar="WHO", help="drop the ID ranges WHO holds, in this commit")
@@ -472,6 +710,7 @@ def main(argv: list[str] | None = None) -> int:
     finish_parser.add_argument("branch")
     add_bookkeeping_options(finish_parser)
     add_bookkeeping_options(sub.add_parser("close"))
+    sub.add_parser("check-pr").add_argument("number", metavar="N", type=pull_request_number, help="the GitHub pull request to check")
     args = parser.parse_args(argv)
     sys.stdout.reconfigure(line_buffering=True)
     try:
@@ -484,11 +723,24 @@ def main(argv: list[str] | None = None) -> int:
             run_checks(root)
         elif args.command == "close":
             close(root, args.message, args.release, args.log)
+        elif args.command == "check-pr":
+            return report_pull_request(args.number, check_pr(root, args.number, github_remote(git(root, "remote", "-v"))))
         else:
             finish(root, args.branch, args.message, args.release, args.log)
     except MergeError as error:
         print(f"merge_agent: {error}", file=sys.stderr)
         return 1
+    except KeyboardInterrupt:
+        print("merge_agent: interrupted", file=sys.stderr)
+        return 130
+    return 0
+
+
+def report_pull_request(number: int, reasons: list[str]) -> int:
+    if reasons:
+        print(f"check-pr {number}: FAIL\n" + "\n".join(f"- {reason}" for reason in reasons))
+        return 1
+    print(f"check-pr {number}: PASS (it never pushes or merges: read the diff, then squash-merge on GitHub)")
     return 0
 
 
