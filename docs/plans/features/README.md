@@ -147,6 +147,6 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 
 | Feature | Status | Top open items |
 |---|---|---|
-| [windows-build](windows-build.md) | NOT_STARTED | WINBUILD-1 dependency discovery and flags; WINBUILD-2 commands and package list |
+| [windows-build](windows-build.md) | NOT_STARTED | WINBUILD-1 dependency discovery and flags; WINBUILD-2 commands and package list; WINBUILD-3 GitHub Windows job |
 | [windows-platform](windows-platform.md) | NOT_STARTED | WINPLAT-1 save directory; WINPLAT-2 native library loading |
 | [windows-tests](windows-tests.md) | NOT_STARTED | WINTEST-1 skips with reasons; WINTEST-2 floating-point equality |

@@ -1,7 +1,7 @@
 # Plan: Windows port
 
 ## 1. Summary
-Build and run the faithful port natively on Windows x86_64 with the same behaviour and the same tests as Linux. Platform differences live in platform files behind plain interfaces. It adds no game behaviour and no packaging. Windows CI is an open question.
+Build and run the faithful port natively on Windows x86_64 with the same behaviour and the same tests as Linux. Platform differences live in platform files behind plain interfaces. It adds no game behaviour and no packaging.
 
 ## 2. Gate
 Opened by the user on 2026-11-12T20:51:55+01:00: "I open the windows gate. I am currently on linux, so just do scouting what we need for a windows port. I will then start implementing once i switched to windpws".
@@ -15,7 +15,7 @@ Opened by the user on 2026-11-12T20:51:55+01:00: "I open the windows gate. I am 
 - R6: Linux stays green; accept: `Linux green (WSL)` for every change to shared code.
 
 ## 4. Scope and non-goals
-In scope: MSYS2 build, dependency discovery, platform files (save directory, library loading), test and tool portability, the docs of Windows commands. Out of scope: packaging, installers, MSVC and other toolchains, any game behaviour. Game logic stays the port's job.
+In scope: MSYS2 build, a Windows job in the GitHub workflow after the first local build, dependency discovery, platform files (save directory, library loading), test and tool portability, the docs of Windows commands. Out of scope: packaging, installers, a Windows job on Forgejo (no hosted Windows runners), MSVC and other toolchains, any game behaviour. Game logic stays the port's job.
 
 ## 5. Design decisions
 - Toolchain, dependencies, commands, packaging, saves, tests: [docs/design/windows-toolchain.md §2026-11-12T20:54:37](../design/windows-toolchain.md#ts-20261112-205437)

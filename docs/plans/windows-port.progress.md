@@ -10,7 +10,7 @@
 ## Decisions
 
 ### Decision: Windows toolchain and scope (2026-11-12T20:54:37+01:00)
-MSYS2 UCRT64 GCC, MSYS2 packages, Ninja, no packaging, `%APPDATA%` saves, skip Linux-only tests with a reason. Windows CI is an open question. See [windows-toolchain.md](../design/windows-toolchain.md#ts-20261112-205437).
+MSYS2 UCRT64 GCC, MSYS2 packages, Ninja, no packaging, `%APPDATA%` saves, skip Linux-only tests with a reason. A GitHub Windows job follows the first local build; none on Forgejo. See [windows-toolchain.md](../design/windows-toolchain.md#ts-20261112-205437).
 
 ## Blockers
 

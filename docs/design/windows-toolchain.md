@@ -15,6 +15,6 @@ Asked of the user by the planner on 2026-11-12 (relayed by the lead); the quoted
 - Save directory: "%APPDATA%\<name> (Recommended)", in a platform file with the same interface as the Linux one.
 - Tests that cannot run on Windows (Azahar oracle, Xvfb and similar): "Skip with reason (Recommended)", each skip listed in the feature file.
 - ID prefixes: "WINBUILD/WINPLAT/WINTEST (Recommended)".
-- CI: open. The user asked (2026-11-12) to check what GitHub offers for Windows CI and report back; the decision is the user's. No Windows workflow is added until they decide.
+- CI: "GitHub job after local build (Recommended)" (2026-11-12, after the lead's web check). Add a Windows job to `.github/workflows/ci.yml` (`msys2/setup-msys2@v2`, msystem UCRT64, MSYS2 packages, Ninja, `ctest -LE slow`) once the first local Windows build passes. Forgejo gets no Windows job, because it has no hosted Windows runners. Facts checked: `windows-latest` is Windows Server 2025 with VS 2026; standard GitHub-hosted runners are free in public repos and Windows minutes count double in private repos; the runners have no GPU, so render tests need Mesa llvmpipe or a skip; game-data tests skip in CI.
 
-Open: Windows CI (above); the exact MSYS2 package list and the `<name>` of the save folder, to be fixed by the first Windows session with the user.
+Open: the exact MSYS2 package list and the `<name>` of the save folder, to be fixed by the first Windows session with the user.
