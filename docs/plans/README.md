@@ -5,7 +5,7 @@ The work is split into plans, one per line of work. Each plan has a plan/progres
 | Plan | Gate | Plan and progress | Rule file | Platform | ID prefixes |
 |---|---|---|---|---|---|
 | `linux-port` | open (user, 2026-10-12) | [linux-port.md](linux-port.md), [linux-port.progress.md](linux-port.progress.md) | [port.md](../rules/port.md) | Linux x86_64 | all prefixes in [features/](features/README.md) so far |
-| `windows-port` | closed: only when the user says so | not created yet | [windows.md](../rules/windows.md) | Windows (user's Windows partition) | decided when the gate opens |
+| `windows-port` | open (user, 2026-11-12: "I open the windows gate.") | [windows-port.md](windows-port.md), [windows-port.progress.md](windows-port.progress.md) | [windows.md](../rules/windows.md) | Windows x86_64 (user's Windows partition) | WINBUILD, WINPLAT, WINTEST |
 | `qol` | open (user, 2026-10-28: "I am opening the QOL of Life Gate.") | [qol.md](qol.md), [qol.progress.md](qol.progress.md) | [qol.md](../rules/qol.md) | all PC builds | QOLSET, QOLFS, QOLMAP, QOLBOT |
 
 Shared files: [features/README.md](features/README.md) (feature files of all plans, grouped by area), [priorities.md](priorities.md) (generated ranking, used by the `linux-port` plan), [id-reservations](features/id-reservations.md).

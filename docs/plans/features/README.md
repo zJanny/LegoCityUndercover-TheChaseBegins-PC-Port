@@ -142,3 +142,11 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [qol-view-distance](qol-view-distance.md) | IN_PROGRESS | QOLVD-6 traffic distances (hook on the traffic step); QOLVD-8 extra rooms at the level start |
 | [qol-minimap](qol-minimap.md) | IN_PROGRESS | QOLMAP-5 minimap and HUD overlap (question); QOLMAP-6 hide in more panels |
 | [qol-bottom-screen](qol-bottom-screen.md) | IN_PROGRESS | QOLBOT-21 front-end pages; QOLBOT-2..4 panels; QOLBOT-5 pause PC menu; QOLBOT-7..10 scanner, build-it, shop, award viewer |
+
+## Windows port (`windows-port` plan)
+
+| Feature | Status | Top open items |
+|---|---|---|
+| [windows-build](windows-build.md) | NOT_STARTED | WINBUILD-1 dependency discovery and flags; WINBUILD-2 commands and package list |
+| [windows-platform](windows-platform.md) | NOT_STARTED | WINPLAT-1 save directory; WINPLAT-2 native library loading |
+| [windows-tests](windows-tests.md) | NOT_STARTED | WINTEST-1 skips with reasons; WINTEST-2 floating-point equality |

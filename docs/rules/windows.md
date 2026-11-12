@@ -2,7 +2,7 @@
 
 Every agent that works for the `windows-port` plan reads this file in full after [CLAUDE.md](../../CLAUDE.md). Plan index and gate: [plans/README.md](../plans/README.md).
 
-**Gate: closed.** Only the user opens it ("only when the user says so", CLAUDE.md "Plans and order of work"). Until then no Windows work of any kind: no builds, infrastructure, abstractions or preparation, in no plan. When the user opens it, the plan is created with [new-plan.md](../../.claude/skills/lead-round/references/new-plan.md), which also fills in the "To be decided" section below with the user.
+**Gate: open** (user, 2026-11-12: "I open the windows gate. I am currently on linux, so just do scouting what we need for a windows port. I will then start implementing once i switched to windpws"). Plan: [windows-port.md](../plans/windows-port.md). Windows work starts when the user continues on the Windows partition; before that only scouting and documents, no code.
 
 ## Where the work happens
 
@@ -34,6 +34,12 @@ Every agent that works for the `windows-port` plan reads this file in full after
 - **Every Windows brief also names:** the spec entries in `docs/design/` it implements, and that the worker verifies on Windows.
 - **Review checks beyond the tests:** game behaviour unchanged against Linux; platform code only in its own files; `Linux green (WSL)` reported for shared code; every choice backed by a spec entry.
 
-## To be decided when the gate opens
+## Decided (spec: [windows-toolchain.md §2026-11-12T20:54:37](../design/windows-toolchain.md#ts-20261112-205437))
 
-Toolchain and compiler, how dependencies (SDL2, epoxy) are installed, the Windows build and test commands (then also in `docs/commands.md` and `docs/building.md`), packaging, and the ID prefixes. Until decided, these are open questions, not defaults.
+- Toolchain: MSYS2 UCRT64 GCC, flags as on Linux. Dependencies (SDL2, epoxy, FFmpeg, pkg-config): MSYS2 package manager, nothing vendored.
+- Commands: the CMake and ctest commands of CLAUDE.md "Commands" run in the MSYS2 UCRT64 shell with the Ninja generator (`-G Ninja`); recorded in `docs/commands.md` and `docs/building.md` by the first Windows session.
+- Packaging: none for now. Saves: `%APPDATA%\<name>` in a Windows platform file.
+- Tests that cannot run on Windows are skipped with a reason and listed in the feature file. Windows CI: open, see the design entry.
+- ID prefixes: WINBUILD (toolchain, CMake), WINPLAT (platform files), WINTEST (tests and tools).
+
+Still open: Windows CI, the exact package list and the save folder name.
