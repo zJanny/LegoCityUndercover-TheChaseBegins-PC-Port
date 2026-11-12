@@ -1,4 +1,5 @@
 #include "runtime/traffic_driver_connect.hpp"
+#include "runtime/traffic_car_push.hpp"
 
 #include "runtime/traffic_route.hpp"
 #include "runtime/traffic_route_mover.hpp"
@@ -125,8 +126,11 @@ TrafficDriveResult TrafficDrivers::drive(TrafficManager& manager, TrafficJunctio
             TrafficContactCar self;
             self.node = entity + 1;
             self.radius = body->radius;
+            self.pusher = (step.carFlags & kEntityFlagBlocker) != 0;
+            TrafficContactSlideHooks slideHooks = step.slide;
+            if (step.pushOf) slideHooks.push = step.pushOf(index);
             AiVec3 move = distance;
-            slideTrafficCarContacts(self, move, contacts, step.slide);
+            slideTrafficCarContacts(self, move, contacts, slideHooks);
         };
         states.events = &stateEvents;
 

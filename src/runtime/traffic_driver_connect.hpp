@@ -43,6 +43,7 @@ struct TrafficDriverCar {
 // What the vehicle side gives of one car for its update.
 struct TrafficCarBody {
     AiMatrix node{};        // the node's world matrix (0x250810, 0x2429d0)
+    AiVec3 centre{};        // entity +0x60..+0x68
     AiVec3 halfExtents{};   // entity +0x6c..+0x74
     float radius = 0.0f;    // entity +0x5c: the length of the half extents
     float gearSpeed = 0.0f; // 0x20362c(body)
@@ -82,6 +83,10 @@ struct TrafficDriveStep {
                                                    const TrafficContactDescriptor& descriptor, unsigned maxEntries)>
         gatherContacts;
     TrafficContactSlideHooks slide;
+    // The entity hword +0x10 of the traffic cars: bit 0x100 makes a car a pusher (no slide in 0x2c8f80). 0x1300 for the shipped traffic vehicles.
+    std::uint16_t carFlags = 0;
+    // The push of one car (makeTrafficCarPush over the world); when set it replaces `slide.push` for each car's contact slide.
+    std::function<std::function<bool(AiVec3& move, std::size_t entry, std::vector<TrafficContactEntry>& entries, bool slide)>(std::size_t car)> pushOf;
     // *0x376c78 is set: entering state 6 fires VehicleChaseEnded a second time at its object.
     bool globalObject = false;
     // The cars' physics bodies (TrafficCarBodies::hooks): the kinematic switch 0x22a270, the mover's test of rigid +0xcc bit 1 and its

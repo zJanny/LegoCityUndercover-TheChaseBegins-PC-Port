@@ -17,6 +17,10 @@ namespace {
 
 using namespace chase::runtime;
 
+bool pushWith(const TrafficPushShapes& shapes, std::uint32_t mover, AiVec3 move, const TrafficContactEntry& entry, AiVec3* vector, bool slide) {
+    return trafficPushVector(shapes, mover, move, entry, vector, slide);
+}
+
 void require(bool condition, const std::string& message) {
     if (!condition) throw std::runtime_error(message);
 }
@@ -59,11 +63,11 @@ TrafficPushShapes shapesOf(Scene& s) {
     shapes.box = [&s](std::uint32_t e) { return s.boxes[e]; };
     shapes.entryMatrix = [&s](const TrafficContactEntry& entry) { return s.matrices[entry.owner]; };
     shapes.meshEntry = [&s](const TrafficContactEntry&) { return s.mesh; };
-    shapes.meshPush = [&s](std::uint32_t, const AiVec3&, const TrafficContactEntry&) {
+    shapes.meshPush = [&s](std::uint32_t, AiVec3&, const TrafficContactEntry&) {
         s.calls.push_back("mesh");
         return s.meshHit;
     };
-    shapes.orientedPush = [&s](std::uint32_t, const AiVec3&, const TrafficContactEntry&, const AiMatrix& matrix, const TrafficPushBox& box,
+    shapes.orientedPush = [&s](std::uint32_t, AiVec3&, const TrafficContactEntry&, const AiMatrix& matrix, const TrafficPushBox& box,
                                const AiVec3&, const AiVec3&, bool slide) {
         s.calls.push_back("oriented");
         s.orientedSlide = slide;
@@ -91,7 +95,7 @@ void testBoxHitWithoutSlide() {
     Scene s;
     const TrafficPushShapes shapes = shapesOf(s);
     AiVec3 vector = {9.0f, 9.0f, 9.0f};
-    require(trafficPushVector(shapes, kMover, {0.0f, 0.0f, 0.6f}, entry(), &vector, false), "the moved mover box overlaps the character box");
+    require(pushWith(shapes, kMover, {0.0f, 0.0f, 0.6f}, entry(), &vector, false), "the moved mover box overlaps the character box");
     require(vector == AiVec3{0.0f, 0.0f, 0.0f}, "0x25b390 clears the vector and nothing writes it without slide");
     require(s.calls.empty() && s.moves.empty() && s.lastHits.empty(), "the box path without slide moves nothing and leaves *0x377134");
 }
@@ -100,10 +104,10 @@ void testBoxEdgesAreOpen() {
     Scene s;
     const TrafficPushShapes shapes = shapesOf(s);
     AiVec3 vector{};
-    require(!trafficPushVector(shapes, kMover, {0.0f, 0.0f, 0.25f}, entry(), &vector, false), "z -0.75 against 0.25 + 0.5 is outside");
-    require(trafficPushVector(shapes, kMover, {0.0f, 0.0f, 0.5f}, entry(), &vector, false), "z -0.5 is inside");
+    require(!pushWith(shapes, kMover, {0.0f, 0.0f, 0.25f}, entry(), &vector, false), "z -0.75 against 0.25 + 0.5 is outside");
+    require(pushWith(shapes, kMover, {0.0f, 0.0f, 0.5f}, entry(), &vector, false), "z -0.5 is inside");
     s.matrices[kOwner] = at(0.75f, 0.0f, 1.0f);
-    require(!trafficPushVector(shapes, kMover, {0.0f, 0.0f, 0.6f}, entry(), &vector, false), "x exactly at the summed half extent is outside");
+    require(!pushWith(shapes, kMover, {0.0f, 0.0f, 0.6f}, entry(), &vector, false), "x exactly at the summed half extent is outside");
 }
 
 void testSlidePushesBothSides() {
@@ -111,7 +115,7 @@ void testSlidePushesBothSides() {
     s.pushedClipZ = 0.1f;
     const TrafficPushShapes shapes = shapesOf(s);
     AiVec3 vector{};
-    require(trafficPushVector(shapes, kMover, {0.0f, 0.0f, 0.6f}, entry(), &vector, true), "slide hit");
+    require(pushWith(shapes, kMover, {0.0f, 0.0f, 0.6f}, entry(), &vector, true), "slide hit");
     const float share = (-1.0f * 0.6f) * 0.5f;
     require(vector[0] == 0.0f && vector[2] == 0.1f && std::signbit(vector[1]), "the pushed character gets (-x, -0.0, -z) after its slide");
     require(s.calls == std::vector<std::string>{"slide 2 88 0", "slide 1 92 floor"}, "0x23d434 on the pushed (88, 0.0), then the mover (92, *0x376910)");
@@ -127,7 +131,7 @@ void testSlideDirectionFallback() {
     s.boxes[kOwner] = {{0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}};
     const TrafficPushShapes shapes = shapesOf(s);
     AiVec3 vector{};
-    require(trafficPushVector(shapes, kMover, {0.0f, 0.0f, 0.4f}, entry(), &vector, true), "hit at the same place");
+    require(pushWith(shapes, kMover, {0.0f, 0.0f, 0.4f}, entry(), &vector, true), "hit at the same place");
     require(vector[0] == 0.0f && vector[2] == -0.2f, "0x23ba14 gives (0, 1) for a zero offset: the pushed one goes -z");
     require(s.moves[0].second == AiVec3{0.0f, 0.0f, 0.2f}, "and the mover +z");
 }
@@ -138,14 +142,14 @@ void testBlockersDoNotSlide() {
     s.flags[kOwner] = 0x200;
     const TrafficPushShapes shapes = shapesOf(s);
     AiVec3 vector{};
-    require(trafficPushVector(shapes, kMover, {0.0f, 0.0f, 0.6f}, entry(), &vector, true), "a mover with 0x100 against an owner without it slides");
+    require(pushWith(shapes, kMover, {0.0f, 0.0f, 0.6f}, entry(), &vector, true), "a mover with 0x100 against an owner without it slides");
     require(!s.calls.empty(), "the slide runs");
     Scene b;
     b.flags[kMover] = 0x2300;
     b.flags[kOwner] = 0x300;
     b.orientedHit = true;
     const TrafficPushShapes blocked = shapesOf(b);
-    require(trafficPushVector(blocked, kMover, {0.0f, 0.0f, 0.6f}, entry(), &vector, true), "the oriented hook decides");
+    require(pushWith(blocked, kMover, {0.0f, 0.0f, 0.6f}, entry(), &vector, true), "the oriented hook decides");
     require(b.calls == std::vector<std::string>{"oriented"} && b.lastHits == std::vector<std::uint32_t>{kOwner}, "a hit of 0x27f174 sets *0x377134");
     require(vector == AiVec3{0.0f, 0.0f, 0.0f}, "the oriented path does not write the vector");
     require(!b.orientedSlide, "both entities with 0x100: 0x1f49d8 clears slide");
@@ -157,12 +161,12 @@ void testMeshAndExcludedKinds() {
     s.meshHit = true;
     const TrafficPushShapes shapes = shapesOf(s);
     AiVec3 vector{};
-    require(trafficPushVector(shapes, kMover, {0.0f, 0.0f, 5.0f}, entry(), &vector, true), "a mesh entry takes 0x287ac4");
+    require(pushWith(shapes, kMover, {0.0f, 0.0f, 5.0f}, entry(), &vector, true), "a mesh entry takes 0x287ac4");
     require(s.calls == std::vector<std::string>{"mesh"} && s.lastHits == std::vector<std::uint32_t>{kOwner}, "mesh hit sets *0x377134");
     Scene e;
     TrafficPushShapes excluded = shapesOf(e);
     excluded.excludedKinds = {27};
-    require(!trafficPushVector(excluded, kMover, {0.0f, 0.0f, 0.6f}, entry(), &vector, true), "a kind of the list 0x58d9b0 is never hit");
+    require(!pushWith(excluded, kMover, {0.0f, 0.0f, 0.6f}, entry(), &vector, true), "a kind of the list 0x58d9b0 is never hit");
 }
 
 void testTiltedBoxBecomesWorldBox() {
@@ -177,11 +181,11 @@ void testTiltedBoxBecomesWorldBox() {
     s.matrices[kMover] = at(0.7f, -0.7f, 0.0f);
     const TrafficPushShapes shapes = shapesOf(s);
     AiVec3 vector{};
-    require(trafficPushVector(shapes, kMover, {0.0f, 0.0f, 0.0f}, entry(), &vector, false),
+    require(pushWith(shapes, kMover, {0.0f, 0.0f, 0.0f}, entry(), &vector, false),
             "|row 1 y| 0.707 < 0.99: the test runs against the world box of 0x22ec3c (an oriented test would miss)");
     s.flags[kOwner] = 0x0a00;
     s.orientedHit = false;
-    require(!trafficPushVector(shapes, kMover, {0.0f, 0.0f, 0.0f}, entry(), &vector, false), "0x800 takes the oriented hook instead");
+    require(!pushWith(shapes, kMover, {0.0f, 0.0f, 0.0f}, entry(), &vector, false), "0x800 takes the oriented hook instead");
     require(s.orientedMatrix[1][1] == c && s.orientedBox.half[0] == 1.0f, "the oriented hook gets the entry matrix and box unchanged");
 }
 
@@ -190,7 +194,7 @@ void testNullVectorWithSlide() {
     const TrafficPushShapes shapes = shapesOf(s);
     bool thrown = false;
     try {
-        trafficPushVector(shapes, kMover, {0.0f, 0.0f, 0.6f}, entry(), nullptr, true);
+        pushWith(shapes, kMover, {0.0f, 0.0f, 0.6f}, entry(), nullptr, true);
     } catch (const std::logic_error&) {
         thrown = true;
     }

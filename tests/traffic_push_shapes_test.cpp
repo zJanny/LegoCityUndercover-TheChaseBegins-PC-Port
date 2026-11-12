@@ -19,6 +19,10 @@ namespace {
 
 using namespace chase::runtime;
 
+bool pushWith(const TrafficPushShapes& shapes, std::uint32_t mover, AiVec3 move, const TrafficContactEntry& entry, AiVec3* vector, bool slide) {
+    return trafficPushVector(shapes, mover, move, entry, vector, slide);
+}
+
 void require(bool condition, const std::string& message) {
     if (!condition) throw std::runtime_error(message);
 }
@@ -290,28 +294,32 @@ void testConnectedPush() {
     TrafficContactEntry entry;
     entry.owner = kOwner;
     AiVec3 vector{};
-    require(trafficPushVector(shapes, kMover, {0.0f, 0.0f, 0.6f}, entry, &vector, true), "the car's moved box reaches the character");
+    require(pushWith(shapes, kMover, {0.0f, 0.0f, 0.6f}, entry, &vector, true), "the car's moved box reaches the character");
     requireMove(vector, {0.0f, 0.0f, 0.0f}, "the wall behind the character takes its whole half of the push (slide 88, mode 17)");
     require(scene.moves.size() == 1 && scene.moves[0].first == kMover, "the car moves back");
     requireMove(scene.moves[0].second, {0.0f, 0.0f, -0.3f + (0.0f - 0.3f)}, "the car takes back its share and what the character could not take");
 
     scene.flags[kOwner] = 0x200 | kEntityFlagPushParts;
     scene.parts = std::nullopt;
-    require(!trafficPushVector(shapes, kMover, {0.0f, 0.0f, 0.6f}, entry, &vector, false), "an owner with 0x800 without a part record: no test");
+    require(!pushWith(shapes, kMover, {0.0f, 0.0f, 0.6f}, entry, &vector, false), "an owner with 0x800 without a part record: no test");
     TrafficPushPart part;
     part.matrix = identityAt(0.0f, 0.0f, 0.0f);
     part.box = {{0.0f, 1.0f, 0.0f}, {0.25f, 1.0f, 0.25f}};
     scene.parts = std::vector<TrafficPushPart>{part};
     scene.lastHits.clear();
-    require(trafficPushVector(shapes, kMover, {0.0f, 0.0f, 0.6f}, entry, &vector, false), "the part's box times the entry matrix is hit");
+    require(pushWith(shapes, kMover, {0.0f, 0.0f, 0.6f}, entry, &vector, false), "the part's box times the entry matrix is hit");
     require(scene.lastHits == std::vector<std::uint32_t>{kOwner}, "an oriented hit stores the owner in *0x377134");
 
     scene.flags[kOwner] = 0x200;
     scene.mesh = true;
     scene.lastHits.clear();
-    require(!trafficPushVector(shapes, kMover, {0.0f, 0.0f, 0.1f}, entry, &vector, true), "the mesh test misses the wall at z 1.3");
-    require(trafficPushVector(shapes, kMover, {0.0f, 0.0f, 0.9f}, entry, &vector, true), "the mesh test reaches the wall");
+    require(!pushWith(shapes, kMover, {0.0f, 0.0f, 0.1f}, entry, &vector, true), "the mesh test misses the wall at z 1.3");
+    require(pushWith(shapes, kMover, {0.0f, 0.0f, 0.9f}, entry, &vector, true), "the mesh test reaches the wall");
     require(scene.lastHits == std::vector<std::uint32_t>{kOwner}, "a mesh hit stores the owner in *0x377134");
+
+    AiVec3 caller = {0.0f, 0.0f, 0.9f};
+    require(trafficPushVector(shapes, kMover, caller, entry, &vector, true), "the mesh test reaches the wall with the caller's own move");
+    require(caller[2] < 0.9f && caller[0] == 0.0f, "TRAFFIC-64: the slide along the mesh changes the caller's move in place (20261112-enemy-C)");
 }
 
 }

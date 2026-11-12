@@ -17,6 +17,7 @@
 #include "game_pedestrians.hpp"
 #include "game_traffic.hpp"
 #include "runtime/traffic_character_feed.hpp"
+#include "runtime/traffic_push_supply.hpp"
 #include "runtime/traffic_driver_states.hpp"
 #include "game_traffic_lights.hpp"
 #include "game_cutscene.hpp"
@@ -280,6 +281,7 @@ private:
     void updateTrafficJunctions(float dt);
     void driveTrafficCars(float dt);
     void feedTrafficCharacters(chase::runtime::TrafficDriveStep& step);
+    void reportTrafficPushes();
     void applyTrafficFades();
     void setupTrafficCarLights();
     void applyTrafficCarLights();
@@ -704,6 +706,7 @@ private:
     };
     std::vector<TrafficCullBounds> trafficCullBounds;
     std::optional<chase::runtime::TrafficCharacterFeed> trafficCharacters;
+    std::optional<chase::runtime::TrafficPushSupply> trafficPush;
     std::vector<std::size_t> trafficContactsListed;
     chase::runtime::PropAnimations propAnimations;
     chase::runtime::PlayerScriptAnimation playerScriptAnimation;

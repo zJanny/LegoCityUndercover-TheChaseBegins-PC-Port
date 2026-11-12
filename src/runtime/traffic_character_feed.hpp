@@ -31,12 +31,13 @@ std::size_t trafficGridAdd(TrafficGrid& grid, const TrafficGridEntry& entry);
 // the order y, z, x. The table is the layout's count product, enlarged for the indices of trafficGridCellIndex that go past it.
 void trafficGridUpdateCells(TrafficGrid& grid, std::size_t index);
 
-// The removal half of 0x209cb8 for all stored cells: the entry is in no list afterwards. STAND-IN TRAFFIC-S44: the original's removal of an
-// entry (not read) is taken as this.
-void trafficGridLeaveCells(TrafficGrid& grid, std::size_t index);
+// The cell bytes a new entry holds (0x30e0d8 and 0x2ba3f4 store 255, 255, 255 at +8..+0xa and 0, 0, 0 at +0xb..+0xd): an empty range, so the
+// first cell update leaves no cell and joins every cell of the entry's box.
+constexpr TrafficGridCellRange kTrafficGridNewEntryCells{{255, 255, 255}, {0, 0, 0}};
 
 constexpr std::uint32_t kTrafficCharacterMask = 4;          // entry +0 of a character
 constexpr std::uint16_t kTrafficCharacterOwnerFlags = 0x200;  // owner hword +0x10: the bit the contact descriptor includes
+constexpr std::uint16_t kTrafficOwnerDisabled = 0x1;        // owner hword +0x10 bit 0: the descriptor excludes bits 0 and 1 (collision.md)
 constexpr std::uint32_t kTrafficFeedPlayerId = 1;           // owner identities of the feed (compared only)
 constexpr std::uint32_t kTrafficFeedPedestrianBase = 2;     // + the pedestrian slot
 constexpr std::uint32_t kTrafficFeedCarBase = 0x10000;      // + the car, the excluded owner of the gather
@@ -47,11 +48,12 @@ struct TrafficFedCharacter {
     AiMatrix node{};          // 0x250810 of the owner's node
     AiVec3 shapeCentre{};
     AiVec3 shapeHalf{};
+    bool disabled = false;    // owner hword +0x10 bit 0 (STAND-IN TRAFFIC-S46: set for the characters the port holds disabled or hidden)
 };
 
-// The characters of a level in a grid: a character that is new is added, one that stays gets the cell update, one that is gone leaves its
-// cells (its table slot stays and is used again when the id returns). STAND-IN TRAFFIC-S44: which characters the original holds in the grid
-// at a time (a disabled or hidden one, the player in a vehicle) is not read; the caller passes the live ones.
+// The characters of a level in a grid. The original registers an entity once (0x2ba3f0 is idempotent) and removes none (docs/re/collision.md,
+// "EnableObject / EnableCollision during play"): a new character is added, one that is listed gets the cell update and its owner flags, one
+// that is not listed stays as it is. A disabled one keeps its entry and its cells; the descriptor's owner flag test leaves it out of a gather.
 class TrafficCharacterFeed {
 public:
     explicit TrafficCharacterFeed(const TrafficGridLayout& layout);

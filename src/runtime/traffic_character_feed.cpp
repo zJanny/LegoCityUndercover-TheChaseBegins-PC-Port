@@ -101,6 +101,7 @@ TrafficGridLayout buildTrafficGridLayout(const std::vector<TrafficWorldBox>& sha
 std::size_t trafficGridAdd(TrafficGrid& grid, const TrafficGridEntry& entry) {
     grid.entries.push_back(entry);
     const std::size_t index = grid.entries.size() - 1;
+    grid.entries[index].cells = kTrafficGridNewEntryCells;
     trafficGridUpdateCells(grid, index);
     return index;
 }
@@ -131,16 +132,6 @@ void trafficGridUpdateCells(TrafficGrid& grid, std::size_t index) {
     entry.cells = next;
 }
 
-void trafficGridLeaveCells(TrafficGrid& grid, std::size_t index) {
-    TrafficGridEntry& entry = grid.entries.at(index);
-    if (!entry.cells) return;
-    const TrafficGridCellRange previous = *entry.cells;
-    for (unsigned y = previous.low[1]; y <= previous.high[1]; ++y)
-        for (unsigned z = previous.low[2]; z <= previous.high[2]; ++z)
-            for (unsigned x = previous.low[0]; x <= previous.high[0]; ++x) removeFromList(listOf(grid, x, y, z), std::uint32_t(index));
-    entry.cells.reset();
-}
-
 TrafficCharacterFeed::TrafficCharacterFeed(const TrafficGridLayout& layout) {
     grid_.layout = layout;
     grid_.cellLists.resize(std::size_t(layout.counts[0]) * layout.counts[1] * layout.counts[2]);
@@ -157,6 +148,7 @@ void TrafficCharacterFeed::update(const std::vector<TrafficFedCharacter>& charac
         if (isNew) {
             index = grid_.entries.size();
             grid_.entries.emplace_back();
+            grid_.entries.back().cells = kTrafficGridNewEntryCells;
             slotOf_[character.id] = index;
         } else {
             index = known->second;
@@ -165,17 +157,12 @@ void TrafficCharacterFeed::update(const std::vector<TrafficFedCharacter>& charac
         entry.mask = kTrafficCharacterMask;
         entry.kind = 0;
         entry.owner = character.id;
-        entry.ownerFlags = kTrafficCharacterOwnerFlags;
+        entry.ownerFlags = std::uint16_t(kTrafficCharacterOwnerFlags | (character.disabled ? kTrafficOwnerDisabled : 0));
         entry.ownerNode = character.id + 0x100000u;
         entry.nodeMatrix = character.node;
         entry.shapeCentre = character.shapeCentre;
         entry.shapeHalf = character.shapeHalf;
         trafficGridUpdateCells(grid_, index);
-    }
-    for (const auto& [id, index] : slotOf_) {
-        if (present.count(id) != 0) continue;
-        trafficGridLeaveCells(grid_, index);
-        grid_.entries[index].mask = 0;
     }
 }
 

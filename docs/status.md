@@ -80,6 +80,7 @@
     - A car that is hit leaves its road and moves like a free car until it settles.
     - This is built from the original's code but is not compared with the original in play.
     - Other things that touch the cars, such as people and other cars of the level, do not push them.
+    - A car that drives into a passer-by or the player after such a hit sends it the original's hit message (a log line); the person does not react yet.
   - In the police station the award viewer shows how many bronze, silver and gold awards the save slot has.
   - The award trophies of its upper screen are not drawn.
   - Nothing else of the game works.

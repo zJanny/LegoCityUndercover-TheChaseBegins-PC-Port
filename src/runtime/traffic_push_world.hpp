@@ -39,8 +39,9 @@ struct TrafficPushShapes {
     // 0x287ac4(mover, move, entry, 93, 3, *0x376910, 0.0) (mesh entries), 0x27f174 (the oriented test of a pushed entity with 0x900 or a mover
     // with 0x2000, per part for 0x800) and the slide 0x23d434 (0x208d84 with the flags 88 / 92 and 17): connectTrafficPushShapes
     // (traffic_push_shapes.hpp). The turn branch of the mesh path (a move's fourth float not 0) is not ported: no caller of 0x2baef0 passes one.
-    std::function<bool(std::uint32_t mover, const AiVec3& move, const TrafficContactEntry& entry)> meshPush;
-    std::function<bool(std::uint32_t mover, const AiVec3& move, const TrafficContactEntry& entry, const AiMatrix& matrix, const TrafficPushBox& box,
+    // Both change `move` in place, as the original does through its pointer.
+    std::function<bool(std::uint32_t mover, AiVec3& move, const TrafficContactEntry& entry)> meshPush;
+    std::function<bool(std::uint32_t mover, AiVec3& move, const TrafficContactEntry& entry, const AiMatrix& matrix, const TrafficPushBox& box,
                        const AiVec3& moverCentre, const AiVec3& movedCentre, bool slide)> orientedPush;
     std::function<void(std::uint32_t entity, AiVec3& move, std::uint32_t flags, float floorNormalMin)> slideMove;
     std::function<void(std::uint32_t entity, const AiVec3& delta)> moveNode;   // node translation += delta, then 0x24c118
@@ -52,11 +53,10 @@ struct TrafficPushShapes {
 
 // 0x1f49d8. `vector` is cleared (0x25b390) and, for a box entry with slide, gets the push of the pushed entity; the mover then moves back by
 // its share. Returns whether `entry` is hit.
-bool trafficPushVector(const TrafficPushShapes& shapes, std::uint32_t mover, const AiVec3& move, const TrafficContactEntry& entry, AiVec3* vector,
-                       bool slide);
+bool trafficPushVector(const TrafficPushShapes& shapes, std::uint32_t mover, AiVec3& move, const TrafficContactEntry& entry, AiVec3* vector, bool slide);
 
 // trafficPushVector as the hook TrafficPushWorld::pushVector. The shapes must outlive the hook.
-std::function<bool(std::uint32_t, const AiVec3&, const TrafficContactEntry&, AiVec3*, bool)> makeTrafficPushVector(const TrafficPushShapes& shapes);
+std::function<bool(std::uint32_t, AiVec3&, const TrafficContactEntry&, AiVec3*, bool)> makeTrafficPushVector(const TrafficPushShapes& shapes);
 
 constexpr std::int32_t kSquashDamage = 32000;   // 0x2335b8
 constexpr std::uint8_t kSquashByte15 = 255;     // record byte +0x15; CharacterHitMessage does not carry it (STAND-IN TRAFFIC-S41)

@@ -31,8 +31,9 @@ struct TrafficPushWorld {
     std::function<std::uint16_t(std::uint32_t entity)> flags;                       // hword +0x10
     std::function<bool(std::uint32_t entity)> bit3;                                 // word +0xc bit 3 of the pushed character
     std::function<bool(std::uint32_t a, std::uint32_t b)> ignorePair;               // 0x1fc508(a, b, 0): the pair does not collide
-    // 0x1f49d8(mover, move, entry, vector, slide): makeTrafficPushVector (traffic_push_world.hpp). `vector` is null for a test only.
-    std::function<bool(std::uint32_t mover, const AiVec3& move, const TrafficContactEntry& entry, AiVec3* vector, bool slide)> pushVector;
+    // 0x1f49d8(mover, move, entry, vector, slide): makeTrafficPushVector (traffic_push_world.hpp). `vector` is null for a test only. The mesh test
+    // and the oriented test change `move` in place, as the original does through the pointer.
+    std::function<bool(std::uint32_t mover, AiVec3& move, const TrafficContactEntry& entry, AiVec3* vector, bool slide)> pushVector;
     std::function<void(std::uint32_t character, std::uint32_t pusher, const AiVec3* vector)> message45;  // 0x244fc8(character, 45, {pusher, vector})
     std::function<bool(std::uint32_t car)> isCharacter;                             // 0x245b00(car)
     std::function<void(std::uint32_t car, std::uint32_t character)> squash;         // 0x233594(car, character, 0): trafficSquashHit to the car

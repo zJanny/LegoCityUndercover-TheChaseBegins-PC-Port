@@ -60,14 +60,16 @@ public:
     void updateSystem(const SystemInputs& inputs, assets::PlacedObjectState& state);
     // The entity pass: each live pedestrian's update, its clips and its posed body.
     void updateCharacters(render::Scene& scene, const CharacterInputs& inputs, const assets::PlacedObjectState& state);
-    // The enabled pedestrians' node matrices and entity boxes (0x242df4 of the body model's node bounds), for the traffic contact grid.
+    // Every pedestrian slot's node matrix and entity box (0x242df4 of the body model's node bounds), for the traffic contact grid, which
+    // registers all of them and tells the disabled ones by owner flag bit 0.
     struct LiveCharacter {
         std::size_t slot = 0;
+        bool disabled = false;
         std::array<runtime::PedestrianVec3, 4> node{};
         runtime::PedestrianVec3 shapeCentre{};
         runtime::PedestrianVec3 shapeHalf{};
     };
-    std::vector<LiveCharacter> liveCharacters(const assets::PlacedObjectState& state) const;
+    std::vector<LiveCharacter> allCharacters(const assets::PlacedObjectState& state) const;
     // The room pass 0x2e6ce4 for the enabled pedestrians (game_pedestrian_rooms.cpp).
     std::vector<runtime::PedestrianRoomMove> moveRooms(const runtime::StreamRooms& rooms, const std::map<int, runtime::RoomBox>& boxes,
                                                        int currentRoom, int playerRoom, const assets::PlacedObjectState& state);

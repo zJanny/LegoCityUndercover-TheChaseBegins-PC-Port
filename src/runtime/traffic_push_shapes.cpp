@@ -333,26 +333,24 @@ bool orientedBoxPush(const CollisionWorld& world, const AiVec3& moverHalf, AiVec
 }
 
 void connectTrafficPushShapes(TrafficPushShapes& shapes, const TrafficPushShapeWorld& world) {
-    shapes.meshPush = [&shapes, &world](std::uint32_t mover, const AiVec3& move, const TrafficContactEntry& entry) {
+    shapes.meshPush = [&shapes, &world](std::uint32_t mover, AiVec3& move, const TrafficContactEntry& entry) {
         const CollisionWorld::Entry* mesh = need(world.meshOf, "meshOf")(entry);
         if (!mesh) throw std::logic_error("traffic push shapes: a mesh entry without its collision item");
         const TrafficPushBox box = need(shapes.box, "box")(mover);
         const TrafficWorldBox moverBox = trafficShapeWorldBox(need(shapes.nodeMatrix, "nodeMatrix")(mover), box.centre, box.half);
-        AiVec3 changed = move;
-        return meshEntryPush(*mesh, moverBox, &changed, kMeshPushFilter, kMeshPushMode, shapes.floorNormalMin);
+        return meshEntryPush(*mesh, moverBox, &move, kMeshPushFilter, kMeshPushMode, shapes.floorNormalMin);
     };
-    shapes.orientedPush = [&shapes, &world](std::uint32_t mover, const AiVec3& move, const TrafficContactEntry& entry, const AiMatrix& matrix,
+    shapes.orientedPush = [&shapes, &world](std::uint32_t mover, AiVec3& move, const TrafficContactEntry& entry, const AiMatrix& matrix,
                                             const TrafficPushBox& box, const AiVec3& moverCentre, const AiVec3& movedCentre, bool slide) {
         if (!world.world) throw std::logic_error("traffic push shapes: no collision world");
         const AiVec3 moverHalf = need(shapes.box, "box")(mover).half;
-        AiVec3 changed = move;
         if ((need(shapes.flags, "flags")(entry.owner) & kEntityFlagPushParts) == 0)
-            return orientedBoxPush(*world.world, moverHalf, changed, box.centre, box.half, matrix, moverCentre, movedCentre, slide,
+            return orientedBoxPush(*world.world, moverHalf, move, box.centre, box.half, matrix, moverCentre, movedCentre, slide,
                                    shapes.floorNormalMin);
         const std::optional<std::vector<TrafficPushPart>> parts = need(world.parts, "parts")(entry.owner);
         if (!parts) return false;
         for (const TrafficPushPart& part : *parts)
-            if (orientedBoxPush(*world.world, moverHalf, changed, part.box.centre, part.box.half, multiply(part.matrix, matrix), moverCentre,
+            if (orientedBoxPush(*world.world, moverHalf, move, part.box.centre, part.box.half, multiply(part.matrix, matrix), moverCentre,
                                 movedCentre, slide, shapes.floorNormalMin))
                 return true;
         return false;

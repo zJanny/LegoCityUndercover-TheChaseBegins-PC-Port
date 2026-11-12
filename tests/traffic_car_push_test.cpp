@@ -38,7 +38,7 @@ TrafficPushWorld worldOf(Recorder& r) {
     world.flags = [&r](std::uint32_t e) { return r.flags[e]; };
     world.bit3 = [&r](std::uint32_t e) { return r.bit3[e]; };
     world.ignorePair = [&r](std::uint32_t, std::uint32_t) { return false; };
-    world.pushVector = [&r](std::uint32_t mover, const AiVec3&, const TrafficContactEntry& entry, AiVec3* vector, bool slide) {
+    world.pushVector = [&r](std::uint32_t mover, AiVec3&, const TrafficContactEntry& entry, AiVec3* vector, bool slide) {
         r.calls.push_back("vector " + std::to_string(mover) + " " + std::to_string(entry.owner) + (vector ? " out" : " test") + (slide ? " slide" : ""));
         if (vector && mover == kCar) {
             if (!r.hit[entry.owner]) return false;

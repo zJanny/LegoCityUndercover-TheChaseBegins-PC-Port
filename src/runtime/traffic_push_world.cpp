@@ -86,8 +86,7 @@ bool insideOpen(float value, float half) { return value > -half && value < half;
 
 }
 
-bool trafficPushVector(const TrafficPushShapes& shapes, std::uint32_t mover, const AiVec3& move, const TrafficContactEntry& entry, AiVec3* vector,
-                       bool slide) {
+bool trafficPushVector(const TrafficPushShapes& shapes, std::uint32_t mover, AiVec3& move, const TrafficContactEntry& entry, AiVec3* vector, bool slide) {
     const std::uint32_t owner = entry.owner;
     const AiMatrix moverMatrix = need(shapes.nodeMatrix, "nodeMatrix")(mover);
     AiMatrix matrix = need(shapes.entryMatrix, "entryMatrix")(entry);
@@ -154,8 +153,8 @@ bool trafficPushVector(const TrafficPushShapes& shapes, std::uint32_t mover, con
     return true;
 }
 
-std::function<bool(std::uint32_t, const AiVec3&, const TrafficContactEntry&, AiVec3*, bool)> makeTrafficPushVector(const TrafficPushShapes& shapes) {
-    return [&shapes](std::uint32_t mover, const AiVec3& move, const TrafficContactEntry& entry, AiVec3* vector, bool slide) {
+std::function<bool(std::uint32_t, AiVec3&, const TrafficContactEntry&, AiVec3*, bool)> makeTrafficPushVector(const TrafficPushShapes& shapes) {
+    return [&shapes](std::uint32_t mover, AiVec3& move, const TrafficContactEntry& entry, AiVec3* vector, bool slide) {
         return trafficPushVector(shapes, mover, move, entry, vector, slide);
     };
 }

@@ -237,6 +237,7 @@ void LevelSession::driveTrafficCars(float dt) {
         const chase::runtime::BoardingVehicle& vehicle = boardingVehicles[*index];
         chase::runtime::TrafficCarBody body;
         body.node = rows(vehicle.matrix);
+        body.centre = {vehicle.boxCentre[0], vehicle.boxCentre[1], vehicle.boxCentre[2]};
         body.halfExtents = {vehicle.boxHalf[0], vehicle.boxHalf[1], vehicle.boxHalf[2]};
         body.radius = std::sqrt(body.halfExtents[0] * body.halfExtents[0] + body.halfExtents[1] * body.halfExtents[1] + body.halfExtents[2] * body.halfExtents[2]);
         body.gearSpeed = levelScripts.vehicles().records()[boardingRecords[*index]].topSpeed;
@@ -249,6 +250,7 @@ void LevelSession::driveTrafficCars(float dt) {
     syncTrafficDriverFields(true);
     const std::vector<chase::runtime::TrafficCarMove> moves = traffic.driveCars(step, updatesForLog, objectState);
     syncTrafficDriverFields(false);
+    reportTrafficPushes();
     for (const chase::runtime::TrafficCarMove& move : moves) {
         const std::optional<std::size_t> index = trafficBoarding[move.car];
         if (!index) continue;

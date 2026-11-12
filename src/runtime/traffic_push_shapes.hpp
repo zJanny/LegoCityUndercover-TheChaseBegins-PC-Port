@@ -79,8 +79,8 @@ struct TrafficPushShapeWorld {
 };
 
 // Fills shapes.meshPush, shapes.orientedPush and shapes.slideMove. `shapes` and `world` must outlive the hooks.
-// STAND-IN TRAFFIC-S45: the mesh test and the oriented test change the caller's move in the original (the slide along the mesh, the push out of
-// the box, the world slide); TrafficPushShapes passes the move const, so the hooks run on a copy and the change does not reach the contact slide.
+// The mesh test and the oriented test change the caller's move (the slide along the mesh, the push out of the box, the world slide) through
+// the `move` reference, as the original does through its pointer.
 void connectTrafficPushShapes(TrafficPushShapes& shapes, const TrafficPushShapeWorld& world);
 
 }

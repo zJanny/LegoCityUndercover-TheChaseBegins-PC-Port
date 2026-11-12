@@ -122,12 +122,36 @@ void testCellListsFollowTheCellUpdate() {
     require(gatherAll(feed) == std::vector<std::uint32_t>({3, 2, 1}), "the walk lists cell 0 first (3, 2) then cell 3 (1)");
 
     feed.update({character(1, 35, 5, 5), character(3, 4, 5, 5)});
-    require(feed.grid().cellLists[0] == std::vector<std::uint32_t>({2}), "a character that is gone leaves its cells");
-    require(gatherAll(feed) == std::vector<std::uint32_t>({3, 1}), "and is not gathered");
+    require(feed.grid().cellLists[0] == std::vector<std::uint32_t>({2, 1}), "a character that is not listed keeps its cells (no entry is ever removed)");
+    require(gatherAll(feed) == std::vector<std::uint32_t>({3, 2, 1}), "and is still gathered");
+
+    TrafficFedCharacter hidden = character(2, 6, 5, 5);
+    hidden.disabled = true;
+    feed.update({character(1, 35, 5, 5), hidden, character(3, 4, 5, 5)});
+    require(feed.grid().cellLists[0] == std::vector<std::uint32_t>({2, 1}), "a disabled character stays in its cells");
+    require(gatherAll(feed) == std::vector<std::uint32_t>({3, 1}), "but owner flag bit 0 keeps it out of the gather");
 
     feed.update({character(1, 35, 5, 5), character(2, 6, 5, 5), character(3, 4, 5, 5)});
-    require(feed.grid().cellLists[0] == std::vector<std::uint32_t>({2, 1}), "it returns to its slot and is appended");
+    require(gatherAll(feed) == std::vector<std::uint32_t>({3, 2, 1}), "enabled again it is gathered at its place");
     require(feed.grid().entries.size() == 3, "without a new table slot");
+}
+
+// 0x30e0d8 / 0x2ba3f4 give a new entry the cell bytes 255, 255, 255 and 0, 0, 0 (docs/re/traffic-character-gather.md, 20261112-enemy-C).
+void testNewEntryCellBytes() {
+    TrafficGrid grid;
+    grid.layout = tenMetreLayout();
+    grid.cellLists.resize(32);
+    TrafficGridEntry entry;
+    entry.mask = kTrafficCharacterMask;
+    entry.owner = 9;
+    entry.nodeMatrix = at(5, 5, 5);
+    entry.shapeHalf = {1.0f, 1.0f, 1.0f};
+    const std::size_t index = trafficGridAdd(grid, entry);
+    require(grid.entries[index].cells && grid.entries[index].cells->low == std::array<std::uint8_t, 3>({0, 0, 0}), "the first update stores the box's cells");
+    require(grid.cellLists[0] == std::vector<std::uint32_t>({0}), "and joins the cell without leaving any");
+    require(kTrafficGridNewEntryCells.low == std::array<std::uint8_t, 3>({255, 255, 255}) &&
+                kTrafficGridNewEntryCells.high == std::array<std::uint8_t, 3>({0, 0, 0}),
+            "a new entry holds 255 255 255 / 0 0 0");
 }
 
 void testBoxAcrossCells() {
@@ -173,6 +197,7 @@ int main() {
         testLayoutRejects();
         testCellIndex();
         testCellListsFollowTheCellUpdate();
+        testNewEntryCellBytes();
         testBoxAcrossCells();
         testCarNearCharacter();
         testFeedRejects();
