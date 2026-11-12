@@ -1,27 +1,36 @@
-# The Chase Begins — PC port (work in progress)
+<h1 align="center">The Chase Begins: PC port</h1>
 
-This project builds a PC port of *LEGO City Undercover: The Chase Begins* (Nintendo 3DS). The goal is a port that plays exactly like the original, from start to finish. It runs on Linux first. A Windows version is planned for after the Linux version is finished.
+<p align="center">
+  An unofficial PC port of <i>LEGO City Undercover: The Chase Begins</i> (Nintendo 3DS),<br>
+  built from your own game dump. Work in progress.
+</p>
 
-**The game is not playable on PC yet.** What you can start today is `chase-game`, an early development runtime. It shows the start screens of the original game. After them you can play parts of the first missions (1-1 to 1-3, and the start of 1-4) in one street of the city. Nothing else of the game works yet. See [the project status](docs/status.md).
+<p align="center">
+  <img alt="Status: not playable yet" src="docs/badges/status-not-playable.svg">
+  <img alt="Platform: Linux x86_64" src="docs/badges/platform-linux.svg">
+  <img alt="License: GPL-3.0-or-later" src="docs/badges/license-gpl.svg">
+  <img alt="OpenGL 4.6" src="docs/badges/opengl-4.6.svg">
+</p>
+
+<p align="center">
+  <a href="#status">Status</a> ·
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#controls">Controls</a> ·
+  <a href="#if-something-goes-wrong">Problems</a> ·
+  <a href="#more-documentation">Documentation</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a>
+</p>
+
+> This is an unofficial fan project. It is not affiliated with, endorsed by or sponsored by Nintendo or any other right holder of *LEGO City Undercover: The Chase Begins*. All names and trademarks belong to their owners.
+> See [Not affiliated](#not-affiliated).
+
+## Status
+
+**The game is not playable on PC yet.** This project is early. The goal is a port that plays exactly like the original, from start to finish. It runs on Linux first. A Windows version is planned for after the Linux version is finished.
+
+What you can start today is `chase-game`, an early development runtime. It shows the start screens of the original game. After them you can play parts of the first missions (1-1 to 1-3, and the start of 1-4) in one street of the city. Nothing else of the game works yet. See [the project status](docs/status.md).
 
 The game data is never part of this repository. You need your own copy of the game, dumped from your own 3DS.
-
-## Progress
-
-<!-- progress:start -->
-| Measure | Now | What it means |
-|---|---|---|
-| Script commands | 56 of 239 (23.4%) | Different commands the level scripts call that the port runs. They cover 68.5% of all calls. 142 more run with a stand-in result. |
-| Object types | 169 of 506 (33.4%) | Different object types in the levels that the port treats with recovered rules (collision, doors, studs). They cover 56.6% of all placed objects. |
-| Game files read | 99.8% of files, 100.0% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
-| Open work | 650 open items, 522 stand-ins | Known gaps and temporary guesses in 38 feature areas. It has no total to reach; watch the trend. |
-| Checked against the original | 536 tests, 232 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
-| Game code documented | 3108 of about 7575 (41.0%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
-
-![Progress trend](docs/progress-trend.svg)
-
-Updated 2026-11-12, commit 0702a31b. How the numbers are measured: [docs/progress.md](docs/progress.md).
-<!-- progress:end -->
 
 ## What you need
 
@@ -30,7 +39,8 @@ Updated 2026-11-12, commit 0702a31b. How the numbers are measured: [docs/progres
 - Your own **decrypted `.cci` image** of the game. Only the European version 1.0 (title ID `00040000000AD600`) is tested. Other regions may work, because the port reads only the game's asset files, but nobody has tried them yet. More in [Getting started](docs/getting-started.md#check-your-game-file).
 - A keyboard. A mouse is optional.
 
-## Step by step
+
+## Quick start
 
 All commands go into a terminal. Run them one after the other.
 
@@ -83,6 +93,8 @@ build/chase-game
 
 A window opens. It shows the start screens of the original game: logos, language list, slot list and the intro movie. After the title card the level starts, and you can move the main character. To quit, close the window, or press Escape for the pause menu, choose PC Settings and then Quit game on the Game tab. The window is borderless full screen; F11 switches to a window and back.
 
+### Saving and continuing later
+
 The game saves at the same moments as the original (for example when the story saves or you collect a super brick). The file is `~/.local/share/chase/savegame.dat` (under `$XDG_DATA_HOME` if you set it); the terminal prints `save: request N written to ...` each time. To continue later, start from that file:
 
 ```sh
@@ -109,6 +121,7 @@ You should see `save: level entry ..., studs ..., super bricks ...` in the termi
 
 All keys and how to change them: [Controls](docs/controls.md).
 
+
 ## If something goes wrong
 
 - **`build/chase-game` does not exist after the build.** libepoxy or FFmpeg was not found. Install the packages of step 2 and run the two commands of step 3 again.
@@ -119,19 +132,28 @@ All keys and how to change them: [Controls](docs/controls.md).
 - **The window does not open or stays black.** Update your graphics driver. The game needs OpenGL 4.6.
 - More help: [Getting started](docs/getting-started.md#problems).
 
-## License
 
-The code and documentation of this project are licensed under the [GNU General Public License, version 3 or later](LICENSE) (GPL-3.0-or-later). This covers only the project's own files.
+## Progress
 
-Third-party files under `third_party/` keep their own licences: the Noto Sans font (SIL Open Font License 1.1, text in `third_party/fonts/OFL.txt`) and `stb_truetype.h` (MIT or public domain, text at the end of the file). The font is built into the program, so keep `OFL.txt` with any copy you distribute. `REUSE.toml` lists the sources.
+<!-- progress:start -->
+| Measure | Now | What it means |
+|---|---|---|
+| Script commands | 56 of 239 (23.4%) | Different commands the level scripts call that the port runs. They cover 68.5% of all calls. 142 more run with a stand-in result. |
+| Object types | 169 of 506 (33.4%) | Different object types in the levels that the port treats with recovered rules (collision, doors, studs). They cover 56.6% of all placed objects. |
+| Game files read | 99.8% of files, 100.0% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
+| Open work | 650 open items, 522 stand-ins | Known gaps and temporary guesses in 38 feature areas. It has no total to reach; watch the trend. |
+| Checked against the original | 536 tests, 232 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
+| Game code documented | 3108 of about 7575 (41.0%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
 
-The game's assets are never part of this repository. You supply your own legally obtained image of the game.
+![Progress trend](docs/progress-trend.svg)
 
-## Not affiliated
-
-This is an unofficial fan project. It is not affiliated with, endorsed by or sponsored by Nintendo or any other right holder of *LEGO City Undercover: The Chase Begins*. All names and trademarks belong to their owners.
+Updated 2026-11-12, commit bf39f143. How the numbers are measured: [docs/progress.md](docs/progress.md).
+<!-- progress:end -->
 
 ## More documentation
+
+For players:
+
 
 - [Getting started](docs/getting-started.md): requirements, version check, package details, the other programs and more problems.
 - [Development runtime](docs/game-runtime.md): what `chase-game` does and its options.
@@ -142,5 +164,21 @@ This is an unofficial fan project. It is not affiliated with, endorsed by or spo
 - [Command reference](docs/commands.md)
 - [Model viewer](docs/model-viewer.md), [sound test](docs/sound-test.md), [video player](docs/fmv-player.md), [debug overlay](docs/debug-overlay.md)
 - [How progress is measured](docs/progress.md)
+
+### For contributors
+
 - Want to help? [Contributing](CONTRIBUTING.md).
-- For developers: [`CLAUDE.md`](CLAUDE.md) (rules), [the plans](docs/plans/README.md) (with their work logs), [feature pages](docs/plans/features/README.md), [reverse-engineering notes](docs/re/README.md).
+- [`CLAUDE.md`](CLAUDE.md) (rules), [the plans](docs/plans/README.md) (with their work logs), [feature pages](docs/plans/features/README.md), [reverse-engineering notes](docs/re/README.md).
+
+## License
+
+The code and documentation of this project are licensed under the [GNU General Public License, version 3 or later](LICENSE) (GPL-3.0-or-later). This covers only the project's own files.
+
+Third-party files under `third_party/` keep their own licences: the Noto Sans font (SIL Open Font License 1.1, text in `third_party/fonts/OFL.txt`) and `stb_truetype.h` (MIT or public domain, text at the end of the file). The font is built into the program, so keep `OFL.txt` with any copy you distribute. `REUSE.toml` lists the sources.
+
+The game's assets are never part of this repository. You supply your own legally obtained image of the game.
+
+
+## Not affiliated
+
+This is an unofficial fan project. It is not affiliated with, endorsed by or sponsored by Nintendo or any other right holder of *LEGO City Undercover: The Chase Begins*. All names and trademarks belong to their owners.
