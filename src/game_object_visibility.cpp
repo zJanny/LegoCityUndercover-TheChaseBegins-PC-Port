@@ -1,10 +1,17 @@
 #include "game_object_visibility.hpp"
 #include "runtime/cutscene_hold.hpp"
 
+#include <cctype>
+
 namespace game_object_visibility {
 namespace render = chase::render;
 
 namespace {
+std::string lowerCase(std::string text) {
+    for (char& c : text) c = char(std::tolower(static_cast<unsigned char>(c)));
+    return text;
+}
+
 void setVisible(render::Scene& scene, const render::CharacterInstance& instance, bool visible) {
     scene.setInstanceVisible(instance.bodyInstance, visible);
     scene.setInstanceVisible(instance.headInstance, visible);
@@ -14,10 +21,10 @@ void setVisible(render::Scene& scene, const render::CharacterInstance& instance,
 
 void CharacterVisibility::apply(render::Scene& scene, const std::vector<chase::assets::CharacterObject>& characters,
                                 const std::vector<std::optional<render::CharacterInstance>>& placed, const chase::assets::PlacedObjectState& state,
-                                const std::function<bool(std::size_t)>& heldByCutscene) {
+                                const std::function<bool(std::size_t)>& heldByCutscene, const std::function<bool(const std::string&)>& nodeHidden) {
     std::vector<bool> drawn = chase::runtime::drawnCharacters(characters, state);
     for (std::size_t i = 0; i < drawn.size() && i < characters.size(); ++i)
-        drawn[i] = chase::runtime::drawnWhileHeld(drawn[i], heldByCutscene(characters[i].placement.objectIndex));
+        drawn[i] = chase::runtime::drawnWhileHeld(drawn[i], heldByCutscene(characters[i].placement.objectIndex)) && !nodeHidden(lowerCase(characters[i].placement.instance));
     wasHidden_.resize(drawn.size(), false);
     for (std::size_t i = 0; i < drawn.size() && i < placed.size(); ++i) {
         if (!placed[i]) continue;

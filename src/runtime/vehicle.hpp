@@ -170,7 +170,8 @@ public:
     // script object of the wrong type would be by the original after the lookup.
     bool apply(VehicleNativeKind kind, const std::string& lowerCaseInstance, float value, const std::string& lowerCaseOther = {});
 
-    using BoardingHandler = std::function<void(BoardingRequestKind, const std::string& vehicleInstance)>;
+    // VehicleJumpIn / VehicleJumpOut of any character; the glue applies the gate 0x21aae0 (characters only).
+    using BoardingHandler = std::function<void(BoardingRequestKind, const std::string& character, const std::string& vehicleInstance)>;
     void setBoardingHandler(BoardingHandler handler) { boarding_ = std::move(handler); }
 
 private:

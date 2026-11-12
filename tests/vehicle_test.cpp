@@ -201,11 +201,21 @@ void boardingNatives() {
     VehicleSet set;
     set.load(fixture.level, fixture.lookup(), fixture.table);
     std::vector<std::pair<runtime::BoardingRequestKind, std::string>> requests;
-    set.setBoardingHandler([&](runtime::BoardingRequestKind kind, const std::string& vehicle) { requests.emplace_back(kind, vehicle); });
+    std::vector<std::string> characters;
+    set.setBoardingHandler([&](runtime::BoardingRequestKind kind, const std::string& character, const std::string& vehicle) {
+        requests.emplace_back(kind, vehicle);
+        characters.push_back(character);
+    });
     require(set.apply(VehicleNativeKind::JumpOut, "player1", 0.0f) && requests.empty(), "VehicleJumpOut does nothing for a player on foot (0x24255c is 0, the state test 0x17f fails)");
-    set.setOccupantLookup([](const std::string& character) { return character == "player1" ? std::string("Parked") : std::string(); });
+    set.setOccupantLookup([](const std::string& character) {
+        return character == "player1" ? std::string("Parked") : character == "chaser" ? std::string("Plain") : std::string();
+    });
     set.apply(VehicleNativeKind::JumpOut, "someone_else", 0.0f);
-    require(requests.empty(), "only the player's seat is modelled; other characters are ignored");
+    require(requests.empty(), "VehicleJumpOut does nothing for a character on foot");
+    set.apply(VehicleNativeKind::JumpOut, "chaser", 0.0f);
+    require(requests.size() == 1 && requests[0].second == "plain" && characters[0] == "chaser", "VehicleJumpOut of a seated character other than the player posts event 200");
+    requests.clear();
+    characters.clear();
     set.apply(VehicleNativeKind::JumpOut, "player1", 0.0f);
     require(requests.size() == 1 && requests[0].first == runtime::BoardingRequestKind::JumpOut && requests[0].second == "parked",
             "VehicleJumpOut for the seated player posts event 200 (0x1da8d8)");
@@ -214,6 +224,8 @@ void boardingNatives() {
             "VehicleJumpIn(player, vehicle) posts event 200 with the vehicle (0x1cdec0)");
     set.apply(VehicleNativeKind::JumpIn, "player1", 0.0f, "nobody");
     require(requests.size() == 2, "VehicleJumpIn with an unknown vehicle is ignored");
+    set.apply(VehicleNativeKind::JumpIn, "chaser", 0.0f, "plain");
+    require(requests.size() == 3 && characters[2] == "chaser" && requests[2].second == "plain", "VehicleJumpIn of another character posts event 200 with the vehicle");
 
     set.apply(VehicleNativeKind::StopPlayerVehicle, "", 1.0f);
     require(set.find("parked")->forcedStop == 1 && set.find("parked")->pendingSpeedLimit && *set.find("parked")->pendingSpeedLimit == 0.0f &&

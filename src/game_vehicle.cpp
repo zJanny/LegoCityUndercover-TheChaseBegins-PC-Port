@@ -21,6 +21,7 @@ void LevelSession::loadBoardingVehicles(const std::map<std::string, std::pair<st
     if (!player) return;
     const Animation& jump = player->animations.at(runtime::kAnimationJump);
     boarding.emplace(runtime::animationLengthTicks(jump.frames, animationFramesPerSecond(jump)));
+    characterVehicles.emplace(runtime::animationLengthTicks(jump.frames, animationFramesPerSecond(jump)));
     const std::vector<runtime::VehicleRecord>& records = levelScripts.vehicles().records();
     for (std::size_t index = 0; index < records.size(); ++index) {
         const runtime::VehicleRecord& record = records[index];
@@ -45,10 +46,14 @@ void LevelSession::loadBoardingVehicles(const std::map<std::string, std::pair<st
     }
     loadVehicleCameras();
     std::cout << "boardable vehicles: " << boardingVehicles.size() << '\n';
-    levelScripts.vehicles().setBoardingHandler([this](runtime::BoardingRequestKind kind, const std::string& vehicle) { scriptBoardingRequest(kind, vehicle); });
+    levelScripts.vehicles().setBoardingHandler([this](runtime::BoardingRequestKind kind, const std::string& character, const std::string& vehicle) {
+        if (character == "player1") scriptBoardingRequest(kind, vehicle);
+        else characterBoardingRequest(kind, character, vehicle);
+    });
     levelScripts.vehicles().setOccupantLookup([this](const std::string& character) -> std::string {
-        const std::optional<std::size_t> seated = boarding ? boarding->seatedVehicle() : std::nullopt;
-        return character == "player1" && seated ? boardingVehicles[*seated].instance : std::string();
+        const std::optional<std::size_t> seated = character == "player1" ? (boarding ? boarding->seatedVehicle() : std::nullopt)
+                                                  : characterVehicles ? characterVehicles->seatedVehicle(character) : std::nullopt;
+        return seated ? boardingVehicles[*seated].instance : std::string();
     });
 }
 

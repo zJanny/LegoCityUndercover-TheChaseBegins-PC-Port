@@ -470,7 +470,8 @@ void LevelSession::draw(int width, int height) {
     applyTrafficFades();
     applySuperBricks();
     characterVisibility.apply(scene, drawable.characters, placedCharacters, objectState,
-                              [this](std::size_t objectIndex) { return cutsceneHost->holdsObject(objectIndex); });
+                              [this](std::size_t objectIndex) { return cutsceneHost->holdsObject(objectIndex); },
+                              [this](const std::string& character) { return characterVehicles && characterVehicles->hidden(character); });
     for (std::size_t i = 0; i < drawn.size(); ++i)
         scene.setInstanceVisible(placedSceneIndex[i], drawn[i] && roomShown(placedRooms[i]) && !wreckHides(i, std::nullopt));
     showNestedProps(drawn);

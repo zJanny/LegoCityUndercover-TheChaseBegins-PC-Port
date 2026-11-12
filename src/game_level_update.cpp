@@ -208,6 +208,7 @@ void LevelSession::updateLevelCharacters(float dt) {
     updatePropAnimations(dt);
     updatePropRocking();
     followAttachedCharacters();
+    stepCharacterVehicles(dt);
     updateCharacterHits();
     updateCharacterTakedowns(dt);
     updateCharacterArrests(dt);

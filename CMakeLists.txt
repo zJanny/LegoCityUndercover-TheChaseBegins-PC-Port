@@ -2584,6 +2584,11 @@ target_compile_options(vehicle-chase-events-test PRIVATE -Wall -Wextra -Wpedanti
 add_test(NAME vehicle-chase-events COMMAND vehicle-chase-events-test)
 add_test(NAME vehicle-chase-events-real-data COMMAND vehicle-chase-events-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
 set_tests_properties(vehicle-chase-events-real-data PROPERTIES SKIP_RETURN_CODE 77)
+target_sources(chase_runtime PRIVATE src/runtime/character_vehicle_entry.cpp)
+add_executable(character-vehicle-entry-test tests/character_vehicle_entry_test.cpp)
+target_link_libraries(character-vehicle-entry-test PRIVATE chase_runtime)
+target_compile_options(character-vehicle-entry-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME character-vehicle-entry COMMAND character-vehicle-entry-test)
 target_sources(chase_runtime PRIVATE src/runtime/traffic_route_mover.cpp)
 add_executable(traffic-route-mover-test tests/traffic_route_mover_test.cpp)
 target_link_libraries(traffic-route-mover-test PRIVATE chase_runtime chase_assets)
@@ -2699,7 +2704,7 @@ add_test(NAME goon-conduct-real-data COMMAND goon-conduct-real-test "${CHASE_ROM
 set_tests_properties(goon-conduct-real-data PROPERTIES SKIP_RETURN_CODE 77)
 set_property(TEST goon-conduct-real-data APPEND PROPERTY LABELS needs-game-data)
 if(TARGET chase-game)
-  target_sources(chase-game PRIVATE src/runtime/game_ai_spawner.cpp src/runtime/game_goon_conduct.cpp)
+  target_sources(chase-game PRIVATE src/runtime/game_ai_spawner.cpp src/runtime/game_goon_conduct.cpp src/runtime/game_character_vehicle_entry.cpp)
   # SCRIPT-410: the 42 characters of the 17 spawners of lvl_01 are held from the level load; the TriggerObject of 1-4_ShowroomArrival starts
   # 1-4_Spawner_05, which releases goons 03 and 06 one after the other (state 1, spawn, state 1, spawn; class code read by 20261102-mission14-A,
   # docs/re/scripts-missions-1-4-spawners.md). The update numbers are the port's, not measured in the original.
@@ -2711,6 +2716,17 @@ if(TARGET chase-game)
   set_tests_properties(game-ai-spawner-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
     PASS_REGULAR_EXPRESSION "ai spawners: 17, 42 characters held\n.*ai spawner 1-4_spawner_05: state 1 active at update 1\n.*ai start state 0 1-4_ai_goon_03: idle at update 2\n.*ai spawner 1-4_spawner_05: spawned 1-4_ai_goon_03 \\(slot 0, 1/2\\) at update 2\n.*ai start state 0 1-4_ai_goon_06: idle at update 4\n.*ai spawner 1-4_spawner_05: spawned 1-4_ai_goon_06 \\(slot 1, 2/2\\) at update 4")
   set_property(TEST game-ai-spawner-1-4 APPEND PROPERTY LABELS needs-game-data)
+  # SCRIPT-444, VEH-22: 1-4_Hatch_Open triggers 1-4_BoosterChaser_Spawner, which releases the chaser, and 0.3 s later VehicleJumpIn puts him into
+  # the stolen car through the states 0x11a and 0x11c that every character runs (event 200 bindings and handlers read by 20261111-chase-C,
+  # docs/re/vehicles-waypoints.md). The update numbers are the port's, not measured in the original.
+  add_test(NAME game-chase-jump-in-1-4 COMMAND chase-game
+    --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+    --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+    --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --save-out "${CMAKE_BINARY_DIR}/game-chase-jump-in-1-4.dat"
+    --start "602.9 23.8 975" --facing 180 --call-script 1-4_Hatch_Open --script "0 0 620")
+  set_tests_properties(game-chase-jump-in-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
+    PASS_REGULAR_EXPRESSION "ai spawner 1-4_boosterchaser_spawner: spawned 1-4_booster_strange_chaser \\(slot 0, 1/1\\) at update [0-9]+\n.*character 1-4_booster_strange_chaser: vehicle 1-4_stolen_vehicle jump in started at update [0-9]+\n.*character 1-4_booster_strange_chaser: vehicle 1-4_stolen_vehicle entered at update [0-9]+")
+  set_property(TEST game-chase-jump-in-1-4 APPEND PROPERTY LABELS needs-game-data slow)
   # SCRIPT-418: 1-4_SO_Phase1 triggers 1-4_Spawner_06 (StartState 6, SuperjumpHeight 5, staggertime 0.6); each goon that comes out gets the spawn word
   # 0x2bae74 of the StartState table, the AISuperJump set-up 0x213300 to its Runto target (table and data read by 20261102-mission14b-A,
   # docs/re/scripts-missions-1-4-spawners.md). The update numbers are the port's, not measured in the original.

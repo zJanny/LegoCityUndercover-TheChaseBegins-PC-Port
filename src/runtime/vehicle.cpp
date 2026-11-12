@@ -311,11 +311,12 @@ bool VehicleSet::apply(VehicleNativeKind kind, const std::string& lowerCaseInsta
     const bool on = value != 0.0f;
     const std::string seated = occupant_ ? lower(occupant_("player1")) : std::string();
     if (kind == VehicleNativeKind::JumpOut) {
-        if (lowerCaseInstance == "player1" && !seated.empty() && boarding_) boarding_(BoardingRequestKind::JumpOut, seated);
+        const std::string vehicle = occupant_ ? lower(occupant_(lowerCaseInstance)) : std::string();
+        if (!vehicle.empty() && boarding_) boarding_(BoardingRequestKind::JumpOut, lowerCaseInstance, vehicle);
         return true;
     }
     if (kind == VehicleNativeKind::JumpIn) {
-        if (lowerCaseInstance == "player1" && mutableFind(lowerCaseOther) && boarding_) boarding_(BoardingRequestKind::JumpIn, lowerCaseOther);
+        if (mutableFind(lowerCaseOther) && boarding_) boarding_(BoardingRequestKind::JumpIn, lowerCaseInstance, lowerCaseOther);
         return true;
     }
     if (kind == VehicleNativeKind::StopPlayerVehicle) {

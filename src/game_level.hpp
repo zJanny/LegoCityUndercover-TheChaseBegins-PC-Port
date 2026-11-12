@@ -113,6 +113,7 @@
 #include "runtime/script_runner.hpp"
 #include "runtime/script_thread_log.hpp"
 #include "runtime/studs.hpp"
+#include "runtime/character_vehicle_entry.hpp"
 #include "runtime/vehicle_boarding.hpp"
 #include "runtime/vehicle_wheels.hpp"
 #include "runtime/vehicle_world.hpp"
@@ -400,6 +401,10 @@ private:
     void selectCameraSubject(chase::runtime::FollowCameraInput& input);
     chase::runtime::BoardingStep stepBoarding(float dt);
     void scriptBoardingRequest(chase::runtime::BoardingRequestKind kind, const std::string& vehicle);
+    void characterBoardingRequest(chase::runtime::BoardingRequestKind kind, const std::string& character, const std::string& vehicle);
+    chase::runtime::CharacterAboard characterAboard(const std::string& character) const;
+    void applyCharacterVehicleStep(const chase::runtime::CharacterVehicleStep& step);
+    void stepCharacterVehicles(float dt);
     void cancelBoardingByPlacement();
     game_player::PlayerAnimation applyBoarding(const chase::runtime::BoardingStep& step);
     bool holdForMovie(float dt);
@@ -555,6 +560,7 @@ private:
     chase::runtime::FenceVaulter fenceVaulter;
     std::map<int, chase::assets::RootMotion> vaultMotions;
     std::optional<chase::runtime::VehicleBoarding> boarding;
+    std::optional<chase::runtime::CharacterVehicleEntry> characterVehicles;
     std::vector<chase::runtime::BoardingVehicle> boardingVehicles;
     std::vector<std::size_t> boardingRecords;
     std::optional<chase::runtime::WaypointVehicle> previousWaypointVehicle;
