@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <utility>
 
 namespace chase::runtime {
 namespace {
@@ -62,7 +63,12 @@ ScriptRunner::Result ScriptRunner::worldNative(const assets::ScriptCall& call) {
     case WorldNativeKind::SetPartyCharacter: {
         const std::string object = lowerCase(args[0]);
         if (object != "player1" && object != "player2") break;
-        partyRequests_.push_back({object == "player1" ? 0u : 1u, static_cast<std::uint16_t>(static_cast<std::uint32_t>(read(args[1])) & 0xffff), static_cast<int>(read(args[2])) != 0});
+        PartyRequest request;
+        request.slot = object == "player1" ? 0u : 1u;
+        request.character = static_cast<std::uint16_t>(static_cast<std::uint32_t>(read(args[1])) & 0xffff);
+        request.flag = static_cast<int>(read(args[2])) != 0;
+        partyNatives_.setPartyCharacter(request, progressNatives_);
+        partyRequests_.push_back(std::move(request));
         break;
     }
     case WorldNativeKind::StreamRoomIn: {

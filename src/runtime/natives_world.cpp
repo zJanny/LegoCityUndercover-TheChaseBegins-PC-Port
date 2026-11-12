@@ -41,8 +41,4 @@ bool worldNativeIsStandIn(WorldNativeKind kind) {
     return false;
 }
 
-PartyOutcome partyOutcome(std::uint16_t current, const PartyRequest& request) {
-    return request.character == current ? PartyOutcome::AlreadyCurrent : PartyOutcome::NotPorted;
-}
-
 }

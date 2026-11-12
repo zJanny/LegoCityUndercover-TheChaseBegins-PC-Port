@@ -94,6 +94,30 @@ std::optional<std::string> PartyNativeState::pilotOf(const std::string& mech) co
     return found->second;
 }
 
+void PartyNativeState::takeGroupBytes(const ProgressNativeState& progress) {
+    PartyFlags flags = party_.flags();
+    const std::vector<std::uint8_t>& slot = progress.slotImage();
+    for (std::size_t i = 0; i < flags.groupBytes.size(); ++i)
+        flags.groupBytes[i] = kCharacterGroupOffset + i < slot.size() ? slot[kCharacterGroupOffset + i] : 0;
+    party_.setFlags(flags);
+}
+
+void PartyNativeState::setPartyCharacter(PartyRequest& request, const ProgressNativeState& progress) {
+    takeGroupBytes(progress);
+    if (!party_.setPartyCharacter(request.slot, request.character, request.flag, request.swap)) request.outcome = PartyOutcome::NotInParty;
+    else request.outcome = request.swap ? PartyOutcome::Swapped : PartyOutcome::AlreadyCurrent;
+}
+
+void PartyNativeState::characterUnlocked(float value, const ProgressNativeState& progress) {
+    takeGroupBytes(progress);
+    party_.unlockCharacter(static_cast<std::int16_t>(toInt(value) & 0xffff));
+}
+
+void PartyNativeState::characterLocked(float value, const ProgressNativeState& progress) {
+    takeGroupBytes(progress);
+    party_.lockCharacter(static_cast<std::int16_t>(toInt(value) & 0xffff));
+}
+
 PartyNativeResult PartyNativeState::run(PartyNativeKind kind, const std::vector<std::string>& objects, const std::vector<float>& numbers,
                                         const ProgressNativeState& progress) {
     PartyNativeResult result;
@@ -118,7 +142,7 @@ PartyNativeResult PartyNativeState::run(PartyNativeKind kind, const std::vector<
         break;
     case PartyNativeKind::RelockChasePlainClothes:
         ++plainClothesRemovals_;
-        if (currentCharacter_ == kCharacterPlainClothes) freeplaySwap_ = FreeplaySwapRecord{"player1", kCharacterChase};
+        if (party_.playerCharacter() == kCharacterPlainClothes) freeplaySwap_ = FreeplaySwapRecord{"player1", kCharacterChase};
         break;
     case PartyNativeKind::WalnutsHit: bossRequests_.push_back({object, 5}); break;
     case PartyNativeKind::RejoinFight: bossRequests_.push_back({object, 6}); break;

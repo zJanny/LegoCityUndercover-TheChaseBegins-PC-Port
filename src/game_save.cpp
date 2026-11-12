@@ -125,6 +125,28 @@ void apply(const SlotStart& start, chase::runtime::ScriptRunner& runner) {
     for (const SavedVariable& variable : start.variables) runner.setVariable(variable.hash, variable.value);
 }
 
+void setUpParty(const SlotStart& start, chase::assets::FuseArchive& archive, chase::runtime::ScriptRunner& runner) {
+    namespace runtime = chase::runtime;
+    const NewGameTables tables = newGameTables(archive);
+    const Bytes& slot = start.slotBytes;
+    if (start.level >= tables.levelParty.size() || slot.size() <= kSlotPartyOffset + runtime::kPartyLevelIds) return;
+    std::array<std::uint8_t, runtime::kPartyLevelIds> slotIds{};
+    for (unsigned i = 0; i < runtime::kPartyLevelIds; ++i) slotIds[i] = slot[kSlotPartyOffset + i];
+    const bool ownParty = (slot[kSlotFlagsOffset] & kSlotOwnPartyBit) != 0;
+    const runtime::PartyList list =
+        runtime::partyList(tables.levelParty[start.level], tables.levelPartyExtras[start.level], slotIds, ownParty, false);
+    runtime::PartyManager& party = runner.partyNatives().party();
+    runtime::PartyFlags flags = party.flags();
+    flags.groupBytes = {slot[kSlotGroupBitsOffset], slot[kSlotGroupBitsOffset + 1]};
+    party.setFlags(flags);
+    party.setLevel(std::int8_t(start.level));
+    party.setUp(list);
+    std::cout << "party: level " << start.level << ", ids";
+    for (const runtime::PartySlot& member : party.slots()) std::cout << ' ' << unsigned(member.id) << (member.removed ? "-" : "");
+    std::cout << ", usable " << party.usableCount() << ", walk " << party.walkCount() << ", player character " << unsigned(party.playerCharacter())
+              << '\n';
+}
+
 LevelStateInput levelStateInput(const SlotStart& start, const chase::runtime::ScriptRunner& runner) {
     LevelStateInput input;
     input.variable = [&runner](std::uint32_t hash) { return runner.variable(hash); };

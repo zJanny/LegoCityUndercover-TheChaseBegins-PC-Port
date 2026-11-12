@@ -20,7 +20,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [input](input.md) | DONE (lab, mapping) | INPUT-2 readers of input slots 16/17 |
 | [abilities-detective](abilities-detective.md) | IN_PROGRESS | DETECT-2 first point never enabled (Doorlock script waits); DETECT-1 use-state approach; DETECT-4 particles, fades, flight |
 | [abilities-scanner](abilities-scanner.md) | IN_PROGRESS | SCAN-2 other zone modes; SCAN-10 sonar segments; SCAN-19 tip pages during the scanner view; SCAN-16 and SCAN-17 info box comparison and icon writer |
-| [disguise](disguise.md) | NOT_STARTED | DISG-1 class look of the HUD; DISG-2 party manager and swap; DISG-3 giving a disguise and the save; DISG-4 script calls per mission (first static map only, nothing ported) |
+| [disguise](disguise.md) | IN_PROGRESS | Party manager ported; DISG-9 swap of the player entity; DISG-1 class look of the HUD; DISG-3 party in the save and at level entry; DISG-5 D-pad swap |
 
 ## Level objects
 
@@ -66,7 +66,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [script-system-missions-1-4-roof](script-system-missions-1-4-roof.md) | IN_PROGRESS | SCRIPT-414 rest of the roof scene; SCRIPT-430 a goon in the air; SCRIPT-437 BulletTime camera shot; SCRIPT-438 callers and time scale readers; SCRIPT-439 slow motion length |
 | [script-system-use-markers](script-system-use-markers.md) | IN_PROGRESS | SCRIPT-299 markers of the other 34 kinds; SCRIPT-355 special cases and HeadMarker; SCRIPT-356 list builder; SCRIPT-357 placement ray |
 | [script-system-natives](script-system-natives.md) | IN_PROGRESS | SCRIPT-7 natives in batches SCRIPT-29 to SCRIPT-39, SCRIPT-57 to SCRIPT-65 |
-| [script-system-natives-world](script-system-natives-world.md) | IN_PROGRESS | SCRIPT-279 party swap; SCRIPT-280 destroy message 1 per class; SCRIPT-281 effect fade rest; SCRIPT-282 distance fade gate; SCRIPT-283 AddToSemiTransList |
+| [script-system-natives-world](script-system-natives-world.md) | IN_PROGRESS | SCRIPT-280 destroy message 1 per class; SCRIPT-281 effect fade rest; SCRIPT-282 distance fade gate; SCRIPT-283 AddToSemiTransList |
 | [script-system-natives-world-death](script-system-natives-world-death.md) | IN_PROGRESS | SCRIPT-326 a character that comes back; SCRIPT-327 the player's branch; SCRIPT-328 AI helpers; SCRIPT-323 sound table, clock, textures |
 | [script-system-natives-animation](script-system-natives-animation.md) | IN_PROGRESS | SCRIPT-270 player animations; SCRIPT-272 attach node changes; SCRIPT-273 / 274 states, loaded set |
 | [script-system-natives-party](script-system-natives-party.md) | IN_PROGRESS | SCRIPT-338 character records read by nothing; SCRIPT-339 boss components; SCRIPT-340 mech piloting |

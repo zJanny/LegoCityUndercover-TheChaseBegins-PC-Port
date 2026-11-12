@@ -78,6 +78,7 @@ target_sources(chase_runtime PRIVATE src/runtime/options_page.cpp src/runtime/la
 target_sources(chase_runtime PRIVATE src/runtime/item_grid.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/debris_pickup.cpp src/runtime/hud_pending_add.cpp)
 target_sources(chase_runtime PRIVATE src/runtime/node_fade.cpp src/runtime/pedestrian_fade.cpp src/runtime/semi_trans_near_camera.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/party_manager.cpp)
 add_library(chase_draw_order src/render/draw_order.cpp)
 target_include_directories(chase_draw_order PUBLIC src)
 target_compile_options(chase_draw_order PRIVATE -Wall -Wextra -Wpedantic -ffp-contract=off)
@@ -396,6 +397,10 @@ if(BUILD_TESTING)
   target_link_libraries(natives-party-test PRIVATE chase_runtime)
   target_compile_options(natives-party-test PRIVATE -Wall -Wextra -Wpedantic)
   add_test(NAME natives-party COMMAND natives-party-test)
+  add_executable(party-manager-test tests/party_manager_test.cpp)
+  target_link_libraries(party-manager-test PRIVATE chase_runtime)
+  target_compile_options(party-manager-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME party-manager COMMAND party-manager-test)
   add_executable(natives-world-test tests/natives_world_test.cpp)
   target_link_libraries(natives-world-test PRIVATE chase_runtime)
   target_compile_options(natives-world-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -1703,7 +1708,7 @@ if(BUILD_TESTING)
       --script "at 948.327 95.031 1124.175 0;0 0 40")
     set_tests_properties(game-save-new-game PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       FIXTURES_REQUIRED save_new_game_clean FIXTURES_SETUP save_new_game
-      PASS_REGULAR_EXPRESSION "save: new game in slot 0, save requests write [^\n]*/test-xdg/game-save-new-game/chase/savegame\\.dat.*save: level entry 2, studs 0, super bricks 0.*save: request 1 written to")
+      PASS_REGULAR_EXPRESSION "save: new game in slot 0, save requests write [^\n]*/test-xdg/game-save-new-game/chase/savegame\\.dat.*save: level entry 2, studs 0, super bricks 0.*party: level 2, ids 9 19- 29- 39- 49- 59- 69- 80- 0 0, usable 1, walk 8, player character 9\n.*save: request 1 written to")
     add_test(NAME game-save-reload COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --save "${CMAKE_BINARY_DIR}/test-xdg/game-save-new-game/chase/savegame.dat" --slot 0

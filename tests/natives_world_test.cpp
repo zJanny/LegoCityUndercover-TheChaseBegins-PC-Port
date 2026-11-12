@@ -2,7 +2,7 @@
 // (src/runtime/natives_effects.cpp, natives_world.cpp, script_runner_natives.cpp; docs/re/script-natives-world.md).
 // Provenance of the rules: EffectFadeObject 0x288a60 -> 0x229e54 -> tween registry 0x21b7cc and evaluation 0x1593c8 (REA pseudo code and
 // llvm-objdump of game.arm.elf, 2026-10-18), EnableDistanceFade 0x2a05bc (REA), AddToSemiTransNearCameraList 0x2cb734 with 0x1f40d8 (REA and
-// objdump), SetPartyCharacter 0x27beb4 with 0x2457bc and 0x245258 (REA), StreamRoomIn 0x1bfba4 with 0x20f194 and 0x2284bc (objdump and REA).
+// objdump), SetPartyCharacter 0x27beb4 with 0x2457bc and 0x245258 (REA; objdump 2026-11-12, 20261112-enemy-B), StreamRoomIn 0x1bfba4 with 0x20f194 and 0x2284bc (objdump and REA).
 // The scripts are made up.
 #include "runtime/script_runner.hpp"
 #include <iostream>
@@ -128,6 +128,10 @@ void setPartyCharacterRecordsTheRequest() {
                      {"SetPartyCharacter", {"Someone", "9", "1"}}});
     PlacedObjectState state;
     ScriptRunner runner(level, state);
+    chase::runtime::PartyFlags flags;
+    flags.groupBytes = {1, 0};
+    runner.partyNatives().party().setFlags(flags);
+    runner.partyNatives().party().setUp(chase::runtime::partyList({9, 19, 29, 39, 49, 59, 69, 80}, {0, 0}, {}, false, false));
     runner.start("s");
     const auto requests = runner.takePartyRequests();
     require(requests.size() == 3, "an object other than Player1 and Player2 does nothing (0x27beb4 returns at once)");
@@ -136,8 +140,9 @@ void setPartyCharacterRecordsTheRequest() {
     require(requests[2].slot == 1 && requests[2].character == 1, "Player2: slot 1; the character is `& 0xffff` (65537 -> 1)");
     require(runner.takePartyRequests().empty(), "taken");
     using chase::runtime::PartyOutcome;
-    require(chase::runtime::partyOutcome(9, requests[0]) == PartyOutcome::AlreadyCurrent, "0x245258 returns at once for the character that is already the player");
-    require(chase::runtime::partyOutcome(9, requests[1]) == PartyOutcome::NotPorted, "another character is a swap, not ported");
+    require(requests[0].outcome == PartyOutcome::AlreadyCurrent && !requests[0].swap, "0x245258 returns at once for the slot of the player's character");
+    require(requests[1].outcome == PartyOutcome::NotInParty, "character 16 has no slot in the party of the level row");
+    require(requests[2].outcome == PartyOutcome::NotInParty, "character 1 has no slot either");
 }
 
 void streamRoomInRequestsAndWaitsForTheRoom() {

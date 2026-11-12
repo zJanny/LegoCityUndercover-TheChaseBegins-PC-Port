@@ -324,6 +324,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
     order.at(runtime::UpdatePhase::Runner, [&] {
         sceneStart.startRequested();
         if (player && !levelScripts.ai().moving("player1")) levelScripts.ai().setPosition("player1", player->position().data());
+        levelScripts.partyNatives().party().setClock(updates);
         levelScripts.update(dt);
         carryPlatformProps();
         applyScriptNatives();

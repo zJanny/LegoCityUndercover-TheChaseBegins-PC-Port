@@ -56,6 +56,8 @@ void sceneEntered(Progress& progress, chase::assets::FuseArchive& archive, const
 chase::save::SlotStart slotStartFor(const Progress& progress, chase::assets::FuseArchive& archive, const chase::assets::Level& level,
                                     const std::string& levelPath);
 void apply(const chase::save::SlotStart& start, chase::runtime::ScriptRunner& runner);
+// The party of the level set-up (0x1b1c90, 0x171bb0) from the slot and the level's TablesLevels row, into the runner's party manager.
+void setUpParty(const chase::save::SlotStart& start, chase::assets::FuseArchive& archive, chase::runtime::ScriptRunner& runner);
 
 // What the level state refresh needs of a level session: the records and end bit set of the slot's saved state of the
 // level and the live level variables of `runner`.

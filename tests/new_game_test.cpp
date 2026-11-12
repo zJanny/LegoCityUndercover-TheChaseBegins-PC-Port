@@ -143,6 +143,10 @@ void testRealTables(chase::assets::FuseArchive& archive) {
         if (reference.offset >= 8) referenceNonZero += std::size_t(std::count_if(reference.bytes.begin(), reference.bytes.end(), [](std::uint8_t b) { return b != 0; }));
     const std::size_t nonZero = std::size_t(std::count_if(slot.begin() + 8, slot.end(), [](std::uint8_t b) { return b != 0; }));
     require(nonZero == referenceNonZero, "no other byte from +8 on is set (" + std::to_string(nonZero) + ")");
+    // TablesLevels rows 1..8, bytes +0x4b / +0x4c (the party extras of 0x1b1c90): all 0 (chase-tabledump, 20261112-enemy-B, 2026-11-12).
+    require(tables.levelPartyExtras.size() == tables.levelParty.size(), "one extras pair per level row");
+    for (unsigned level = 1; level <= 8; ++level)
+        require(tables.levelPartyExtras[level][0] == 0 && tables.levelPartyExtras[level][1] == 0, "no party extras in level row " + std::to_string(level));
 }
 
 void testRoundTrip(chase::assets::FuseArchive& archive) {

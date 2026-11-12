@@ -25,6 +25,8 @@ constexpr std::size_t kSoundVolumeOption = 4, kMusicVolumeOption = 6, kSlotRecor
 constexpr unsigned kSlotOptionLimit = 3;
 constexpr unsigned kFirstUnlockLevel = 2, kLastUnlockLevel = 8;
 constexpr unsigned kPartySize = 8;
+constexpr std::size_t kLevelPartyExtrasOffset = 0x4b;
+constexpr unsigned kPartyExtras = 2;
 
 const assets::TableSheet& sheetOf(const assets::Table& table, std::size_t index, unsigned minRows, const char* name) {
     if (table.sheets.size() <= index) throw std::runtime_error(std::string(name) + " has no sheet " + std::to_string(index));
@@ -84,6 +86,9 @@ NewGameTables newGameTables(const assets::Table& levels, const assets::Table& ch
         std::array<std::uint8_t, 8> party{};
         for (unsigned i = 0; i < kPartySize; ++i) party[i] = byteAt(levelSheet, row, kLevelPartyOffset + i, "TablesLevels");
         tables.levelParty.push_back(party);
+        std::array<std::uint8_t, kPartyExtras> extras{};
+        for (unsigned i = 0; i < kPartyExtras; ++i) extras[i] = byteAt(levelSheet, row, kLevelPartyExtrasOffset + i, "TablesLevels");
+        tables.levelPartyExtras.push_back(extras);
     }
     const assets::TableSheet& characterSheet = sheetOf(characters, 0, kCharacterIdLimit, "TablesCharacters");
     for (unsigned row = 0; row < characterSheet.rows; ++row) {

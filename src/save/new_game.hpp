@@ -42,6 +42,7 @@ struct NewGameCharacter {
 struct NewGameTables {
     std::array<std::uint8_t, 2> levelOneGroup{};            // TablesLevels row 1 bytes +0x43, +0x44 (*0x375914 + 0x97)
     std::vector<std::array<std::uint8_t, 8>> levelParty;    // TablesLevels rows 0..: bytes +0x43..+0x4a
+    std::vector<std::array<std::uint8_t, 2>> levelPartyExtras;  // TablesLevels rows 0..: bytes +0x4b, +0x4c (0x1b1c90 into 0x37590c)
     std::vector<NewGameCharacter> characters;               // TablesCharacters sheet 0 rows 0..140
     std::array<bool, kAbilityBits> abilityLocked{};         // TablesCharacters sheet 2 (*0x372cb8, stride 8) byte +6 != 0
 };

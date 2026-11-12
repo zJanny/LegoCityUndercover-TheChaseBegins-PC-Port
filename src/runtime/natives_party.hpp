@@ -3,6 +3,9 @@
 // hooks of the Walnuts / Rex / 1-8 missions, mech piloting, skydive mode and the downtown intro switch. The handlers set fields of the
 // character components and global bytes; the systems that read them (AI core SCRIPT-42, weapons, mechs, party) are not ported, so every
 // handler records its effect (STAND-IN SCRIPT-S277 to SCRIPT-S280), except UsePet (an empty handler) and HACK_PlayDowntownIntro. No SDL dependency.
+#include "runtime/natives_world.hpp"
+#include "runtime/party_manager.hpp"
+
 #include <array>
 #include <cstdint>
 #include <map>
@@ -110,8 +113,15 @@ struct PartyNativeResult {
 
 class PartyNativeState {
 public:
-    // Character id of the current party leader (byte 4 of the party manager 0x51b248); the port always plays Chase (9).
-    void setCurrentCharacter(std::uint16_t id) { currentCharacter_ = id; }
+    // The character id of the player entity (component +0x2cc), kept by the party manager.
+    void setCurrentCharacter(std::uint16_t id) { party_.setPlayerCharacter(std::uint8_t(id)); }
+    PartyManager& party() { return party_; }
+    const PartyManager& party() const { return party_; }
+    // SetPartyCharacter through the party manager; the party side of UnlockCharacter 0x263918 and LockCharacter 0x1cda60 after the progress
+    // natives ran them (the id is the low halfword of the argument, sign-extended). Each first takes the group bytes of the live slot.
+    void setPartyCharacter(PartyRequest& request, const ProgressNativeState& progress);
+    void characterUnlocked(float value, const ProgressNativeState& progress);
+    void characterLocked(float value, const ProgressNativeState& progress);
 
     PartyNativeResult run(PartyNativeKind kind, const std::vector<std::string>& objects, const std::vector<float>& numbers, const ProgressNativeState& progress);
 
@@ -136,7 +146,9 @@ public:
     bool downtownIntroPlayed() const { return downtownIntroPlayed_; }
 
 private:
-    std::uint16_t currentCharacter_ = kCharacterChase;
+    void takeGroupBytes(const ProgressNativeState& progress);
+
+    PartyManager party_;
     std::map<std::string, std::uint32_t> allegianceSwaps_;
     std::vector<WeaponRequest> weaponRequests_;
     std::optional<PlayerWeaponBytes> playerWeapon_;

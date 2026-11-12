@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1141 open items and stand-ins, 205 linked to game usage, 936 with unknown reach.
+Items: 1142 open items and stand-ins, 205 linked to game usage, 937 with unknown reach.
 
 ## Top 50 overall
 
@@ -67,9 +67,9 @@ Items: 1141 open items and stand-ins, 205 linked to game usage, 936 with unknown
 | 31 | [SCRIPT-36](features/script-system-natives.md?display=source#L25) | 366 | 0 | 7 | 13 | 2 stand-in, 9 implemented | `setforcedstoponmyvehicle`, `stopplayervehicle`, `vehicleallowjumpout`, `vehiclejumpin` +7 | Batch 11 (C, 9 left): VehicleSetLocked, VehicleSetForcedStop, SetForcedStopOnMyVehicle, VehicleAllowJumpOut ... |
 | 32 | [SCRIPT-57](features/script-system-natives-state.md?display=source#L29) | 362 | 0 | 7 | 14 | 3 stand-in, 1 none | `distancefademid`, `enableshadow`, `enableswitch`, `toggleuseable` | Kind-gated natives: the kind of every class is read (`objectKind`); ToggleUseable, EnableSwitch (use-zone ... |
 | 33 | [SCRIPT-S239](features/script-system-natives-world.md?display=source#L34) | 351 | 0 | 7 | 0 | 2 stand-in | `enableswitch`, `toggleuseable` | ToggleUseable and EnableSwitch write the use flag only for instances whose kind registers a use zone ... |
-| 34 | [SCRIPT-294](features/script-system-natives-world.md?display=source#L50) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The hint registry 0x2219bc searches (records at `*(0x58e9a4 + 0x24)`, singleton "LEGOHintBounds"): who adds ... |
-| 35 | [SCRIPT-296](features/script-system-natives-world.md?display=source#L52) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The registration conditions of the use zone: what sets halfword `[entity + 0x10]` bit 7 (post-link of kinds ... |
-| 36 | [SCRIPT-281](features/script-system-natives-world.md?display=source#L47) | 271 | 0 | 6 | 1 | 1 stand-in | `effectfadeobject` | EffectFadeObject: the third node property (0x23f540, flag bit 2), the particle node case, the clock of ... |
+| 34 | [SCRIPT-294](features/script-system-natives-world.md?display=source#L49) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The hint registry 0x2219bc searches (records at `*(0x58e9a4 + 0x24)`, singleton "LEGOHintBounds"): who adds ... |
+| 35 | [SCRIPT-296](features/script-system-natives-world.md?display=source#L51) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The registration conditions of the use zone: what sets halfword `[entity + 0x10]` bit 7 (post-link of kinds ... |
+| 36 | [SCRIPT-281](features/script-system-natives-world.md?display=source#L46) | 271 | 0 | 6 | 1 | 1 stand-in | `effectfadeobject` | EffectFadeObject: the third node property (0x23f540, flag bit 2), the particle node case, the clock of ... |
 | 37 | [SCRIPT-S232](features/script-system-natives-world.md?display=source#L30) | 271 | 0 | 6 | 0 | 1 stand-in | `effectfadeobject` | EffectFadeObject drives `Scene::setInstanceFade` and the instance visibility of placed objects (and their ... |
 | 38 | [SCRIPT-S11](features/script-system-dcam.md?display=source#L19) | 256 | 0 | 8 | 0 | 1 stand-in | `startdcamtrack` | `StartDCamTrack` looks at the placement position of the object (the live position for the player), not at its ... |
 | 39 | [SCRIPT-S20](features/script-system-natives-state.md?display=source#L19) | 248 | 0 | 7 | 0 | 10 stand-in | `addstuds`, `disablesuperbuiltitsave`, `enablestudsbygroup`, `enablesuperbricks` +6 | Nine batch 27 natives (UnlockAbility, LockAbility, UnlockScanner, SetParachuteDeployHeight ... |
@@ -87,7 +87,7 @@ Items: 1141 open items and stand-ins, 205 linked to game usage, 936 with unknown
 
 ## Player and camera
 
-25 of 237 items linked.
+25 of 239 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -97,10 +97,10 @@ Items: 1141 open items and stand-ins, 205 linked to game usage, 936 with unknown
 | 4 | [ANIM-S13](features/animation-characters.md?display=source#L25) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The player's script clip (PlayCharAnim on Player1) is shown at full weight from the native's update instead ... |
 | 5 | [CAMERA-55](features/camera.md?display=source#L46) | 495 | 0 | 8 | 0 | 1 implemented | `positionobject` | After PositionObject of `1-1_Release_Car_Script` the port's police car stays on its locator while the ... |
 | 6 | [CAMERA-S51](features/camera.md?display=source#L26) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
-| 7 | [DISG-4](features/disguise.md?display=source#L26) | 113 | 0 | 7 | 0 | 3 stand-in | `setpartycharacter`, `unlockability`, `unlockcharacter` | Which mission gives and uses which disguise: decode the script calls with their arguments (SetPartyCharacter ... |
-| 8 | [DISG-8](features/disguise.md?display=source#L30) | 5 | 106 | 7 | 0 | 1 stand-in, 1 none | `charactershop`, `superfreeplayswap`, `pickups/pickup_charactertoken` | Other ways to change character: the character swap pad (object kind 126, player states 234 to 236), the ... |
-| 9 | [PLAYER-S15](features/player-movement-attack.md?display=source#L25) | 97 | 0 | 7 | 0 | 1 stand-in | `enabletargetable` | `appendAttackCharacters` — the character facts besides the box and the near list: the `MeshCollision` branch ... |
-| 10 | [TRAV-55](features/player-traversal-zipline.md?display=source#L40) | 0 | 66 | 7 | 0 | - | `props/parkour_zipline` | The zipline poles (`props/parkour_zipline` anchors) can be walked through in `chase-game` (user report); in ... |
+| 7 | [DISG-8](features/disguise.md?display=source#L33) | 5 | 106 | 7 | 0 | 1 stand-in, 1 none | `charactershop`, `superfreeplayswap`, `pickups/pickup_charactertoken` | Other ways to change character: the character swap pad (object kind 126, player states 234 to 236), the ... |
+| 8 | [PLAYER-S15](features/player-movement-attack.md?display=source#L25) | 97 | 0 | 7 | 0 | 1 stand-in | `enabletargetable` | `appendAttackCharacters` — the character facts besides the box and the near list: the `MeshCollision` branch ... |
+| 9 | [TRAV-55](features/player-traversal-zipline.md?display=source#L40) | 0 | 66 | 7 | 0 | - | `props/parkour_zipline` | The zipline poles (`props/parkour_zipline` anchors) can be walked through in `chase-game` (user report); in ... |
+| 10 | [COMBAT-S5](features/combat-characters.md?display=source#L27) | 62 | 0 | 4 | 0 | 1 stand-in | `aiignoreplayer` | `characterAggro` knows only the side bit of the target: ctrl+0xd8 bit 5 (the side slot, now kept by the idle ... |
 
 ## Level objects
 
@@ -138,7 +138,7 @@ Items: 1141 open items and stand-ins, 205 linked to game usage, 936 with unknown
 
 ## Scripts and missions
 
-132 of 288 items linked.
+132 of 287 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -219,7 +219,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [camera.md](features/camera.md): CAMERA-54 (+3), CAMERA-11 (+1), CAMERA-53 (+1), CAMERA-1, CAMERA-12, CAMERA-2, CAMERA-3, CAMERA-4, CAMERA-5, CAMERA-S1, CAMERA-S31, CAMERA-S4, CAMERA-S50, CAMERA-S52, CAMERA-S53, CAMERA-S6
 - [collision.md](features/collision.md): COLL-24 (+2), COLL-21 (+1), COLL-3 (+1), COLL-4 (+1), COLL-1, COLL-23, COLL-25, COLL-5, COLL-6, COLL-7, COLL-S1, COLL-S2, COLL-S3, COLL-S4, COLL-S5, COLL-S6, COLL-S7
 - [combat-characters.md](features/combat-characters.md): COMBAT-10 (+7), COMBAT-8 (+4), COMBAT-13 (+2), COMBAT-6 (+2), COMBAT-11 (+1), COMBAT-4 (+1), COMBAT-12, COMBAT-14, COMBAT-5, COMBAT-S1, COMBAT-S2, COMBAT-S3, COMBAT-S4, COMBAT-S6, COMBAT-S7, COMBAT-S9
-- [disguise.md](features/disguise.md): DISG-5, DISG-6, DISG-7
+- [disguise.md](features/disguise.md): DISG-10 (+1), DISG-5, DISG-6, DISG-7, DISG-S2
 - [doors.md](features/doors.md): DOOR-2, DOOR-3, DOOR-4, DOOR-6, DOOR-7, DOOR-S1, DOOR-S2, DOOR-S3, DOOR-S4, DOOR-S5
 - [executable-platform.md](features/executable-platform.md): EXEC-1 (+2), EXEC-10 (+1), EXEC-2, EXEC-3, EXEC-4, EXEC-S1, EXEC-S10
 - [front-end.md](features/front-end.md): FE-3 (+10), FE-30 (+2), FE-40 (+1), FE-1, FE-2, FE-4, FE-5, FE-6, FE-7, FE-8, FE-9, FE-S1, FE-S2, FE-S3, FE-S31, FE-S32, FE-S33, FE-S4, FE-S40, FE-S41, FE-S5, FE-S6
@@ -282,7 +282,6 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-324 (+3), SCRIPT-352 (+2), SCRIPT-325 (+1), SCRIPT-334 (+1), SCRIPT-405 (+1), SCRIPT-S284 (+1), SCRIPT-344, SCRIPT-353, SCRIPT-S262, SCRIPT-S266, SCRIPT-S267
 - [script-system-natives-party.md](features/script-system-natives-party.md): SCRIPT-338 (+2), SCRIPT-340 (+1)
 - [script-system-natives-state.md](features/script-system-natives-state.md): SCRIPT-335 (+1), SCRIPT-56 (+1), SCRIPT-64 (+1), SCRIPT-S97
-- [script-system-natives-world.md](features/script-system-natives-world.md): SCRIPT-279 (+1)
 - [script-system-natives.md](features/script-system-natives.md): SCRIPT-43 (+18), SCRIPT-44 (+16), SCRIPT-45 (+14), SCRIPT-7 (+12), SCRIPT-13 (+1), SCRIPT-150 (+1)
 - [script-system-platforms.md](features/script-system-platforms.md): SCRIPT-385, SCRIPT-440, SCRIPT-S301, SCRIPT-S302, SCRIPT-S307, SCRIPT-S310
 - [script-system-triggers.md](features/script-system-triggers.md): SCRIPT-76 (+11), SCRIPT-51 (+3), SCRIPT-77 (+1), SCRIPT-78 (+1), SCRIPT-S15, SCRIPT-S28, SCRIPT-S30, SCRIPT-S8

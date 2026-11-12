@@ -110,7 +110,7 @@ public:
     void requestSave(std::uint32_t superBrickCount);
     const std::vector<std::uint32_t>& rewards() const { return rewards_; }
     const std::vector<std::uint32_t>& charactersUnlocked() const { return charactersUnlocked_; }
-    // LockCharacter requests; the removal from the party (0x23b388) is not modelled (SCRIPT-S31).
+    // LockCharacter requests; the removal from the party (0x22db24) is the party manager's (party_manager.hpp).
     const std::vector<std::uint32_t>& charactersLocked() const { return charactersLocked_; }
     std::optional<bool> raceInProgress() const { return raceInProgress_; }
     std::optional<bool> superBricksEnabled() const { return superBricks_; }

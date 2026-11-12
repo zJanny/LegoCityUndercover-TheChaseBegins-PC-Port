@@ -21,9 +21,13 @@ void LevelSession::installScriptHooks() {
 
 void LevelSession::applyScriptNatives() {
     for (const runtime::PartyRequest& request : levelScripts.takePartyRequests())
-        if (runtime::partyOutcome(game_player::kPlayerCharacterId, request) == runtime::PartyOutcome::NotPorted)
+        if (request.outcome == runtime::PartyOutcome::NotInParty)
             std::cout << "party character " << request.character << " for Player" << request.slot + 1 << " at update " << updatesForLog
-                      << ": swap not ported (stand-in SCRIPT-S234)\n";
+                      << ": not in the party\n";
+    for (const runtime::PartySwap& swap : levelScripts.partyNatives().party().takeSwaps())
+        std::cout << "party swap to slot " << unsigned(swap.index) << " (" << swap.member << ", character " << unsigned(swap.character)
+                  << (swap.effects ? ", effects 7 and 241" : "") << ") at update " << updatesForLog
+                  << (swap.swapped ? ": player entity swap not ported (stand-in DISG-S1)\n" : ": member missing, player kept\n");
     for (const runtime::ScriptParticleRequest& request : levelScripts.takeParticleRequests()) {
         const bool started = request.definition >= 0 && particles.system().start(unsigned(request.definition), {request.position, std::nullopt, 0}) != 0;
         std::cout << "particles " << request.definition << " at " << request.object << (started ? " started" : " refused") << " at update " << updatesForLog << '\n';

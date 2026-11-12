@@ -623,6 +623,8 @@ void ScriptRunner::progressNative(const ScriptCall& call) {
     std::vector<float> values;
     for (unsigned i = 0; i < shape.values; ++i) values.push_back(read(args[first + i]));
     const ProgressNativeResult result = progressNatives_.run(*kind, values, shape.object ? lower(args[0]) : std::string());
+    if (*kind == ProgressNativeKind::UnlockCharacter) partyNatives_.characterUnlocked(values[0], progressNatives_);
+    if (*kind == ProgressNativeKind::LockCharacter) partyNatives_.characterLocked(values[0], progressNatives_);
     if (result.unlockedLevel) progress_.levelUnlocked |= 1u << *result.unlockedLevel;
     if (!shape.output) return;
     float output = result.output.value_or(-1.0f);

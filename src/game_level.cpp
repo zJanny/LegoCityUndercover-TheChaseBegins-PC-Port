@@ -252,6 +252,7 @@ LevelSession::LevelSession(const Shared& sharedState)
     superBricks.setTotal(shared.progress.superBricks);
     const chase::save::SlotStart saved = game_save::slotStartFor(shared.progress, archive, level, options.level);
     game_save::apply(saved, levelScripts);
+    game_save::setUpParty(saved, archive, levelScripts);
     if (options.extras) levelScripts.setRedBrickExtrasActive(*options.extras);
     saveLevelId = saved.level;
     fastTravelState.storyProgress = saved.storyProgress;
