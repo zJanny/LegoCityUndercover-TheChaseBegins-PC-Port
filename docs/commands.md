@@ -38,12 +38,14 @@ ctest --test-dir build -j"$(nproc)" -LE slow --output-on-failure   # without the
 
 ## Continuous integration
 
-The workflow files in `.forgejo/workflows/` and `.github/workflows/` define the same two workflows. CI has no game data, so it never runs the tests labelled `needs-game-data`.
+The workflow files in `.forgejo/workflows/` and `.github/workflows/` define the same four workflows. CI has no game data, so it never runs the tests labelled `needs-game-data`.
 
 | Workflow | When | What it runs |
 |---|---|---|
 | `ci.yml` | every push to `main` and every pull request | Build with warnings as errors, the Python tests, then `ctest -LE 'slow\|needs-game-data'` |
 | `full.yml` | every night and by hand (`workflow_dispatch`) | The same build and Python tests, then `ctest -LE needs-game-data`, which includes the `slow` tests |
+| `dco.yml` (workflow `DCO`, job `dco`) | every pull request | `python3 tools/check_dco.py`: fails when a commit of the pull request has no `Signed-off-by:` line |
+| `generated.yml` (workflow `Generated files`, job `regenerate`) | every push to `main` | `python3 tools/regenerate_generated_files.py`, then commits the changed generated files to `main` as the GitHub Actions bot |
 
 Reproduce a CI run on your machine:
 
@@ -100,6 +102,24 @@ python3 tools/progress_report.py --update-readme README.md  # rewrite the progre
 python3 tools/progress_report.py --check README.md          # fails when the README table is out of date
 ```
 
+## Sign-off check and generated files
+
+```sh
+python3 tools/check_dco.py --base BASE_COMMIT --head HEAD_COMMIT
+python3 tools/regenerate_generated_files.py             # rewrite the generated files that differ
+python3 tools/regenerate_generated_files.py --check     # exit 1 when one differs, write nothing
+python3 tools/regenerate_generated_files.py --skip-marked   # do nothing when HEAD is a commit made by the workflow
+python3 tools/generated_file_census.py --refresh        # measure the game data and rewrite tests/data/generated_file_census.csv
+python3 tools/generated_file_census.py --check          # fails when the table differs from a measurement
+```
+
+- `check_dco.py` checks every commit that is in `HEAD_COMMIT` and not in `BASE_COMMIT`. A commit needs a line `Signed-off-by: Name <email>`; a GitHub noreply address is fine. Merge commits and commits of bots (author name ending in `[bot]`) are not checked. To fix a failure, run `git rebase --signoff main` (or `git commit --amend -s` for the last commit) and force-push your own branch. A missing, unknown or malformed `--base` or `--head` stops with an error naming the option.
+- The workflow `Generated files` rebuilds the README progress section, `docs/plans/priorities.md` and `docs/progress-trend.svg` from tracked files only. The numbers that come from game data are read from `tests/data/generated_file_census.csv` (columns `section,key,value,provenance`). It commits the files that differ with the marker `[generated-files]`; a push whose HEAD carries the marker does nothing.
+- A ruleset or branch protection on `main` must let the GitHub Actions bot push (a bypass entry), or the `regenerate` job cannot commit.
+- The line `Updated <date>, commit <hash>.` of the README section is not compared, so a new commit alone changes nothing.
+- `progress_report.py` and `priority_report.py` read the table when the game data is absent. `--census TABLE` names another table; `--from-census` uses the table even when the game data is present.
+- The table is refreshed at each merge on a machine with game data. `--refresh` and `--check` need `artifacts/romfs`, `artifacts/game` and the built `build/libchase_assets_c.so`; `--check` skips with code 77 without them.
+
 ## Priority ranking
 
 ```sh
@@ -130,6 +150,7 @@ python3 tools/merge_agent.py check                   # run the checks again afte
 python3 tools/merge_agent.py finish BRANCH -m FILE   # checks, commit with the message in FILE, remove worktree and branch
 python3 tools/merge_agent.py finish BRANCH -m FILE --release 20261021-audio-A --log linux-port LINE_FILE
 python3 tools/merge_agent.py close -m FILE --release 20261021-audio-C --log linux-port LINE_FILE
+python3 tools/merge_agent.py check-pr 42             # check pull request 42 of the GitHub remote
 ```
 
 - `sync` compares main with its upstream (`--upstream REMOTE/BRANCH` names another one). When the upstream is ahead and main has no own commits, it fast-forwards main. When both moved, or main has uncommitted changes, it stops with an error, and the user decides.
@@ -139,6 +160,7 @@ python3 tools/merge_agent.py close -m FILE --release 20261021-audio-C --log linu
 - `finish` removes the worktree of a Claude agent even while the agent's lock is still set. A worktree with any other lock stays: `finish` warns and prints the `git worktree remove` and `git branch -D` commands, and still reports the commit.
 - Both are safe to repeat: after a failed check, run `finish` again with the same options.
 - `prepare` and `check` record a fingerprint (staged tree and main's HEAD) in the git directory (`merge-agent-verified`, untracked) once build, ctest and Python tests passed. When `finish` starts with the same fingerprint, it skips those three and prints one line saying so; the doc and README checks still run. A failed check deletes the record; a different tree or a missing record runs everything.
+- `check-pr N` checks the pull request N of the GitHub remote. It fetches `refs/pull/N/head` into a temporary worktree, stops on game-derived and binary files before any code of the pull request runs, builds, runs all tests including the ones that need game data, prints PASS or FAIL with the reasons and removes the worktree. It never pushes or merges. Read the diff first.
 - `close` makes the same release and log line as its own commit, for a round whose last branch was dropped. It needs at least one of the two options.
 
 The checks stop on game files, screenshots or other binary files (except bundled fonts `third_party/fonts/*.ttf`), broken doc links, build warnings and failing tests. They also refresh the README progress table. Conflicts in the README progress table or the trend graphic are fixed by making them again. Conflicts in a session log archive keep the lines of both sides. Lines that both sides added to a session log, the feature index, the ID reservations or a `docs/re/` topic are both kept. Other conflicts you fix by hand, `docs/design/` ones included. The message file must end with the merging agent's own `Co-Authored-By:` line. The script never pushes.

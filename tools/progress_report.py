@@ -22,6 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import generated_file_census  # noqa: E402
 from progress_trend import END_MARKER, START_MARKER, TREND_IMAGE, trend_is_current, write_trend  # noqa: E402
 
 SKIP_EXIT = 77
@@ -304,24 +305,66 @@ def git_info(root):
     return {'commit': run('rev-parse', 'HEAD'), 'short': run('rev-parse', '--short', 'HEAD')}
 
 
-def collect(root, romfs, elf):
+def ratio_from_table(table, total_key, part_key):
+    return ratio(int(table[('readme_progress', part_key)]), int(table[('readme_progress', total_key)]))
+
+
+def summary_from_table(table, prefix):
+    def cell(total, part):
+        return ratio_from_table(table, '%s_%s' % (prefix, total), '%s_%s' % (prefix, part))
+    return {
+        'level_files': int(table[('readme_progress', '%s_level_files' % prefix)]),
+        'script_functions': {'distinct': cell('script_functions_total', 'script_functions_implemented'),
+                             'distinct_with_stand_in': cell('script_functions_total', 'script_functions_with_stand_in'),
+                             'calls': cell('script_calls_total', 'script_calls_implemented'),
+                             'calls_with_stand_in': cell('script_calls_total', 'script_calls_with_stand_in')},
+        'object_classes': {'distinct': cell('classes_total', 'classes_behaving'), 'instances': cell('instances_total', 'instances_behaving')},
+    }
+
+
+def measurements_from_table(table):
+    everything, main = summary_from_table(table, 'all_levels'), summary_from_table(table, 'main_levels')
+    levels = {'level_files': everything['level_files'], 'main_level_files': main['level_files']}
+    files = {'files': ratio_from_table(table, 'files_total', 'files_decoded'), 'bytes': ratio_from_table(table, 'bytes_total', 'bytes_decoded'),
+             'by_type': {}}
+    code = {'functions': ratio_from_table(table, 'code_functions_total', 'code_functions_documented'),
+            'cited_code_addresses': int(table[('readme_progress', 'code_cited_addresses')]),
+            'text_bytes': int(table[('readme_progress', 'code_text_bytes')]), 'method': 'recorded in the census table'}
+    return levels, everything, main, files, code
+
+
+def collect(root, romfs, elf, census=None, use_census=False):
     report = {'timestamp': datetime.datetime.now().astimezone().isoformat(timespec='seconds'), 'git': git_info(root)}
     import chase_native
-    if not (romfs / 'lego_city3ds.fib').exists() or not (romfs / 'lego_city3ds.csv').exists():
+    live = (not use_census and (romfs / 'lego_city3ds.fib').exists() and (romfs / 'lego_city3ds.csv').exists()
+            and chase_native.available() and elf.exists())
+    if not live and census is not None:
+        try:
+            levels, everything, main, files, code = measurements_from_table(census)
+        except KeyError as error:
+            raise generated_file_census.CensusError('the census table lacks %s %s' % error.args[0])
+        report['levels'] = levels
+        report['scripts'] = {'all_levels': everything['script_functions'], 'main_levels': main['script_functions']}
+        report['classes'] = {'all_levels': everything['object_classes'], 'main_levels': main['object_classes']}
+        report['files'] = files
+        report['code'] = code
+    elif not (romfs / 'lego_city3ds.fib').exists() or not (romfs / 'lego_city3ds.csv').exists():
         reason = 'game data not extracted (%s)' % romfs
         report['scripts'] = report['classes'] = report['files'] = skipped(reason)
+        report['code'] = measure_code(root, elf) if elf.exists() else skipped('analysis ELF not extracted (%s)' % elf)
     elif not chase_native.available():
         reason = 'C++ library not built (%s)' % chase_native.library_path()
         report['scripts'] = report['classes'] = report['files'] = skipped(reason)
+        report['code'] = measure_code(root, elf) if elf.exists() else skipped('analysis ELF not extracted (%s)' % elf)
     else:
         everything, main = measure_levels(romfs)
         report['levels'] = {'level_files': everything['level_files'], 'main_level_files': main['level_files']}
         report['scripts'] = {'all_levels': everything['script_functions'], 'main_levels': main['script_functions']}
         report['classes'] = {'all_levels': everything['object_classes'], 'main_levels': main['object_classes']}
         report['files'] = measure_files(romfs)
+        report['code'] = measure_code(root, elf) if elf.exists() else skipped('analysis ELF not extracted (%s)' % elf)
     report['features'] = measure_features(root)
     report['checks'] = measure_checks(root)
-    report['code'] = measure_code(root, elf) if elf.exists() else skipped('analysis ELF not extracted (%s)' % elf)
     return report
 
 
@@ -431,11 +474,24 @@ def main(argv=None):
     parser.add_argument('--json', type=Path, metavar='PATH', help='write the full data as JSON')
     parser.add_argument('--update-readme', type=Path, metavar='README', help='rewrite the text between the progress markers')
     parser.add_argument('--check', type=Path, metavar='README', help='exit 1 when the README section differs from a fresh run; 77 without game data')
+    parser.add_argument('--census', type=generated_file_census.existing_file, metavar='TABLE',
+                        help='values table used when the game data is absent (default: <root>/%s)' % generated_file_census.TABLE_PATH)
+    parser.add_argument('--from-census', action='store_true', help='use the values table even when the game data is present')
     args = parser.parse_args(argv)
     root = args.root.resolve()
     romfs = args.romfs or root / 'artifacts' / 'romfs' / 'romfs'
     elf = args.elf or root / 'artifacts' / 'game' / 'game.arm.elf'
-    report = collect(root, romfs, elf)
+    table_path = args.census or generated_file_census.default_table(root)
+    if args.from_census and not table_path.is_file():
+        parser.error('--from-census: no such file: %s' % table_path)
+    try:
+        census = generated_file_census.read_census(table_path) if table_path.is_file() else None
+    except generated_file_census.CensusError as error:
+        parser.error(str(error))
+    try:
+        report = collect(root, romfs, elf, census, args.from_census)
+    except generated_file_census.CensusError as error:
+        parser.error(str(error))
     if args.check:
         gaps = missing_data(report)
         if gaps:

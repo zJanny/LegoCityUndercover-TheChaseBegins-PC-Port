@@ -142,12 +142,12 @@ All keys and how to change them: [Controls](docs/controls.md).
 | Object types | 169 of 506 (33.4%) | Different object types in the levels that the port treats with recovered rules (collision, doors, studs). They cover 56.6% of all placed objects. |
 | Game files read | 99.8% of files, 100.0% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
 | Open work | 661 open items, 536 stand-ins | Known gaps and temporary guesses in 39 feature areas. It has no total to reach; watch the trend. |
-| Checked against the original | 550 tests, 232 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
+| Checked against the original | 552 tests, 233 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
 | Game code documented | 3169 of about 7575 (41.8%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-11-12, commit 95e98efc. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-11-12, commit d1f42e4f. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## More documentation

@@ -1,0 +1,32 @@
+name: DCO
+
+on:
+  pull_request:
+
+concurrency:
+  group: dco-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  dco:
+    runs-on: docker
+    timeout-minutes: 10
+    steps:
+      - name: Install git and Python
+        run: |
+          if command -v git >/dev/null && command -v python3 >/dev/null; then exit 0; fi
+          SUDO=""
+          if [ "$(id -u)" != "0" ]; then SUDO="sudo"; fi
+          $SUDO apt-get update
+          $SUDO apt-get install -y --no-install-recommends ca-certificates git python3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check the Signed-off-by lines
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 tools/check_dco.py --base "$BASE_SHA" --head "$HEAD_SHA"

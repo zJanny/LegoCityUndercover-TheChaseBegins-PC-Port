@@ -1,0 +1,46 @@
+name: Generated files
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - docs/progress-trend.svg
+      - docs/plans/priorities.md
+
+concurrency:
+  group: generated-files
+  cancel-in-progress: false
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Install git and Python
+        run: |
+          if command -v git >/dev/null && command -v python3 >/dev/null; then exit 0; fi
+          SUDO=""
+          if [ "$(id -u)" != "0" ]; then SUDO="sudo"; fi
+          $SUDO apt-get update
+          $SUDO apt-get install -y --no-install-recommends ca-certificates git python3
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Regenerate the README progress section, priorities and trend graphic
+        run: python3 tools/regenerate_generated_files.py --skip-marked
+      - name: Commit the files that changed
+        run: |
+          if git diff --quiet -- README.md docs/progress-trend.svg docs/plans/priorities.md; then
+            echo "generated files are current"
+            exit 0
+          fi
+          git add README.md docs/progress-trend.svg docs/plans/priorities.md
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "Regenerate generated files [generated-files]"
+          git push origin HEAD:main || {
+            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" pull --rebase origin main
+            git push origin HEAD:main
+          }

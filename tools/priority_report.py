@@ -16,6 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import generated_file_census  # noqa: E402
 from check_doc_links import ITEM_ID, feature_files  # noqa: E402
 from progress_report import SKIP_EXIT  # noqa: E402
 
@@ -302,13 +303,35 @@ def render(rows, areas):
     return '\n'.join(lines) + '\n'
 
 
-def load_census(romfs):
+def census_from_table(table):
+    """(functions, classes) rebuilt from the values table."""
+    functions, classes = {}, {}
+    for (section, key), value in table.items():
+        if section != 'priorities' or key == generated_file_census.PROVENANCE_KEY:
+            continue
+        kind, rest = key.split('.', 1)
+        name, field = rest.rsplit('.', 1)
+        target = functions if kind == 'f' else classes
+        entry = target.setdefault(name, {})
+        entry[field] = value if field == 'support' else int(value)
+    return functions, classes
+
+
+def load_census(romfs, table=None, use_table=False):
     import chase_native
     fib, names = romfs / 'lego_city3ds.fib', romfs / 'lego_city3ds.csv'
-    if not fib.exists() or not names.exists():
-        return None, 'game data not extracted (%s)' % romfs
-    if not chase_native.available():
-        return None, 'C++ library not built (%s)' % chase_native.library_path()
+    reason = None
+    if not (fib.exists() and names.exists()):
+        reason = 'game data not extracted (%s)' % romfs
+    elif not chase_native.available():
+        reason = 'C++ library not built (%s)' % chase_native.library_path()
+    if table is not None and (use_table or reason):
+        functions, classes = census_from_table(table)
+        if not functions:
+            return None, 'the census table has no priorities rows'
+        return (functions, classes), None
+    if reason:
+        return None, reason
     _count, classes, functions = chase_native.level_census(fib, names, True)
     return (functions, classes), None
 
@@ -333,12 +356,22 @@ def main(argv=None):
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--update', type=Path, metavar='FILE', help='write the ranking to FILE')
     mode.add_argument('--check', type=Path, metavar='FILE', help='exit 1 when FILE differs from a fresh run; 77 without game data')
+    parser.add_argument('--census', type=generated_file_census.existing_file, metavar='TABLE',
+                        help='values table used when the game data is absent (default: <root>/%s)' % generated_file_census.TABLE_PATH)
+    parser.add_argument('--from-census', action='store_true', help='use the values table even when the game data is present')
     args = parser.parse_args(argv)
     root = args.root.resolve()
     romfs = args.romfs or root / 'artifacts' / 'romfs' / 'romfs'
+    table_path = args.census or generated_file_census.default_table(root)
+    if args.from_census and not table_path.is_file():
+        parser.error('--from-census: no such file: %s' % table_path)
+    try:
+        table = generated_file_census.read_census(table_path) if table_path.is_file() else None
+    except generated_file_census.CensusError as error:
+        parser.error(str(error))
     if args.check and not args.check.is_file():
         parser.error('--check: no such file: %s' % args.check)
-    census, reason = load_census(romfs)
+    census, reason = load_census(romfs, table, args.from_census)
     if census is None:
         print('priorities %s: %s' % ('check skipped' if args.check else 'not written', reason))
         return SKIP_EXIT if args.check else 2
