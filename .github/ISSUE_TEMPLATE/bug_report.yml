@@ -1,0 +1,33 @@
+name: Bug report
+description: Something in the tools or in chase-game does not work.
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what you saw.
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command and output
+      description: The command you ran and the text it printed.
+      render: shell
+  - type: input
+    id: image
+    attributes:
+      label: Game image
+      description: Region and the first 12 characters of the SHA256 of your image. Do not attach game files.
+  - type: input
+    id: system
+    attributes:
+      label: System
+      description: Linux distribution, graphics card and driver version.
+  - type: checkboxes
+    id: notice
+    attributes:
+      label: Before you send
+      options:
+        - label: I attached no game assets, saves or screenshots of the original game.
+          required: true

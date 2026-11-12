@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or discussion
+    url: https://github.com/zJanny/LegoCityUndercover-TheChaseBegins-PC-Port/discussions
+    about: Ask questions and talk about ideas in Discussions.
+  - name: Security problem or takedown request
+    url: https://github.com/zJanny/LegoCityUndercover-TheChaseBegins-PC-Port/security/advisories/new
+    about: Report privately. Do not open a public issue.

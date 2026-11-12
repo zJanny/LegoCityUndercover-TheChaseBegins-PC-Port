@@ -147,7 +147,7 @@ All keys and how to change them: [Controls](docs/controls.md).
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-11-12, commit d1f42e4f. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-11-12, commit 52643933. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## More documentation
@@ -170,6 +170,7 @@ For players:
 ### For contributors
 
 - Want to help? [Contributing](CONTRIBUTING.md).
+- [Development rules](docs/development.md): the rules for code, tests, docs and commits, for people.
 - [`CLAUDE.md`](CLAUDE.md) (rules), [the plans](docs/plans/README.md) (with their work logs), [feature pages](docs/plans/features/README.md), [reverse-engineering notes](docs/re/README.md).
 
 ## License

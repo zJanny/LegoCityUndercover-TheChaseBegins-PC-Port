@@ -1,0 +1,29 @@
+name: Port finding
+description: How the original game behaves, or a difference between the port and the original.
+body:
+  - type: textarea
+    id: finding
+    attributes:
+      label: Finding
+      description: Describe the behaviour of the original in your own words.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Function address, the tool and command you used, or the measurement. Short excerpts only. Do not paste large decompiler output.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Game version
+      description: Region, title ID and version of the build you looked at.
+  - type: checkboxes
+    id: notice
+    attributes:
+      label: Before you send
+      options:
+        - label: Nothing here comes from leaked code, SDK documents or game assets.
+          required: true
