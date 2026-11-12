@@ -178,7 +178,7 @@ CollisionEventOutcome superKnockbackEvent(std::uint32_t type, std::optional<std:
     CharacterHitMessage hit;
     hit.move = std::nullopt;
     hit.sender = CharacterHitSender{};
-    hit.damage = kSuperKnockbackDamageStandIn;
+    hit.damage = kSuperKnockbackDamage;
     hit.force = 0.0f;
     hit.kind = 0;
     hit.weapon = 0;

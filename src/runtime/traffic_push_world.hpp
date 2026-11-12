@@ -36,15 +36,16 @@ struct TrafficPushShapes {
     std::function<TrafficPushBox(std::uint32_t entity)> box;                // +0x60 / +0x6c; a box entry's shape +0x18 points at its owner's
     std::function<AiMatrix(const TrafficContactEntry& entry)> entryMatrix;  // 0x21bb78: the owner's node matrix times entry +0x14
     std::function<bool(const TrafficContactEntry& entry)> meshEntry;        // entry +0x1c set (kind 1, a collision item)
-    // STAND-IN TRAFFIC-S40: 0x287ac4(mover, move, entry, 93, 3, *0x376910, 0.0) (mesh entries), 0x27f174 (the oriented test of a pushed entity
-    // with 0x900 or a mover with 0x2000, per part for 0x800) and the slide 0x23d434 (0x208d84 with the flags 88 / 92 and 17) are not read.
+    // 0x287ac4(mover, move, entry, 93, 3, *0x376910, 0.0) (mesh entries), 0x27f174 (the oriented test of a pushed entity with 0x900 or a mover
+    // with 0x2000, per part for 0x800) and the slide 0x23d434 (0x208d84 with the flags 88 / 92 and 17): connectTrafficPushShapes
+    // (traffic_push_shapes.hpp). The turn branch of the mesh path (a move's fourth float not 0) is not ported: no caller of 0x2baef0 passes one.
     std::function<bool(std::uint32_t mover, const AiVec3& move, const TrafficContactEntry& entry)> meshPush;
     std::function<bool(std::uint32_t mover, const AiVec3& move, const TrafficContactEntry& entry, const AiMatrix& matrix, const TrafficPushBox& box,
                        const AiVec3& moverCentre, const AiVec3& movedCentre, bool slide)> orientedPush;
     std::function<void(std::uint32_t entity, AiVec3& move, std::uint32_t flags, float floorNormalMin)> slideMove;
     std::function<void(std::uint32_t entity, const AiVec3& delta)> moveNode;   // node translation += delta, then 0x24c118
     std::function<void(std::uint32_t owner)> lastHit;                          // *0x377134 = owner
-    // STAND-IN TRAFFIC-S40: the kinds of the list 0x58d9b0 (count *0x377138, 0 in the image's data); its writers are not read.
+    // The kinds of the list 0x58d9b0 (count *0x377138): 0 in the image's data and no code writes it, so the list stays empty.
     std::vector<std::uint8_t> excludedKinds;
     float floorNormalMin = 0x1.37af86p-1f;   // *0x376910 at the level start (kFloorNormalMin of collision.hpp)
 };
@@ -68,8 +69,8 @@ constexpr std::uint32_t kCharacterEventCollider = 17;   // "..._ColliderEvent": 
 constexpr std::uint32_t kCharacterEventCollidee = 18;   // "..._CollideeEvent": 0x283d0c to a pushing character, arg the pushed one
 constexpr std::uint16_t kCharacterStateSuperKnockback = 0x99;   // state object 0x58d920, listeners 0x58d8f0..0x58d914 (0x268e24)
 constexpr std::uint16_t kCharacterStateThrowFinisher = 0x199;   // state object 0x5158f8, listeners 0x5158b8..0x5158e8 (0x28b96c)
-// STAND-IN TRAFFIC-S41: the damage word *0x377130 that 0x3305fc sends is 1 in the image's data; its writers are not read.
-constexpr std::int32_t kSuperKnockbackDamageStandIn = 1;
+// The damage word *0x377130 that 0x3305fc sends: 1 in the image's data, and no code writes it.
+constexpr std::int32_t kSuperKnockbackDamage = 1;
 constexpr std::uint8_t kThrowFinisherHitKind = 15;      // listener +0xc of 0x5158d8 / 0x5158e8, record byte +0x14
 constexpr std::int32_t kThrowFinisherDamage = 1;        // 0x1e306c
 constexpr float kHeadingUnits = 10430.378f;             // 0x1e31d8

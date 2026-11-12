@@ -194,6 +194,8 @@ Unknowns:
 
 ## 2026-10-19T07:58:53+02:00 — Placed-object walls block only from their front side: the wall candidate filter 0x209a98 (llvm-objdump of `artifacts/game/game.arm.elf`, Azahar RPC read of the entry pool)
 
+Corrected by [traffic-car-push.md §2026-11-12T10:09:38](traffic-car-push.md#ts-20261112-100938): 0x40 drops repeated triangle records (0x250e20 is memcmp); 0x10 makes the side test apply to every owner.
+
 Evidence. Disassembly (`--triple=armv6k --mattr=+vfp2`) of 0x209a98..0x209cb4 (candidate filter), 0x208d84..0x2092d8 (query driver, calls at 0x209058 and 0x209090), the wall call at 0x21a8c4, 0x254250 (point times matrix), 0x257e78 (dot product), 0x21bb78 (entry matrix); the entry pool 0x56defc (1216 entries) and the owners' header words read through RPC from save state at the built trampoline of mission 1-2 (own emulator on port 24762).
 
 - **The filter.** 0x208d84 calls 0x209a98 with flags 0x4c | 0x20 = 0x6c for the player's wall query (the stack argument 76 of the call at 0x21a8c4). Per candidate (entry, triangle) the flags decide: 0x40 skips a triangle whose surface is in the exclusion mask (0x250e20); 0x4 tests the normal's y against the limit; 0x8 removes a triangle whose normal has a dot product with the movement vector of 0 or more; **0x20 (and always 0x10) removes a triangle when the owner entity's u16 at +0x14 is non-zero and dot(p, normal) is below the triangle's plane offset d at +0xc**, that is when the reference point p lies behind the plane (0x209c5c..0x209c78). The test runs in the entry's local space (p moved by the inverse entry matrix, the triangle as stored), which equals the world test for a rigid matrix.
