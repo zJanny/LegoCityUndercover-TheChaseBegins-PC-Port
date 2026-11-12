@@ -57,8 +57,7 @@ public:
                     const std::map<int, runtime::RoomBox>* boxes, int currentRoom);
     // Slot +0x48 of the system list: spawns enable a slot's entity, removals disable it.
     void updateSystem(const SystemInputs& inputs, assets::PlacedObjectState& state);
-    // The entity pass: each live pedestrian's update, its clips and its posed body. STAND-IN PED-S7: it runs in the object phase, not
-    // in the entity pass's order by priority 128 and type.
+    // The entity pass: each live pedestrian's update, its clips and its posed body.
     void updateCharacters(render::Scene& scene, const CharacterInputs& inputs, const assets::PlacedObjectState& state);
     // The room pass 0x2e6ce4 for the enabled pedestrians (game_pedestrian_rooms.cpp).
     std::vector<runtime::PedestrianRoomMove> moveRooms(const runtime::StreamRooms& rooms, const std::map<int, runtime::RoomBox>& boxes,

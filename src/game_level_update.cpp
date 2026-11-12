@@ -404,7 +404,7 @@ void LevelSession::simulate(float dt, const runtime::PadState& padInput) {
             }
     }
     });
-    order.at(runtime::UpdatePhase::Objects, [&] { updatePedestrianCharacters(dt); });
+    order.atObjectKind(runtime::kPedestrianObjectKind, [&] { updatePedestrianCharacters(dt); });
     order.at(runtime::UpdatePhase::Objects, [&] { updateTrafficJunctions(dt); });
     order.at(runtime::UpdatePhase::Objects, [&] { driveTrafficCars(dt); });
     order.at(runtime::UpdatePhase::Objects, [&] {

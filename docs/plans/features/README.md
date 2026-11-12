@@ -80,7 +80,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 |---|---|---|
 | [world-streaming](world-streaming.md) | IN_PROGRESS | `chase-game` streams rooms (street level); WSTREAM-12 room position code; WSTREAM-30 loader cost; WSTREAM-4 visibility inside rooms |
 | [pedestrians-traffic](pedestrians-traffic.md) | IN_PROGRESS | PREGEN-3 traffic floor cell; derived path, tangent and room ported; pedestrian file used in chase-game |
-| [pedestrians-traffic-pedestrians](pedestrians-traffic-pedestrians.md) | IN_PROGRESS | run in chase-game with room moves; PED-5 message slot; PED-27 fade point cameras |
+| [pedestrians-traffic-pedestrians](pedestrians-traffic-pedestrians.md) | IN_PROGRESS | run in chase-game with room moves; PED-30 pedestrian sounds; PED-27 fade point cameras |
 | [pedestrians-traffic-pedestrians-fade](pedestrians-traffic-pedestrians-fade.md) | IN_PROGRESS | PED-21 faded-out pedestrians not removed; PED-22 node radius source; PED-23 node draw pass |
 | [pedestrians-traffic-pedestrians-vehicles](pedestrians-traffic-pedestrians-vehicles.md) | IN_PROGRESS | vehicle test and set-up layer table run in chase-game; PED-18 cutscene layer table; PED-19 vehicle list filter |
 | [pedestrians-traffic-cars-driver](pedestrians-traffic-cars-driver.md) | IN_PROGRESS | AI driver runs on the cars with states 4 to 8 connected, brake lights and culling; the chased car of mission 1-4 drives; TRAFFIC-42 thrown objects, TRAFFIC-43 contact gather |

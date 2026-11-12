@@ -17,12 +17,17 @@ const std::array<UpdatePhaseInfo, kUpdatePhaseCount>& updatePhases() {
 }
 
 void UpdateSequence::at(UpdatePhase phase, std::function<void()> step) {
-    steps_[static_cast<std::size_t>(phase)].push_back(std::move(step));
+    steps_[static_cast<std::size_t>(phase)].push_back({0, std::move(step)});
+}
+
+void UpdateSequence::atObjectKind(std::uint8_t kind, std::function<void()> step) {
+    steps_[static_cast<std::size_t>(UpdatePhase::Objects)].push_back({kind, std::move(step)});
 }
 
 void UpdateSequence::run() {
     for (auto& phase : steps_) {
-        for (auto& step : phase) step();
+        std::stable_sort(phase.begin(), phase.end(), [](const Step& a, const Step& b) { return a.kind < b.kind; });
+        for (auto& step : phase) step.run();
         phase.clear();
     }
 }

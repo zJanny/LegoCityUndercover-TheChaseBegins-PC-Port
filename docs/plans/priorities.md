@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1126 open items and stand-ins, 200 linked to game usage, 926 with unknown reach.
+Items: 1127 open items and stand-ins, 199 linked to game usage, 928 with unknown reach.
 
 ## Top 50 overall
 
@@ -155,17 +155,16 @@ Items: 1126 open items and stand-ins, 200 linked to game usage, 926 with unknown
 
 ## World and levels
 
-7 of 104 items linked.
+6 of 105 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
 | 1 | [TRANS-5](features/level-transitions.md?display=source#L33) | 127 | 25 | 7 | 0 | 5 stand-in, 4 none, 1 implemented | `charsetallowvehicleentry`, `playcredits`, `playscriptonstartup`, `positionplayer` +7 | The 31 scripts of the shipped levels that call SceneChange, CharSetAllowVehicleEntry or ... |
 | 2 | [WSTREAM-6](features/world-streaming.md?display=source#L36) | 49 | 15 | 6 | 0 | 1 none, 1 implemented | `roomstreamingwait`, `streamroomin`, `roomstreamingcontrol` | The `RoomStreamingControl/Destination` classes and the `RoomStreamingWait` native as scripted preloads ... |
-| 3 | [PED-5](features/pedestrians-traffic-pedestrians.md?display=source#L58) | 0 | 58 | 6 | 0 | - | `chars/pedestrian` | The pedestrian's message slot 0x19efbc is read only at its start: which messages request the dodge (3, 4) and ... |
-| 4 | [TRANS-S2](features/level-transitions.md?display=source#L24) | 25 | 25 | 7 | 0 | 1 implemented | `scenechange`, `scenechange` | `SceneChange <bound>` is qualified with the calling level's world level instance name (data fit, every ... |
-| 5 | [TRAFFIC-15](features/pedestrians-traffic-cars.md?display=source#L53) | 40 | 0 | 2 | 1 | 1 implemented | `enabletrafficpath` | Which junction objects the original's global list holds (creation flags, rooms not streamed in) and the ... |
-| 6 | [WSTREAM-33](features/world-streaming.md?display=source#L39) | 40 | 0 | 6 | 1 | 1 implemented | `streamroomin` | When the scripted request list 0x375d70 is cleared (the table slots 0x363eb8 and 0x363ee0 call 0x309534 and ... |
-| 7 | [TRAFFIC-S10](features/pedestrians-traffic-cars.md?display=source#L46) | 40 | 0 | 2 | 0 | 1 implemented | `enabletrafficpath` | Every junction object of the level's data is taken (the original's global junction list holds the created ... |
+| 3 | [TRANS-S2](features/level-transitions.md?display=source#L24) | 25 | 25 | 7 | 0 | 1 implemented | `scenechange`, `scenechange` | `SceneChange <bound>` is qualified with the calling level's world level instance name (data fit, every ... |
+| 4 | [TRAFFIC-15](features/pedestrians-traffic-cars.md?display=source#L53) | 40 | 0 | 2 | 1 | 1 implemented | `enabletrafficpath` | Which junction objects the original's global list holds (creation flags, rooms not streamed in) and the ... |
+| 5 | [WSTREAM-33](features/world-streaming.md?display=source#L39) | 40 | 0 | 6 | 1 | 1 implemented | `streamroomin` | When the scripted request list 0x375d70 is cleared (the table slots 0x363eb8 and 0x363ee0 call 0x309534 and ... |
+| 6 | [TRAFFIC-S10](features/pedestrians-traffic-cars.md?display=source#L46) | 40 | 0 | 2 | 0 | 1 implemented | `enabletrafficpath` | Every junction object of the level's data is taken (the original's global junction list holds the created ... |
 
 ## Front end, HUD, saves
 
@@ -243,7 +242,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [pedestrians-traffic-cars.md](features/pedestrians-traffic-cars.md): TRAFFIC-12 (+2), TRAFFIC-14 (+1), TRAFFIC-3 (+1), TRAFFIC-S1, TRAFFIC-S2, TRAFFIC-S3, TRAFFIC-S4, TRAFFIC-S8
 - [pedestrians-traffic-pedestrians-fade.md](features/pedestrians-traffic-pedestrians-fade.md): PED-22 (+1), PED-21, PED-S11, PED-S12
 - [pedestrians-traffic-pedestrians-vehicles.md](features/pedestrians-traffic-pedestrians-vehicles.md): PED-18 (+1), PED-19 (+1), PED-S10, PED-S9
-- [pedestrians-traffic-pedestrians.md](features/pedestrians-traffic-pedestrians.md): PED-27 (+2), PED-16 (+1), PED-24 (+1), PED-25 (+1), PED-26 (+1), PED-28 (+1), PED-9 (+1), PED-29, PED-S13, PED-S14, PED-S15, PED-S16, PED-S2, PED-S4, PED-S5, PED-S6, PED-S7, PED-S8
+- [pedestrians-traffic-pedestrians.md](features/pedestrians-traffic-pedestrians.md): PED-27 (+2), PED-16 (+1), PED-24 (+1), PED-26 (+1), PED-28 (+1), PED-30 (+1), PED-31 (+1), PED-9 (+1), PED-29, PED-S13, PED-S14, PED-S15, PED-S16, PED-S17, PED-S18, PED-S2, PED-S4, PED-S5, PED-S6, PED-S8
 - [pedestrians-traffic.md](features/pedestrians-traffic.md): PREGEN-6, PREGEN-S1, PREGEN-S2, PREGEN-S4
 - [player-movement-attack.md](features/player-movement-attack.md): PLAYER-16 (+2), PLAYER-31 (+2), PLAYER-15 (+1), PLAYER-22 (+1), PLAYER-28 (+1), PLAYER-30 (+1), PLAYER-32 (+1), PLAYER-13, PLAYER-18, PLAYER-21, PLAYER-23, PLAYER-24, PLAYER-26, PLAYER-S10, PLAYER-S11, PLAYER-S12, PLAYER-S14, PLAYER-S16, PLAYER-S5, PLAYER-S6, PLAYER-S8
 - [player-movement.md](features/player-movement.md): PLAYER-11 (+1), PLAYER-25 (+1), PLAYER-1, PLAYER-10, PLAYER-2, PLAYER-3, PLAYER-5, PLAYER-6, PLAYER-7, PLAYER-8, PLAYER-S1, PLAYER-S2, PLAYER-S4
