@@ -20,6 +20,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [input](input.md) | DONE (lab, mapping) | INPUT-2 readers of input slots 16/17 |
 | [abilities-detective](abilities-detective.md) | IN_PROGRESS | DETECT-2 first point never enabled (Doorlock script waits); DETECT-1 use-state approach; DETECT-4 particles, fades, flight |
 | [abilities-scanner](abilities-scanner.md) | IN_PROGRESS | SCAN-2 other zone modes; SCAN-10 sonar segments; SCAN-19 tip pages during the scanner view; SCAN-16 and SCAN-17 info box comparison and icon writer |
+| [disguise](disguise.md) | NOT_STARTED | DISG-1 class look of the HUD; DISG-2 party manager and swap; DISG-3 giving a disguise and the save; DISG-4 script calls per mission (first static map only, nothing ported) |
 
 ## Level objects
 

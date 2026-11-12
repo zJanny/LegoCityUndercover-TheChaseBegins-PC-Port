@@ -40,6 +40,7 @@
 - The pickup of the super bricks of broken props apart from the pull of a car (the pull runs whenever the player sits in a vehicle, which only approximates the original's conditions; walking over a brick is not checked), collision with people, most objects that break or move (props break only when punched or hit by a vehicle), the camera being placed again when it is stuck, and fighting enemies (Y near an enemy throws it down and a second throw makes it arrestable, but the arrest, the enemies' attacks and their movement during a throw are missing). Vehicles are only partly done.
 - Most music, and the sounds of other people, animals, vehicles and objects. For the character and the coins the sound for each event is known.
 - The rescued man at the end of the crane rescue of mission 1-3: he stays stuck in the air after the crane sequence.
+- Disguises. Chase always wears his police uniform; he cannot change into another disguise yet.
 - Several smaller file types.
 - Most of what a save game contains. The save file can be checked, read and written safely. Only the completion totals, the last level, the missions done, unlocks, level variables, studs, super bricks and the play time are understood. `chase-game` writes the save at the original's save requests and `chase-game --save` starts from a slot; collected items and object states are not saved or loaded yet.
 
