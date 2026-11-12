@@ -50,13 +50,16 @@ unsigned aiNativeObjects(AiNativeKind kind);
 bool aiNativeIsStandIn(AiNativeKind kind);
 
 // Requested state byte of the AI component (+0x15). Idle: 0x2246c0 stores 0. NoState: 0x241304 (AIEnable, AINoState)
-// stores 1. Combat: the sighting 0x21102c stores 2 (goon_conduct.hpp; its routines 0x2c4708 are not ported). FollowPath: the path state writes 5. MillAbout: 0x22471c stores 9. FaceTarget: 0x211110 stores 10.
+// stores 1. Combat: the sighting 0x21102c stores 2; Attack: 0x2080a0 stores 3; Move: the move front end 0x22d85c stores 4; StrikeWindUp: the decision
+// of state 3 requests 31 (ai_pursuit.hpp runs these on the conduct's entities). FollowPath: the path state writes 5. MillAbout: 0x22471c stores 9. FaceTarget: 0x211110 stores 10.
 // RunAway: 0x228c70 requests 25. Stalk: 0x282b88 requests 27. Takedown / Pursuit: AIPursuit passes 35 (takedown argument set) or 36 to 0x218b38. MoveTo: the state AIMove requests
 // through 0x2414b4 (its number is not read; the value is a placeholder).
 enum class AiState : std::uint8_t {
     Idle = 0,
     NoState = 1,
     Combat = 2,
+    Attack = 3,
+    Move = 4,
     FollowPath = 5,
     MillAbout = 9,
     FaceTarget = 10,
@@ -65,6 +68,7 @@ enum class AiState : std::uint8_t {
     ReturnToSpawn = 15,
     RunAway = 25,
     Stalk = 27,
+    StrikeWindUp = 31,
     Takedown = 35,
     Pursuit = 36,
     MoveTo = 0xfe,
@@ -81,6 +85,7 @@ struct AiMoveOrder {
     std::shared_ptr<NavPathRecord> nav;
     std::size_t navWorld = 0;
     bool blocked = false;  // AI state 14: the path request failed, the follower answers 1
+    bool conduct = false;  // started by startPatrolWalk: the decision of its AI state runs the follower (followPatrolWalk), update() leaves it alone
     // Stand-in SCRIPT-S100: height of the character above the base of the grid it walks in, taken at the first step.
     std::optional<float> navHeightOffset;
 };
@@ -192,16 +197,26 @@ public:
     // 0x21102c for a character that holds a side slot: AI state 2 with ctrl+0xc4 = `target` (goon_conduct.hpp).
     void startCombat(const std::string& lowerCaseName, const std::string& target);
     // The requests of AI states 15 (0x2a9874) and 14 (0x2c5cac) of the idle conduct; a state other than 14 ends the walk of AI state 14.
+    // The fight states 4 and 5 (ai_pursuit.hpp) keep a walk the conduct started.
     void startConductState(const std::string& lowerCaseName, AiState state) {
         AiCharacter& character = at(lowerCaseName);
         character.state = state;
-        if (state != AiState::Patrol) character.move.reset();
+        const bool walks = state == AiState::Patrol || ((state == AiState::Move || state == AiState::FollowPath) && character.move && character.move->conduct);
+        if (!walks) character.move.reset();
     }
+    // ctrl+0xc4 of a character whose fight decision chose another target without a state change.
+    void setCombatTarget(const std::string& lowerCaseName, const std::string& target) { at(lowerCaseName).combatTarget = target; }
+    // ctrl+6 and ctrl+10 written by a fight decision: the character at `position` turns to `heading` (the host copies it like a move).
+    void face(const std::string& lowerCaseName, const std::array<float, 3>& position, std::uint16_t heading);
+    // The AIMove event 0x23cee8 the decision of AI state 4 raises when a walk of the conduct arrives (0x2c630c).
+    void endConductMove(const std::string& lowerCaseName) { ended_.push_back({lowerCaseName, 0}); }
     // The path follower of AI state 14 (goon_conduct.hpp): `startPatrolWalk` is the end of the enter 0x2a11a0 (the path request from `from` to
     // `destination`; false when the finder cannot get there), `followPatrolWalk` is 0x1faf04 with its application 0x1fae48 for one update and
     // returns the code (low byte: 0 arrived, 1 and 2 blocked, 3 and more moving). STAND-IN SCRIPT-S31: without nav grids or outside them the
     // character walks straight, arriving within the speed of one step.
-    bool startPatrolWalk(const std::string& lowerCaseName, const std::array<float, 3>& from, const std::array<float, 3>& destination, bool walk);
+    // `state` is the AI state of the walk: 14, or 4 / 5 for the moves of the fight states (0x22d85c).
+    bool startPatrolWalk(const std::string& lowerCaseName, const std::array<float, 3>& from, const std::array<float, 3>& destination, bool walk,
+                         AiState state = AiState::Patrol);
     int followPatrolWalk(const std::string& lowerCaseName, bool walk, float dt);
 
     // Position of a character that something else moves (the player node, PositionObject).

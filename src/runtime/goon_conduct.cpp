@@ -1,5 +1,6 @@
 #include "runtime/goon_conduct.hpp"
 
+#include "runtime/ai_pursuit.hpp"
 #include "runtime/level_start.hpp"
 
 #include <algorithm>
@@ -51,6 +52,17 @@ std::uint32_t referenceParam(const assets::LevelObject& object, const assets::Le
     return param ? assets::objectReferenceHash(*param) : 0;
 }
 
+// 0x241624 with the two-value block of `AIMeleeFireDelay` / `AIRangedFireDelay` (0x2bcacc): the first value, and the second less the first (1 when equal).
+void delayParam(const assets::LevelObject& object, const assets::Level& cls, const char* name, std::uint8_t& first, std::uint8_t& span) {
+    const assets::LevelParam* param = effectiveParam(object, cls, assets::nameHash(name));
+    if (!param || param->blocks.empty() || param->blocks[0].size() < 8) return;
+    std::uint32_t low, high;
+    std::memcpy(&low, param->blocks[0].data(), 4);
+    std::memcpy(&high, param->blocks[0].data() + 4, 4);
+    first = std::uint8_t(low);
+    span = std::uint8_t(high == low ? 1 : high - low);
+}
+
 std::uint32_t bitsOf(float value) {
     std::uint32_t bits;
     std::memcpy(&bits, &value, 4);
@@ -88,6 +100,14 @@ AiConductParams aiConductParamsOf(const assets::LevelObject& object, const asset
     params.idleReturn.waitTime = intParam(object, cls, "Wait_Time", kAiReturnWaitDefault);
     params.badGuy = intParam(object, cls, "AIBadGuy", 0) != 0;
     params.boss = intParam(object, cls, "Boss_IsBoss", 0) != 0;
+    params.characterRow = std::uint8_t(intParam(object, cls, "CharacterEnum", kAiCharacterRowDefault));
+    params.combatBehaviour = std::uint8_t(intParam(object, cls, "AICombatBehaviour", kAiCombatBehaviourDefault) & 7);
+    params.dontChase = (intParam(object, cls, "AIDontChase", 0) & 1) != 0;
+    params.lineOfSight = (intParam(object, cls, "AILineOfSight", 0) & 1) != 0;
+    params.dontFaceTarget = (intParam(object, cls, "AIDontFaceTarget", 0) & 1) != 0;
+    delayParam(object, cls, "AIMeleeFireDelay", params.meleeDelay, params.meleeDelaySpan);
+    delayParam(object, cls, "AIRangedFireDelay", params.rangedDelay, params.rangedDelaySpan);
+    params.targetDelay = std::uint8_t(intParam(object, cls, "AITargetDelay", kAiTargetDelayDefault));
     return params;
 }
 
@@ -292,13 +312,7 @@ void AiConduct::thinkIdle(AiConductEntity& self, const AiConductBoundTest& insid
     }
     if (self.countdown != 0) --self.countdown;
     if (self.params.millAbout) {
-        engage(self);
-        self.aiState = kAiMillAboutState;
-        self.countdown = kAiMillAboutCountdown;
-        AiConductEvent event;
-        event.kind = AiConductEventKind::MillAbout;
-        event.character = self.name;
-        events_.push_back(event);
+        requestMillAbout(self);
         return;
     }
     if (self.params.friendly && self.spawn) {
@@ -318,6 +332,32 @@ void AiConduct::thinkIdle(AiConductEntity& self, const AiConductBoundTest& insid
         return;
     }
     if (aiReturnRequested(self.patrolObject != 0, self.params.returnToSpawnPoint, self.position, self.spawn)) requestReturn(self);
+}
+
+void AiConduct::requestMillAbout(AiConductEntity& self) {
+    if (!self.params.millAbout) return;
+    engage(self);
+    self.aiState = kAiMillAboutState;
+    self.countdown = kAiMillAboutCountdown;
+    AiConductEvent event;
+    event.kind = AiConductEventKind::MillAbout;
+    event.character = self.name;
+    events_.push_back(event);
+}
+
+void AiConduct::requestIdle(AiConductEntity& self) {
+    self.aiState = 0;
+    self.target.clear();
+    release(self);
+    AiConductEvent idle;
+    idle.kind = AiConductEventKind::Idle;
+    idle.character = self.name;
+    events_.push_back(idle);
+}
+
+const AiConductEntity* AiConduct::targetOf(const AiConductEntity& self) const {
+    const AiConductEntity* target = entityNamed(self.target);
+    return target && target->present ? target : nullptr;
 }
 
 void AiConduct::requestReturn(AiConductEntity& self) {
@@ -450,16 +490,31 @@ void AiConduct::update(const AiConductBoundTest& inside) {
         if (entity.aiState == 0 || entity.aiState == kAiNoState) release(entity);
         if (entity.aiState == kAiReturnToSpawnState) enterReturn(entity);
         if (entity.aiState == kAiReturnedState) enterPatrol(entity);
+        if (const AiFightState* fight = aiFightState(entity.aiState); fight && fight->enter) fight->enter(*this, entity);
         lastState_[i] = entity.aiState;
     }
+    aiSideCooldownStep(sideCooldowns_);
     for (std::size_t i = 0; i < entities_.size(); ++i) {
         AiConductEntity& entity = entities_[i];
         if (entity.player || !entity.present) continue;
         if (!entity.thinks) continue;
-        if (entity.aiState == 0) thinkIdle(entity, inside);
-        else if (entity.aiState == kAiReturnToSpawnState) thinkReturn(entity, inside);
-        else if (entity.aiState == kAiReturnedState) thinkPatrol(entity, inside);
-        else continue;
+        entity.pressBits = 0;
+        const AiFightState* fight = aiFightState(entity.aiState);
+        if (fight && (entity.aiState == kAiMoveState || entity.aiState == kAiChaseState) && !entity.conductWalk) fight = nullptr;
+        if (entity.aiState == 0) {
+            thinkIdle(entity, inside);
+        } else if (fight) {
+            // 0x200c5c: a character in a state above 1 without a slot takes one, and goes idle when its side list is full.
+            if (!entity.engaged) engage(entity);
+            if (entity.engaged) fight->decision(*this, entity, inside);
+            else requestIdle(entity);
+        } else if (entity.aiState == kAiReturnToSpawnState) {
+            thinkReturn(entity, inside);
+        } else if (entity.aiState == kAiReturnedState) {
+            thinkPatrol(entity, inside);
+        } else {
+            continue;
+        }
         lastState_[i] = entity.aiState;
     }
 }

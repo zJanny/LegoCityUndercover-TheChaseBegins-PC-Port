@@ -63,13 +63,14 @@ Back to the [documentation list](../README.md#more-documentation).
   - When a script switches the spawner on, it sends its characters out one after the other, where the level places them. The waits between them are the original's. A second switch turns it off again.
   - Once all of its characters were sent out and are beaten or arrested, the spawner starts the next step of the story. Arresting works for the goons of mission 1-4. Beating them does not.
   - Each character gets the first order of its spawner when it comes out, as in the original. Most goons stand idle. Others run or jump to the spot the spawner names for them. In mission 1-4 the goons of the second and third wave jump to their places. Some first orders of the original are not done (the character then just stands).
-  - A standing goon notices Chase when he comes within its view distance and stands inside the goon's fight area (in mission 1-4 the showroom). It gets ready to fight him, but it does not fight or move. At most six goons at a time are ready to fight, as in the original.
+  - A standing goon notices Chase when he comes within its view distance and stands inside the goon's fight area (in mission 1-4 the showroom). It then runs up to him with the game's path finder, as far as its fight area allows, and stands facing him. It follows him when he walks away. It does not strike yet. At most six goons at a time are ready to fight, as in the original.
   - A goon that stands at least 2 units from the place where it was set up waits about half a second. Then it walks back to that place with the game's path finder (at the port's stand-in walking speed) and stands idle there again. If a target comes in sight while it waits or walks, it gets ready to fight instead.
   - A path the finder cannot find makes it try again after about a third to two thirds of a second.
   - Spawners that should send goons out only when they are off screen do so at once.
   - The program prints these lines ([command reference](commands.md#development-runtime)):
     - a line for each spawner change, each character sent out and the first order it got,
-    - `ai conduct NAME: sees player1 at D, AI state 2 (not ported) at update U` when a goon notices Chase,
+    - `ai conduct NAME: sees player1 at D, AI state 2 at update U` when a goon notices Chase,
+    - `ai conduct NAME: AI state N (pursue, attack, move, chase or strike wind-up) on player1 at update U` and `ai conduct NAME: runs to X Y Z at update U` when it goes after him,
     - lines for the walk back (`ai conduct NAME: AI state 14 (walk back)`, `walks to its spawn point`, `walk ended, idle`).
 - Build-its (piles of bricks the story switches on) can be built: stand next to them and hold A.
   - One brick is built per press and it takes the same number of updates as the original.

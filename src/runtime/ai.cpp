@@ -95,7 +95,7 @@ void AiCore::setPosition(const std::string& name, const float position[3]) {
 
 bool AiCore::moving(const std::string& name) const {
     const AiCharacter* found = character(name);
-    return found && found->move && (found->state == AiState::MoveTo || found->state == AiState::FollowPath);
+    return found && found->move && !found->move->conduct && (found->state == AiState::MoveTo || found->state == AiState::FollowPath);
 }
 
 bool AiCore::movedLastUpdate(const std::string& name) const { return std::find(moved_.begin(), moved_.end(), name) != moved_.end(); }
@@ -335,14 +335,23 @@ void AiCore::stepTowards(AiCharacter& target, AiMoveOrder& order, const std::arr
     position[2] += dz / distance * step;
 }
 
-bool AiCore::startPatrolWalk(const std::string& name, const std::array<float, 3>& from, const std::array<float, 3>& destination, bool walk) {
+void AiCore::face(const std::string& name, const std::array<float, 3>& position, std::uint16_t heading) {
+    AiCharacter& target = at(name);
+    if (target.heading && *target.heading == heading) return;
+    if (!target.position) target.position = position;
+    target.heading = heading;
+    if (!movedLastUpdate(name)) moved_.push_back(name);
+}
+
+bool AiCore::startPatrolWalk(const std::string& name, const std::array<float, 3>& from, const std::array<float, 3>& destination, bool walk, AiState state) {
     AiCharacter& target = at(name);
     target.position = from;
     AiMoveOrder order;
     order.waypoints = {destination};
     order.run = !walk;
+    order.conduct = true;
     target.move = std::move(order);
-    target.state = AiState::Patrol;
+    target.state = state;
     if (!navigation_) return true;
     if (startNavMove(name, target, from, destination, false)) return true;
     target.move->blocked = true;
@@ -484,7 +493,7 @@ void AiCore::update(float dt) {
             advanceFaceTarget(name, target);
             continue;
         }
-        if (!target.move) continue;
+        if (!target.move || target.move->conduct) continue;
         if (target.state != AiState::MoveTo && target.state != AiState::FollowPath) continue;
         moved_.push_back(name);
         if (target.move->follow) advanceSimplePath(name, target, dt);

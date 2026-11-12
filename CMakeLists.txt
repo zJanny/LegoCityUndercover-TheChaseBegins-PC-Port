@@ -2293,15 +2293,16 @@ if(BUILD_TESTING)
     # The first fight of mission 1-4 to its end: after 1-4_ShowroomArrival (cutscene 1_4_a) goons 03 and 06 of 1-4_Spawner_05 are each thrown twice
     # and arrested; CharacterArrestable starts 1-4_Character_Arrestable_Script for each, and once both are arrested (destroyed) the spawner fires
     # 1-4_SO_Phase1, whose TriggerObject starts 1-4_Spawner_06 (the done bit of the spawner's slots, docs/re/scripts-missions-1-4-spawners.md). The
-    # positions are the goons' placements in lvl_01 (level data); the update numbers are the port's.
+    # player stays at 1-4_P1_GoTo, where the script puts him, and the goons run up to him (docs/re/ai-states.md, 20261112-enemy-A): the Y taps
+    # reach goon 06 first, then goon 03. The update numbers are the port's.
     add_test(NAME game-arrest-showroom-1-4 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
       --call-script 1-4_ShowroomArrival
-      --script "0 0 600;at 568.06 27.5656 974.072 0;0 0 1 Y;0 0 120;0 0 1 Y;0 0 90;0 0 1 A;0 0 70;at 563.918 27.8636 968.328 0;0 0 1 Y;0 0 120;0 0 1 Y;0 0 90;0 0 1 A;0 0 70")
+      --script "0 0 700;0 0 1 Y;0 0 150;0 0 1 Y;0 0 90;0 0 1 A;0 0 130;0 0 1 Y;0 0 150;0 0 1 Y;0 0 90;0 0 1 A;0 0 70")
     set_tests_properties(game-arrest-showroom-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
-      PASS_REGULAR_EXPRESSION "1-4_ai_goon_03: event CharacterArrestable at update [0-9]+\n.*script 1-4_Character_Arrestable_Script started.*arrest: player state 322 ARRESTING on character 1-4_ai_goon_03.*1-4_ai_goon_03: event CharacterArrested.*1-4_ai_goon_03: arrested \\(destroyed, disabled\\).*1-4_ai_goon_06: event CharacterArrestable at update [0-9]+\n.*script 1-4_Character_Arrestable_Script started.*arrest: player state 322 ARRESTING on character 1-4_ai_goon_06.*1-4_ai_goon_06: arrested \\(destroyed, disabled\\) at update [0-9]+\nai spawner 1-4_spawner_05: TriggerObject 1-4_so_phase1.*script 1-4_SO_Phase1 started.*ai spawner 1-4_spawner_06: spawned 1-4_ai_goon_07")
+      PASS_REGULAR_EXPRESSION "1-4_ai_goon_06: event CharacterArrestable at update [0-9]+\n.*script 1-4_Character_Arrestable_Script started.*arrest: player state 322 ARRESTING on character 1-4_ai_goon_06.*1-4_ai_goon_06: event CharacterArrested.*1-4_ai_goon_06: arrested \\(destroyed, disabled\\).*1-4_ai_goon_03: event CharacterArrestable at update [0-9]+\n.*script 1-4_Character_Arrestable_Script started.*arrest: player state 322 ARRESTING on character 1-4_ai_goon_03.*1-4_ai_goon_03: arrested \\(destroyed, disabled\\) at update [0-9]+\nai spawner 1-4_spawner_05: TriggerObject 1-4_so_phase1.*script 1-4_SO_Phase1 started.*ai spawner 1-4_spawner_06: spawned 1-4_ai_goon_07")
     # The arrest after the car crash of mission 1-4 (docs/re/combat-characters-arrest.md, entry 2026-11-12T00:02:29): the development step left-vehicle stands in for the chaser's
     # exit from the wrecked car (it also releases the chaser from `1-4_BoosterChaser_Spawner`, which the test does not run), an A tap next to him arrests him
     # (STAND-IN COMBAT-S9), CharacterArrested starts `1-4_RobberCaught`, whose cutscene 1_4_e ends before it spawns `1-4_MissionEnd`, which spawns `1-5_MissionStart`. The player
@@ -2822,7 +2823,7 @@ add_test(NAME traffic-ground-world COMMAND traffic-ground-world-test)
 add_test(NAME traffic-ground-world-real-data COMMAND traffic-ground-world-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
 set_tests_properties(traffic-ground-world-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)
 
-target_sources(chase_runtime PRIVATE src/runtime/ai_spawner.cpp src/runtime/ai_start_state.cpp src/runtime/goon_conduct.cpp src/runtime/goon_idle_return.cpp src/runtime/ai_patrol_walk.cpp)
+target_sources(chase_runtime PRIVATE src/runtime/ai_spawner.cpp src/runtime/ai_start_state.cpp src/runtime/goon_conduct.cpp src/runtime/goon_idle_return.cpp src/runtime/ai_patrol_walk.cpp src/runtime/ai_pursuit.cpp)
 add_executable(ai-spawner-test tests/ai_spawner_test.cpp)
 target_link_libraries(ai-spawner-test PRIVATE chase_runtime chase_assets)
 target_compile_options(ai-spawner-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -2841,6 +2842,10 @@ add_executable(goon-conduct-test tests/goon_conduct_test.cpp)
 target_link_libraries(goon-conduct-test PRIVATE chase_runtime chase_assets)
 target_compile_options(goon-conduct-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME goon-conduct COMMAND goon-conduct-test)
+add_executable(ai-pursuit-test tests/ai_pursuit_test.cpp)
+target_link_libraries(ai-pursuit-test PRIVATE chase_runtime chase_assets)
+target_compile_options(ai-pursuit-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME ai-pursuit COMMAND ai-pursuit-test)
 add_executable(goon-idle-return-test tests/goon_idle_return_test.cpp)
 target_link_libraries(goon-idle-return-test PRIVATE chase_runtime chase_assets)
 target_compile_options(goon-idle-return-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -2894,13 +2899,15 @@ if(TARGET chase-game)
   # control in cutscene 1_4_a; in the first update after it each takes a slot of the bad side list (0x206d18) and sees the player at 1-4_P1_GoTo
   # inside 1-4_AIRange_01 within AIViewDistance 50 (0x1f8d5c, 0x1f6958), at the distances goon-conduct-real-data pins from the level data
   # (12.387, 13.762; read by 20261103-large-C, docs/re/scripts-missions-1-4-spawners-conduct.md). The update numbers are the port's.
+  # COMBAT-9, SCRIPT-104: goon 03 then goes through the fight states (docs/re/ai-states.md, 20261112-enemy-A): state 3, the chase of state 5 to
+  # 0.8 x 2.2 from the player (the point on the line from the player at 1-4_P1_GoTo to the goon), state 3 again within 2.2 and the strike wind-up 31.
   add_test(NAME game-goon-conduct-1-4 COMMAND chase-game
     --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
     --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
     --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes
-    --call-script 1-4_ShowroomArrival --script "0 0 600")
+    --call-script 1-4_ShowroomArrival --script "0 0 640")
   set_tests_properties(game-goon-conduct-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy"
-    PASS_REGULAR_EXPRESSION "ai conduct: [0-9]+ characters, 36 with AIRangeBound\n.*cutscene 1_4_a ended at update [0-9]+\n.*ai conduct 1-4_ai_goon_03: engaged \\(bad slot 0\\) at update [0-9]+\nai conduct 1-4_ai_goon_03: sees player1 at 12\\.387[0-9]*, AI state 2 \\(not ported\\) at update [0-9]+\nai conduct 1-4_ai_goon_06: engaged \\(bad slot 1\\) at update [0-9]+\nai conduct 1-4_ai_goon_06: sees player1 at 13\\.762[0-9]*, AI state 2 \\(not ported\\) at update [0-9]+")
+    PASS_REGULAR_EXPRESSION "ai conduct: [0-9]+ characters, 36 with AIRangeBound\n.*cutscene 1_4_a ended at update [0-9]+\n.*ai conduct 1-4_ai_goon_03: engaged \\(bad slot 0\\) at update [0-9]+\nai conduct 1-4_ai_goon_03: sees player1 at 12\\.387[0-9]*, AI state 2 at update [0-9]+\nai conduct 1-4_ai_goon_06: engaged \\(bad slot 1\\) at update [0-9]+\nai conduct 1-4_ai_goon_06: sees player1 at 13\\.762[0-9]*, AI state 2 at update [0-9]+\n.*ai conduct 1-4_ai_goon_03: AI state 3 \\(attack\\) on player1 at update [0-9]+\n.*ai conduct 1-4_ai_goon_03: runs to 576\\.1[0-9]* 27\\.5[0-9]* 968\\.6[0-9]* at update [0-9]+\n.*ai conduct 1-4_ai_goon_03: AI state 5 \\(chase\\) on player1 at update [0-9]+\n.*ai conduct 1-4_ai_goon_03: AI state 3 \\(attack\\) on player1 at update [0-9]+\n.*ai conduct 1-4_ai_goon_03: AI state 31 \\(strike wind-up\\) on player1 at update [0-9]+")
   set_property(TEST game-goon-conduct-1-4 APPEND PROPERTY LABELS needs-game-data)
 endif()
 

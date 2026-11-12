@@ -31,11 +31,12 @@ constexpr std::uint16_t kAiSightRefusedLocomotionState = 82;  // 0x211044: nothi
 constexpr std::uint8_t kAiSeenBits = 2;                       // 0x21102c: ctrl+0xdc bits 3..4 = 2
 constexpr float kAiRunSpeedDefault = 1.0f;                    // `AIRunSpeed` default, literal 0x2bcd00 (0x2bc94c)
 constexpr float kAiRunSpeedScale = 0.23f;                     // *0x37450c (initialiser 0x343de4), the factor 0x2bc984 multiplies AIRunSpeed by
+constexpr std::uint8_t kAiCharacterRowDefault = 192;          // 0x236d98: the default of `CharacterEnum`
+constexpr std::uint8_t kAiCombatBehaviourDefault = 3;         // 0x2bce90: the default of `AICombatBehaviour`
+constexpr std::uint8_t kAiFireDelayDefault = 60;              // 0x2bcab8: without `AIMeleeFireDelay` / `AIRangedFireDelay` 60 and a span of 30
+constexpr std::uint8_t kAiFireDelaySpanDefault = 30;
+constexpr std::uint8_t kAiTargetDelayDefault = 10;            // 0x2bcb44: the default of `AITargetDelay`
 constexpr float kAiFriendlyHomeFactor = 8.0f;                 // literal 0x2a9d84: the friendly branch 0x2a9bc4 compares with 8 x ctrl+0x8c
-
-// STAND-IN SCRIPT-S326: ctrl+0xdb bit 1, which 0x2bca0c fills from 0x21e798 (ability 20 of the character row, then the ability of the row's
-// weapon entry), is taken as clear: the row columns behind byte +0x18 and the weapon entry's +0x16 are not read.
-constexpr bool kAiCloseSightStandIn = false;
 
 // The parameters 0x2bc934 and 0x1c6e84 read for a placed character, and the entity bits of its create.
 struct AiConductParams {
@@ -47,7 +48,7 @@ struct AiConductParams {
     bool ignorePlayer = false;                                // `AIIgnorePlayer`, ctrl+0xd9 bit 0
     bool seesInvisible = false;                               // `AISeesInvisibleChars`, ctrl+0xdb bit 6
     bool friendly = false;                                    // `AIFriendly`, ctrl+0xdb bit 2 (0x1c6e84)
-    bool closeSight = kAiCloseSightStandIn;                   // ctrl+0xdb bit 1 (0x21e798), the shortcut of the sight test 0x1f6aa0
+    bool closeSight = false;                                  // ctrl+0xdb bit 1 (0x21e798: a ranged weapon), the shortcut of the sight test 0x1f6aa0
     float runSpeed = kAiRunSpeedDefault * kAiRunSpeedScale;   // ctrl+0x8c: `AIRunSpeed` x *0x37450c (0x2bc988, after the character set-up's write)
     bool returnToSpawnPoint = true;                           // `ReturnToSpawnPoint`, ctrl+0xdc bit 5 (0x1c6e84)
     bool millAbout = false;                                   // `AIMillAbout`, ctrl+0x315 bit 7 (0x1c6e84)
@@ -58,6 +59,19 @@ struct AiConductParams {
     AiIdleReturnParams idleReturn;                            // the sleep clips and `Wait_Time` (goon_idle_return.hpp)
     bool badGuy = false;                                      // `AIBadGuy`, entity +0xc bit 2
     bool boss = false;                                        // `Boss_IsBoss`, entity +0xc bit 14
+    std::uint8_t characterRow = kAiCharacterRowDefault;       // `CharacterEnum`, ctrl+0x2cc: the row of tables/tablescharacters.bxls sheet 0
+    std::uint8_t combatBehaviour = kAiCombatBehaviourDefault; // `AICombatBehaviour` & 7, ctrl+0xdc bits 0..2; applyAiCombatFacts adjusts it (0x2bceb0)
+    bool melee = false;                                       // ctrl+0xdb bit 0: ability 19 and a melee weapon row (0x2bc998)
+    bool strike = false;                                      // ability 54, asked by the decision of AI state 3 (0x2b83c0)
+    bool charge = false;                                      // ability 63 (0x2b830c)
+    bool dontChase = false;                                   // `AIDontChase`, ctrl+0xd8 bit 7
+    bool lineOfSight = false;                                 // `AILineOfSight`, ctrl+0xd9 bit 4
+    bool dontFaceTarget = false;                              // `AIDontFaceTarget`, ctrl+0xda bit 6
+    std::uint8_t meleeDelay = kAiFireDelayDefault;            // `AIMeleeFireDelay` first value, ctrl+0x73
+    std::uint8_t meleeDelaySpan = kAiFireDelaySpanDefault;    // second - first, 1 when equal, ctrl+0x74
+    std::uint8_t rangedDelay = kAiFireDelayDefault;           // `AIRangedFireDelay`, ctrl+0x75
+    std::uint8_t rangedDelaySpan = kAiFireDelaySpanDefault;   // ctrl+0x76
+    std::uint8_t targetDelay = kAiTargetDelayDefault;         // `AITargetDelay`, ctrl+0x77
 };
 AiConductParams aiConductParamsOf(const assets::LevelObject& object, const assets::Level& cls);
 // The request at the end of 0x1c6e84: AI state 14 with an `AIPatrolPath`, 9 for a friendly character that mills about, else 0.
@@ -89,10 +103,20 @@ struct AiConductEntity {
     bool clipEnded = kAiClipEndedStandIn;   // 0x22f560 of the current clip answers 6
     std::uint32_t patrolObject = 0;         // ctrl+0xd4: the name hash of the patrol node the character walks to, written by AI state 14
     bool walk = false;                      // ctrl+0xd9 bit 5: the walk of AI state 14 is a walk, not a run
+    bool avoidMove = false;                 // ctrl+0xd9 bit 3: the avoid argument of the last move 0x22d85c
+    std::array<float, 3> destination{};     // ctrl+0xb8: where the last move leads, or where the character stood when its attack began
+    std::optional<std::uint16_t> heading;   // ctrl+6 and ctrl+10 once a fight decision turned the character to its target
+    bool moveWanted = false;                // ctrl+0xc bit 0, set by the fight decisions (the walk it asks for is not ported)
+    std::uint8_t weaponBits = 0;            // ctrl+0x2cd: which weapon is out (0x2106d8)
+    std::uint16_t pressBits = 0;            // ctrl+0xe bits 5..7 of this update: the attack presses of 0x2896d4
+    bool conductWalk = false;               // host: the walk in progress was started by the conduct's walker, not by a script native
+    bool landed = true;                     // ctrl+0x314 bit 6
+    bool arrestTarget = false;              // host: locomotion state 323 or 324, or the arrest test 0x2107e0 passes (0x2c4780)
 };
 
 enum class AiConductEventKind : std::uint8_t {
-    Engaged, Released, Sighted, MillAbout, SleepClip, ReturnToSpawn, Returned, PatrolWalk, CantGetThere, WalkEnded, Idle, PlayerCaught
+    Engaged, Released, Sighted, MillAbout, SleepClip, ReturnToSpawn, Returned, PatrolWalk, CantGetThere, WalkEnded, Idle, PlayerCaught,
+    FightState, RunTo, AttackPress, LostTarget, Taunt, OutsideBound, MoveEnded
 };
 struct AiConductEvent {
     AiConductEventKind kind = AiConductEventKind::Engaged;
@@ -107,6 +131,9 @@ struct AiConductEvent {
     AiPatrolSource source = AiPatrolSource::None;  // PatrolWalk: where the walk of AI state 14 leads
     bool patrolling = false;  // PatrolWalk: the character walks a patrol, not back to its spawn point
     bool toWait = false;      // WalkEnded: AI state 15 follows, else the character is idle
+    std::uint8_t state = 0;   // FightState: the AI state requested (ai_pursuit.hpp), with `target`
+    std::array<float, 3> destination{};  // RunTo
+    std::uint16_t press = 0;  // AttackPress: the ctrl+0xe bit
 };
 
 // The path follower of AI state 14 on the host's side: `start` is 0x215988 and the request 0x1f9834(…, 1) of the enter (false: no path, the
@@ -164,6 +191,17 @@ public:
     void setPatrolNodes(AiPatrolNodeLookup lookup) { patrolNodes_ = std::move(lookup); }
     // 0x21102c(self, target); `held` when the caller set ctrl+0xd8 bit 5 itself (the watch 0x1f5c3c), so the engage does nothing.
     void sighted(AiConductEntity& self, const AiConductEntity& target, float distance, bool held = false);
+    // What the fight decisions (ai_pursuit.hpp) need of the conduct: the entity ctrl+0xc4 names when it has a node (0x1f522c), the next word of
+    // 0x25b2b8, the event list, the walker, the idle request 0x2246c0 with the enter of state 0, the mill-about request 0x22471c, the side
+    // cool-downs 0x3771da (the others) / 0x3771dc (the bad guys) and the side lists.
+    const AiConductEntity* targetOf(const AiConductEntity& self) const;
+    const AiConductEntity* named(const std::string& name) const { return entityNamed(name); }
+    std::uint32_t random() { return random_.next(); }
+    void push(AiConductEvent event) { events_.push_back(std::move(event)); }
+    const AiConductWalker& walker() const { return walker_; }
+    void requestIdle(AiConductEntity& self);
+    void requestMillAbout(AiConductEntity& self);
+    std::uint16_t& sideCooldown(bool badGuy) { return sideCooldowns_[badGuy ? 1 : 0]; }
     // The clock 0x241098 the decision of state 0 tests.
     void setClock(std::uint32_t clock) { clock_ = clock; }
 
@@ -186,6 +224,7 @@ private:
     AiConductWalker walker_;
     AiPatrolNodeLookup patrolNodes_;
     GameRandom random_{kAiPatrolRetrySeedStandIn};
+    std::array<std::uint16_t, 2> sideCooldowns_{};
 };
 
 // STAND-IN SCRIPT-S326: the spawn point is the position of the first update the character is present (the original stores its node position at

@@ -1,9 +1,11 @@
 #include "game_level.hpp"
 
+#include "runtime/ai_pursuit.hpp"
 #include "runtime/director_hold.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/prop_rocking.hpp"
 
+#include <cmath>
 #include <iostream>
 #include <map>
 
@@ -30,6 +32,9 @@ std::uint8_t aiStateNumber(runtime::AiState state) { return std::uint8_t(state);
 void LevelSession::loadAiConduct() {
     std::vector<runtime::AiConductEntity> entities;
     std::size_t bounded = 0;
+    chase::assets::Table characterTable, weaponTable;
+    if (const chase::assets::FuseEntry* entry = shared.archive.find("tables/tablescharacters.bxls")) characterTable = chase::assets::parseTable(shared.archive.read(*entry));
+    if (const chase::assets::FuseEntry* entry = shared.archive.find("tables/tablesweapons.bxls")) weaponTable = chase::assets::parseTable(shared.archive.read(*entry));
     if (levelCharacters)
         for (const auto& [name, character] : levelCharacters->characters()) {
             const chase::assets::LevelObject& object = level.objects[character->placement.objectIndex];
@@ -38,6 +43,7 @@ void LevelSession::loadAiConduct() {
             runtime::AiConductEntity entity;
             entity.name = name;
             entity.params = runtime::aiConductParamsOf(object, *cls);
+            runtime::applyAiCombatFacts(entity.params, runtime::aiCombatFacts(characterTable, weaponTable, entity.params.characterRow));
             entity.rangeBound = boundNamed(level, entity.params.rangeBound);
             entity.aiState = runtime::aiStartRequest(entity.params);
             bounded += entity.rangeBound.has_value();
@@ -65,6 +71,7 @@ void LevelSession::loadAiConduct() {
         return std::nullopt;
     });
     aiConductUnslottedSightings.clear();
+    aiFightStatesLogged.clear();
     std::cout << "ai conduct: " << aiConduct.entities().size() - 1 << " characters, " << bounded << " with AIRangeBound\n";
 }
 
@@ -75,7 +82,7 @@ void LevelSession::updateAiConduct(float dt) {
     runtime::AiCore& ai = levelScripts.ai();
     runtime::AiConductWalker walker;
     walker.start = [&ai](const runtime::AiConductEntity& entity, const std::array<float, 3>& destination) {
-        return ai.startPatrolWalk(entity.name, entity.position, destination, entity.walk);
+        return ai.startPatrolWalk(entity.name, entity.position, destination, entity.walk, runtime::AiState(entity.aiState));
     };
     walker.follow = [&ai, dt](const runtime::AiConductEntity& entity) { return ai.followPatrolWalk(entity.name, entity.walk, dt); };
     aiConduct.setWalker(std::move(walker));
@@ -100,9 +107,19 @@ void LevelSession::updateAiConduct(float dt) {
         }
         entity.thinks = !destroyed && runtime::characterControl(director.holdsControl(), false, true, director.objectActiveDuringDirector(entity.name)) ==
                                           runtime::CharacterControl::Ai;
+        // STAND-IN SCRIPT-S342: a character in a hit, takedown or arrest state does not decide (in the original the AI controller runs and those
+        // locomotion states ignore the buttons it presses), and one the arrestable list holds is the arrest target of 0x2c4780.
+        const auto hit = characterHits.find(entity.name);
+        const auto takedown = characterTakedowns.find(entity.name);
+        if (hit != characterHits.end() && hit->second.states.active()) entity.thinks = false;
+        if (takedown != characterTakedowns.end() && (takedown->second.states.active() || takedown->second.states.pending() || takedown->second.arrest.active()))
+            entity.thinks = false;
+        entity.arrestTarget = arrestables.contains(entity.name);
+        entity.conductWalk = false;
         if (const runtime::AiCharacter* state = ai.character(entity.name)) {
             entity.aiState = aiStateNumber(state->state);
             entity.target = state->combatTarget;
+            entity.conductWalk = state->move && state->move->conduct;
             if (state->millAbout) entity.params.millAbout = *state->millAbout;
             if (state->ignorePlayer) entity.params.ignorePlayer = *state->ignorePlayer;
         }
@@ -113,10 +130,34 @@ void LevelSession::updateAiConduct(float dt) {
         const std::vector<std::uint8_t>& enabled = levelScripts.boundsEnabled();
         return bound < level.bounds.size() && runtime::pointInFallArrestBound(level.bounds[bound], bound < enabled.size() && enabled[bound] != 0, point);
     });
+    applyAiConductEvents();
+}
+
+// The conduct's events of this update go to the AI core and the log; then the AI core takes the targets and headings the decisions wrote.
+void LevelSession::applyAiConductEvents() {
+    runtime::AiCore& ai = levelScripts.ai();
     for (const runtime::AiConductEvent& event : aiConduct.takeEvents()) {
         const bool unslotted = event.kind == runtime::AiConductEventKind::Sighted && !event.combat;
         if (!unslotted) aiConductUnslottedSightings.erase(event.character);
         else if (!aiConductUnslottedSightings.insert(event.character).second) continue;
+        // A character without a ticket next to its target goes from state 3 to 2 and back every update (0x2a980c, 0x2bb770): the two states are
+        // logged once until it leaves them.
+        const bool sighting = event.kind == runtime::AiConductEventKind::Sighted && event.combat;
+        const bool fight = event.kind == runtime::AiConductEventKind::FightState;
+        const std::uint8_t requested = sighting ? runtime::kAiPursueState : event.state;
+        if ((sighting || fight) && (requested == runtime::kAiPursueState || requested == runtime::kAiAttackState)) {
+            if (!aiFightStatesLogged[event.character].insert(requested).second) {
+                if (sighting) {
+                    ai.startCombat(event.character, event.target);
+                } else {
+                    ai.startConductState(event.character, runtime::AiState(event.state));
+                    ai.setCombatTarget(event.character, event.target);
+                }
+                continue;
+            }
+        } else if (fight || event.kind == runtime::AiConductEventKind::Idle) {
+            aiFightStatesLogged.erase(event.character);
+        }
         std::cout << "ai conduct " << event.character << ": ";
         switch (event.kind) {
         case runtime::AiConductEventKind::Engaged:
@@ -128,7 +169,7 @@ void LevelSession::updateAiConduct(float dt) {
             std::cout << "sees " << event.target << " at " << event.distance;
             if (event.combat) {
                 ai.startCombat(event.character, event.target);
-                std::cout << ", AI state 2 (not ported)";
+                std::cout << ", AI state 2";
             } else {
                 std::cout << ", no free slot";
             }
@@ -165,9 +206,80 @@ void LevelSession::updateAiConduct(float dt) {
             levelScripts.fireObjectEvent("playercaught", event.character);
             std::cout << "PlayerCaught";
             break;
+        case runtime::AiConductEventKind::FightState:
+            ai.startConductState(event.character, runtime::AiState(event.state));
+            ai.setCombatTarget(event.character, event.target);
+            std::cout << "AI state " << unsigned(event.state) << " (" << runtime::aiFightStateName(event.state) << ")";
+            if (!event.target.empty()) std::cout << " on " << event.target;
+            break;
+        case runtime::AiConductEventKind::RunTo:
+            std::cout << "runs to " << event.destination[0] << ' ' << event.destination[1] << ' ' << event.destination[2];
+            break;
+        case runtime::AiConductEventKind::AttackPress:
+            std::cout << "attack press " << event.press << " on " << event.target << " (not ported)";
+            break;
+        case runtime::AiConductEventKind::LostTarget:
+            std::cout << "lost " << event.target << " (LOST TARGET not ported)";
+            break;
+        case runtime::AiConductEventKind::Taunt:
+            std::cout << "taunts " << event.target << " (TAUNT not ported)";
+            break;
+        case runtime::AiConductEventKind::OutsideBound:
+            std::cout << "outside its AIRangeBound (walk back not ported)";
+            break;
+        case runtime::AiConductEventKind::MoveEnded:
+            ai.endConductMove(event.character);
+            std::cout << "move ended, event AIMove";
+            break;
         }
         std::cout << " at update " << updatesForLog << '\n';
     }
+    for (const runtime::AiConductEntity& entity : aiConduct.entities()) {
+        if (entity.player) continue;
+        const runtime::AiCharacter* state = ai.character(entity.name);
+        if (!state) continue;
+        if (state->combatTarget != entity.target) ai.setCombatTarget(entity.name, entity.target);
+        if (entity.heading && entity.present && runtime::aiFightState(entity.aiState)) ai.face(entity.name, entity.position, *entity.heading);
+    }
+}
+
+// The aggro 0x1d1170(target, sender) of a character the receiver took a hit from a character for, on the conduct's entity: without a slot the
+// sighting 0x21102c, with one the target switch 0x2080a0 and the counter ctrl+0x72. A sender other than the player is not named by the hit
+// message of the port and only logged.
+void LevelSession::aiAggro(const std::string& lowerInstance, const runtime::CharacterHitSender& sender) {
+    runtime::AiConductEntity* self = aiConduct.find(lowerInstance);
+    runtime::AiConductEntity* from = sender.player ? aiConduct.find(kPlayerName) : nullptr;
+    if (!self) return;
+    const auto distanceTo = [self](const runtime::AiConductEntity& other) {
+        const float x = other.position[0] - self->position[0], y = other.position[1] - self->position[1], z = other.position[2] - self->position[2];
+        return std::sqrt(x * x + y * y + z * z);
+    };
+    self->engaged = engagedTable.engaged(self->name);
+    runtime::AggroTarget target;
+    target.badGuy = self->params.badGuy;
+    target.boss = self->params.boss;
+    target.pursuitActive = self->engaged;
+    target.ignorePlayer = self->params.ignorePlayer;
+    target.state = self->locomotionState;
+    if (!self->target.empty()) target.target = self->target;
+    const runtime::AiConductEntity* current = aiConduct.targetOf(*self);
+    target.targetIsPlayer = current && current->player;
+    if (current) target.targetDistance = distanceTo(*current);
+    target.range = self->params.meleeFireDistance;
+    target.counter = self->aggroCounter;
+    runtime::AggroSender hitter;
+    hitter.player = sender.player;
+    hitter.name = from ? from->name : "character";
+    hitter.badGuy = false;
+    const runtime::AggroResult result = runtime::aggroOnHit(target, hitter);
+    if (!result.pursuit && !result.switchTarget && !result.counter) return;
+    std::cout << "character " << lowerInstance << ": aggro on " << hitter.name << (result.pursuit ? " (sighting" : result.switchTarget ? " (target switch" : " (counter")
+              << ") at update " << updatesForLog << '\n';
+    if (result.counter) self->aggroCounter = *result.counter;
+    if (!from) return;
+    if (result.pursuit) aiConduct.sighted(*self, *from, distanceTo(*from));
+    if (result.switchTarget) runtime::aiAttackTarget(aiConduct, *self, *from);
+    applyAiConductEvents();
 }
 
 }

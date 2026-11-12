@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1145 open items and stand-ins, 206 linked to game usage, 939 with unknown reach.
+Items: 1152 open items and stand-ins, 204 linked to game usage, 948 with unknown reach.
 
 ## Top 50 overall
 
@@ -87,7 +87,7 @@ Items: 1145 open items and stand-ins, 206 linked to game usage, 939 with unknown
 
 ## Player and camera
 
-25 of 239 items linked.
+23 of 240 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -100,7 +100,7 @@ Items: 1145 open items and stand-ins, 206 linked to game usage, 939 with unknown
 | 7 | [DISG-8](features/disguise.md?display=source#L33) | 5 | 106 | 7 | 0 | 1 stand-in, 1 none | `charactershop`, `superfreeplayswap`, `pickups/pickup_charactertoken` | Other ways to change character: the character swap pad (object kind 126, player states 234 to 236), the ... |
 | 8 | [PLAYER-S15](features/player-movement-attack.md?display=source#L25) | 97 | 0 | 7 | 0 | 1 stand-in | `enabletargetable` | `appendAttackCharacters` — the character facts besides the box and the near list: the `MeshCollision` branch ... |
 | 9 | [TRAV-55](features/player-traversal-zipline.md?display=source#L40) | 0 | 66 | 7 | 0 | - | `props/parkour_zipline` | The zipline poles (`props/parkour_zipline` anchors) can be walked through in `chase-game` (user report); in ... |
-| 10 | [COMBAT-S5](features/combat-characters.md?display=source#L27) | 62 | 0 | 4 | 0 | 1 stand-in | `aiignoreplayer` | `characterAggro` knows only the side bit of the target: ctrl+0xd8 bit 5 (the side slot, now kept by the idle ... |
+| 10 | [DISG-3](features/disguise.md?display=source#L29) | 41 | 0 | 7 | 0 | 2 stand-in | `lockcharacter`, `unlockcharacter` | The party in the save and at level entry: UnlockCharacter's add and the set-up from the slot's own party are ... |
 
 ## Level objects
 
@@ -138,7 +138,7 @@ Items: 1145 open items and stand-ins, 206 linked to game usage, 939 with unknown
 
 ## Scripts and missions
 
-133 of 290 items linked.
+133 of 296 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -209,7 +209,7 @@ No linked items.
 
 No script native or object class is linked to these items (`+N` is Unblocks). Add `uses:` to an item when its fix changes the game.
 
-Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L33) (+30), [VEH-6](features/vehicles-physics.md?display=source#L30) (+24), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L34) (+17), [SCRIPT-44](features/script-system-natives.md?display=source#L31) (+16), [SCRIPT-101](features/script-system-ai-navigation.md?display=source#L37) (+15), [SCRIPT-40](features/script-system-dcam.md?display=source#L27) (+15), [SCRIPT-95](features/script-system-ai-navigation.md?display=source#L35) (+15), [SCRIPT-100](features/script-system-ai-navigation.md?display=source#L36) (+14), [SCRIPT-45](features/script-system-natives.md?display=source#L32) (+14)
+Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?display=source#L36) (+33), [SCRIPT-458](features/script-system-ai-navigation.md?display=source#L42) (+24), [SCRIPT-460](features/script-system-ai-navigation.md?display=source#L44) (+24), [VEH-6](features/vehicles-physics.md?display=source#L30) (+24), [SCRIPT-43](features/script-system-natives.md?display=source#L30) (+18), [SCRIPT-94](features/script-system-ai-navigation.md?display=source#L37) (+17), [SCRIPT-44](features/script-system-natives.md?display=source#L31) (+16), [SCRIPT-101](features/script-system-ai-navigation.md?display=source#L40) (+15), [SCRIPT-40](features/script-system-dcam.md?display=source#L27) (+15), [SCRIPT-95](features/script-system-ai-navigation.md?display=source#L38) (+15)
 
 - [abilities-detective.md](features/abilities-detective.md): DETECT-19 (+3), DETECT-13 (+2), DETECT-1 (+1), DETECT-15 (+1), DETECT-4 (+1), DETECT-6 (+1), DETECT-S11 (+1), DETECT-S7 (+1), DETECT-S8 (+1), DETECT-10, DETECT-11, DETECT-12, DETECT-18, DETECT-3, DETECT-5, DETECT-9, DETECT-S1, DETECT-S2, DETECT-S4, DETECT-S5, DETECT-S6, DETECT-S9
 - [abilities-scanner.md](features/abilities-scanner.md): SCAN-10 (+1), SCAN-16 (+1), SCAN-17 (+1), SCAN-S10 (+1), AUDIO-S33, SCAN-13, SCAN-15, SCAN-19, SCAN-3, SCAN-6, SCAN-S1, SCAN-S11, SCAN-S12, SCAN-S13, SCAN-S14, SCAN-S2, SCAN-S3, SCAN-S4, SCAN-S5, SCAN-S6, SCAN-S7, SCAN-S9
@@ -218,7 +218,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [audio.md](features/audio.md): AUDIO-3 (+2), AUDIO-20 (+1), AUDIO-32 (+1), AUDIO-34 (+1), AUDIO-35 (+1), AUDIO-36 (+1), AUDIO-37 (+1), AUDIO-1, AUDIO-38, AUDIO-5, AUDIO-6, AUDIO-7, AUDIO-S1, AUDIO-S2, AUDIO-S20, AUDIO-S3, AUDIO-S30, AUDIO-S34, AUDIO-S35, AUDIO-S36, AUDIO-S4, AUDIO-S5, AUDIO-S6, AUDIO-S7
 - [camera.md](features/camera.md): CAMERA-54 (+3), CAMERA-11 (+1), CAMERA-53 (+1), CAMERA-1, CAMERA-12, CAMERA-2, CAMERA-3, CAMERA-4, CAMERA-5, CAMERA-S1, CAMERA-S31, CAMERA-S4, CAMERA-S50, CAMERA-S52, CAMERA-S53, CAMERA-S6
 - [collision.md](features/collision.md): COLL-24 (+2), COLL-21 (+1), COLL-3 (+1), COLL-4 (+1), COLL-1, COLL-23, COLL-25, COLL-5, COLL-6, COLL-7, COLL-S1, COLL-S2, COLL-S3, COLL-S4, COLL-S5, COLL-S6, COLL-S7
-- [combat-characters.md](features/combat-characters.md): COMBAT-10 (+7), COMBAT-8 (+4), COMBAT-13 (+2), COMBAT-6 (+2), COMBAT-11 (+1), COMBAT-4 (+1), COMBAT-12, COMBAT-14, COMBAT-5, COMBAT-S1, COMBAT-S2, COMBAT-S3, COMBAT-S4, COMBAT-S6, COMBAT-S7, COMBAT-S9
+- [combat-characters.md](features/combat-characters.md): COMBAT-10 (+7), COMBAT-8 (+4), COMBAT-13 (+2), COMBAT-15 (+2), COMBAT-6 (+2), COMBAT-11 (+1), COMBAT-16 (+1), COMBAT-4 (+1), COMBAT-12, COMBAT-14, COMBAT-5, COMBAT-S1, COMBAT-S2, COMBAT-S3, COMBAT-S4, COMBAT-S5, COMBAT-S6, COMBAT-S7, COMBAT-S9
 - [disguise.md](features/disguise.md): DISG-10 (+1), DISG-5, DISG-6, DISG-7, DISG-S2
 - [doors.md](features/doors.md): DOOR-2, DOOR-3, DOOR-4, DOOR-6, DOOR-7, DOOR-S1, DOOR-S2, DOOR-S3, DOOR-S4, DOOR-S5
 - [executable-platform.md](features/executable-platform.md): EXEC-1 (+2), EXEC-10 (+1), EXEC-2, EXEC-3, EXEC-4, EXEC-S1, EXEC-S10
@@ -267,7 +267,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [rendering-shadows.md](features/rendering-shadows.md): RENDER-72 (+1), RENDER-73 (+1), RENDER-74 (+1), RENDER-S67, RENDER-S68
 - [rendering.md](features/rendering.md): RENDER-50 (+2), RENDER-69 (+2), RENDER-39 (+1), RENDER-60 (+1), RENDER-63 (+1), RENDER-64 (+1), ASSET-S1, RENDER-30, RENDER-34, RENDER-42, RENDER-6, RENDER-61, RENDER-70, RENDER-S4, RENDER-S50, RENDER-S51, RENDER-S6, RENDER-S60, RENDER-S61, RENDER-S62, RENDER-S63, RENDER-S65, RENDER-S66, RENDER-S7
 - [saves-options.md](features/saves-options.md): SAVE-8 (+4), SAVE-13 (+1), SAVE-14 (+1), SAVE-16 (+1), SAVE-2 (+1), SAVE-20 (+1), SAVE-22 (+1), SAVE-21, SAVE-23, SAVE-3, SAVE-5, SAVE-S1, SAVE-S10, SAVE-S11, SAVE-S2, SAVE-S3, SAVE-S4, SAVE-S5, SAVE-S6, SAVE-S8
-- [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+30), SCRIPT-94 (+17), SCRIPT-101 (+15), SCRIPT-95 (+15), SCRIPT-100 (+14), SCRIPT-79 (+13), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95
+- [script-system-ai-navigation.md](features/script-system-ai-navigation.md): SCRIPT-92 (+33), SCRIPT-458 (+24), SCRIPT-460 (+24), SCRIPT-94 (+17), SCRIPT-101 (+15), SCRIPT-95 (+15), SCRIPT-100 (+14), SCRIPT-79 (+13), SCRIPT-461 (+2), SCRIPT-S100, SCRIPT-S101, SCRIPT-S102, SCRIPT-S104, SCRIPT-S31, SCRIPT-S341, SCRIPT-S342, SCRIPT-S343, SCRIPT-S93, SCRIPT-S94, SCRIPT-S95
 - [script-system-dcam.md](features/script-system-dcam.md): SCRIPT-40 (+15), SCRIPT-182 (+1), SCRIPT-48 (+1), SCRIPT-181, SCRIPT-332, SCRIPT-49, SCRIPT-50, SCRIPT-S142
 - [script-system-hud-natives.md](features/script-system-hud-natives.md): SCRIPT-350 (+2), SCRIPT-329 (+1), SCRIPT-330 (+1), SCRIPT-354 (+1), SCRIPT-331, SCRIPT-68, SCRIPT-69, SCRIPT-70, SCRIPT-S270, SCRIPT-S282, SCRIPT-S283, SCRIPT-S285
 - [script-system-missions-1-3-end.md](features/script-system-missions-1-3-end.md): SCRIPT-391, SCRIPT-400, SCRIPT-408, SCRIPT-409, SCRIPT-S303, SCRIPT-S304, SCRIPT-S311, SCRIPT-S319

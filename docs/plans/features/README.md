@@ -15,7 +15,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [player-traversal-ladders](player-traversal-ladders.md) | IN_PROGRESS | TRAV-58 entry from the air, furled ladders; TRAV-59 exit collision; TRAV-60 clip restart, hidden weapons, camera; TRAV-61 oracle check of the sounds (ladders ported) |
 | [camera](camera.md) | IN_PROGRESS | CAMERA-55 police car after PositionObject at the hand-back; CAMERA-3 multi-record weights; CAMERA-2 characters and vehicles not registered |
 | [collision](collision.md) | IN_PROGRESS | COLL-1 broad phase stand-in; COLL-2 constructors missing (about 40 kinds, characters); COLL-23 transcribe them; COLL-24 nested start state |
-| [combat-characters](combat-characters.md) | IN_PROGRESS | COMBAT-10 counter takedown and grab; COMBAT-8 takedown motion; COMBAT-9 AI pursuit; COMBAT-12 arrest against the oracle (hit receiver, takedown and arrest by A ported) |
+| [combat-characters](combat-characters.md) | IN_PROGRESS | COMBAT-10 counter takedown and grab; COMBAT-8 takedown motion; COMBAT-15 strike of an AI character; COMBAT-12 arrest against the oracle (hit receiver, takedown and arrest by A ported) |
 | [animation-characters](animation-characters.md) | IN_PROGRESS | ANIM-3 blending; ANIM-10 slot bookkeeping; ANIM-11 model folders |
 | [input](input.md) | DONE (lab, mapping) | INPUT-2 readers of input slots 16/17 |
 | [abilities-detective](abilities-detective.md) | IN_PROGRESS | DETECT-2 first point never enabled (Doorlock script waits); DETECT-1 use-state approach; DETECT-4 particles, fades, flight |
@@ -72,7 +72,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [script-system-natives-animation](script-system-natives-animation.md) | IN_PROGRESS | SCRIPT-270 player animations; SCRIPT-272 attach node changes; SCRIPT-273 / 274 states, loaded set |
 | [script-system-natives-party](script-system-natives-party.md) | IN_PROGRESS | SCRIPT-338 character records read by nothing; SCRIPT-339 boss components; SCRIPT-340 mech piloting |
 | [script-system-natives-state](script-system-natives-state.md) | IN_PROGRESS | SCRIPT-56 / 59 / 335 / 336 readers of placement and flags; SCRIPT-57 kind gates; SCRIPT-61 / 62 / 64 / 65 progress natives |
-| [script-system-ai-navigation](script-system-ai-navigation.md) | IN_PROGRESS | SCRIPT-79 AI movement; SCRIPT-94 active nav grid set; SCRIPT-103 AISuperJump flight, SCRIPT-104 pursuit / stalk / run-away states |
+| [script-system-ai-navigation](script-system-ai-navigation.md) | IN_PROGRESS | SCRIPT-79 AI movement; SCRIPT-94 active nav grid set; SCRIPT-103 AISuperJump flight, SCRIPT-458..460 run-away, stalk and pursuit states, SCRIPT-461 rest of the fight decisions |
 | [script-system-dcam](script-system-dcam.md) | IN_PROGRESS | SCRIPT-46 director camera commands, SCRIPT-48 / 49 / 50 / 181 / 182 details |
 | [script-system-hud-natives](script-system-hud-natives.md) | IN_PROGRESS | SCRIPT-66 to SCRIPT-70 text screens; SCRIPT-73 map and scanner natives; SCRIPT-329 to SCRIPT-331 arrow hide, oracle check, enemy and carry groups; SCRIPT-354 vehicle waypoint steering |
 

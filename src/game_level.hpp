@@ -397,8 +397,11 @@ private:
     // What idle AI characters do next, their side slots and sightings (runtime/goon_conduct.hpp; glue src/runtime/game_goon_conduct.cpp).
     chase::runtime::AiConduct aiConduct;
     std::set<std::string> aiConductUnslottedSightings;
+    std::map<std::string, std::set<std::uint8_t>> aiFightStatesLogged;
     void loadAiConduct();
     void updateAiConduct(float dt);
+    void applyAiConductEvents();
+    void aiAggro(const std::string& lowerInstance, const chase::runtime::CharacterHitSender& sender);
     // The particle objects, kind 1, and the FallArrest bounds (runtime/particle_object.hpp, runtime/fall_arrest_bounds.hpp; glue
     // src/runtime/game_particle_objects.cpp), and the BulletTime system's step on the real clock (src/game_level_natives.cpp).
     chase::runtime::ParticleObjects particleObjects;

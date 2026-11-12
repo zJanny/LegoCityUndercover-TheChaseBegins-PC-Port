@@ -56,8 +56,8 @@
   - Mission 1-4 starts after mission 1-3.
     - The waypoint at the car showroom runs its arrival scene: the cutscene, then the two hints.
     - The gang members stay hidden until the arrival scene sends in the first two, who appear where the level places them.
-    - The goons notice Chase in the showroom but do not fight back.
-    - The first two stand there; the goons of the later waves jump to their target spots.
+    - The goons notice Chase in the showroom and run up to him, but they do not strike.
+    - The goons of the later waves jump to their target spots first.
     - Each can be thrown twice and then arrested with A; once the first two are arrested the next wave comes out.
     - The roof scene's slow motion slows the game and plays its sounds, and the ladder kick starts its particle effect.
     - After the skylight scene the booster chaser jumps into the stolen car.
