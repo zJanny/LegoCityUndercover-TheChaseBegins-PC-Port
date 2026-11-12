@@ -82,6 +82,7 @@ void originalDefaultsUnchanged() {
     require(rows[0].label == "Window mode" && rows[0].kind == qol::ui::RowKind::Selector && rows[0].value == "Fullscreen" && rows[0].enabled,
         "window mode selector shows Fullscreen");
     require(rows[1].label == "Resolution" && rows[1].kind == qol::ui::RowKind::Dropdown, "resolution dropdown row");
+    require(d.page.help(2) == "How far the world is drawn. Higher values load more rooms and cost speed.", "view distance help text (user, 2026-11-12, option Short)");
     require(rows[2].label == "View distance" && rows[2].kind == qol::ui::RowKind::Slider && !rows[2].enabled, "view distance slider, greyed out in Original");
     require(rows[3].label == "Reset to defaults" && rows[3].kind == qol::ui::RowKind::Button && rows[3].enabled, "reset button");
 }

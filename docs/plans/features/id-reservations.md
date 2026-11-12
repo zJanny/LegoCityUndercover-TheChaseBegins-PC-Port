@@ -16,5 +16,3 @@ Ranges of item IDs held by parallel agents, named like `20261021-audio-A`. The p
 | SCRIPT-S | 344 | 345 | 20261112-enemy-D | 2026-11-12T10:53:40+01:00 |
 | SCRIPT | 465 | 467 | 20261112-enemy-E | 2026-11-12T10:53:40+01:00 |
 | SCRIPT-S | 346 | 347 | 20261112-enemy-E | 2026-11-12T10:53:40+01:00 |
-| QOLSET | 101 | 102 | 20261112-qolpc-B | 2026-11-12T10:55:25+01:00 |
-| QOLSET-S | 7 | 7 | 20261112-qolpc-B | 2026-11-12T10:55:25+01:00 |

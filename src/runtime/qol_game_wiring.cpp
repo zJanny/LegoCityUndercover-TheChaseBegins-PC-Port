@@ -47,7 +47,9 @@ public:
           writer_(target_, image_, 0, std::nullopt), game_(page_, options_.data(), live_) {
         std::copy(image_.options(), image_.options() + save::kOptionsSize, options_.begin());
         live_ = {std::uint8_t(setup.soundVolume), std::uint8_t(setup.musicVolume)};
+        const OptionVolumes started = live_;
         loadingScreenVolumes(options_.data(), live_);
+        if (setGains_ && (live_.sound != started.sound || live_.music != started.music)) setGains_(gainOf(live_.sound), gainOf(live_.music));
     }
 
     int sfxVolume() const override { return game_.sfxVolume(); }
@@ -58,13 +60,16 @@ public:
     void setMusicVolume(int volume) override { game_.setMusicVolume(volume); }
     void setInvertCamera(bool invert) override { game_.setInvertCamera(invert); }
     void openLanguages() override { game_.openLanguages(); }
+    void chooseLanguage(int language) override {
+        game_.chooseLanguage(language);
+        std::cout << "settings menu: language " << language << " chosen (the texts and pictures of the other languages are not loaded)\n";
+    }
     int startLanguage() const override { return startLanguage_; }
 
     void applied() override {
         const std::optional<float> sound = game_.takeSoundGain(), music = game_.takeMusicGain();
         if ((sound || music) && setGains_) setGains_(sound, music);
-        if (game_.takePageRequest() == OptionsPageRequest::Languages)
-            std::cout << "settings menu: the Languages page is requested (not shown in the settings menu yet, QOLSET-S6)\n";
+        game_.takePageRequest();
     }
 
     void left() override {
@@ -74,7 +79,7 @@ public:
         std::cout << "settings menu: options saved" << (stored ? " to " + writer_.path() : std::string(" (writing disabled)")) << ", slot " << slot
                   << " sound volume " << unsigned(options_[4 + slot]) << ", music volume " << unsigned(options_[6 + slot]) << ", invert camera "
                   << ((options_[3] & kInvertCameraBit) ? "on" : "off") << '\n';
-        page_.saveDone();
+        game_.saved();
     }
 
 private:

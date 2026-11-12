@@ -134,7 +134,7 @@
     - A display change asks "Keep these settings?".
   - The Game rows show your save's options.
     - They change the volumes and Invert camera and store them when the menu closes.
-    - A new language is not applied.
+    - A new language is stored in the save file when the menu closes; the texts and pictures stay English.
   - Its Quit game row (Yes or No) ends the program.
   - In play the Game tab holds only Quit game.
   - Escape never closes the game.

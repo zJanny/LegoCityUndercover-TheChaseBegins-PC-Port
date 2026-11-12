@@ -23,7 +23,6 @@ None.
 
 ## 5. Open items
 
-- [ ] QOLVD-4 — Question for the user: the help text of the row. Until a wording is approved the row shows no help line. evidence: [qol-view-distance.md §2026-11-02T18:43:07](../../design/qol-view-distance.md#ts-20261102-184307).
 - [ ] QOLVD-6 — Traffic distances not scaled (to be scaled with the factor, the user's "Next round", 2026-11-02): the spawn band and the removal radius (`TrafficSystemStep::despawnRadius`, an input since TRAFFIC-13) have no QoL hook yet, so traffic still spawns and leaves at the original distances while the far plane, the fog, the pedestrians and room loading are scaled. evidence: [traffic-ai-driver.md §2026-11-03T08:37:32](../../re/traffic-ai-driver.md#ts-20261103-083732).
 - [ ] QOLVD-8 — The rooms the hook adds are not part of the level-start settle (the original's rooms are loaded before the first update); they finish loading 9 updates after the start, so the first frames of a level at a high factor miss them; a settle input for extra rooms would be a port capability. evidence: [view-edges.md §2026-11-03T08:48:54](../../re/view-edges.md#ts-20261103-084854).
 - [ ] QOLVD-7 — Depth precision at high factors: the near plane stays, the far plane grows, so the depth buffer resolves coarser far away (follow camera, near 0.5: about 0.01 m at x1.0 and 3.2 m at x20.0 at the far plane; cutscene camera, near 0.1: 3800 m at far 80000); distant coplanar surfaces can flicker. Computed, not seen in a picture. evidence: [view-edges.md §2026-11-02T22:18:57](../../re/view-edges.md#ts-20261102-221857).

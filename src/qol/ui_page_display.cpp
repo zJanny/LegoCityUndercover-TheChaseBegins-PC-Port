@@ -108,6 +108,7 @@ std::string DisplayPage::help(int row) const {
     switch (row) {
     case WindowModeRow: return "Windowed or full screen. F11 also switches. Default: Fullscreen";
     case ResolutionRow: return "Window size in Windowed mode; full screen uses the desktop. Default: Desktop resolution";
+    case ViewDistanceRow: return "How far the world is drawn. Higher values load more rooms and cost speed.";
     case ResetRow: return "Sets every setting on this tab back to its default.";
     default: return {};
     }

@@ -43,6 +43,7 @@ struct FakeGame final : qol::GamePort {
     void setInvertCamera(bool) override {}
     void openLanguages() override {}
     int startLanguage() const override { return 1; }
+    void chooseLanguage(int) override {}
     void applied() override {}
     void left() override {}
 };

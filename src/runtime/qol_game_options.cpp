@@ -1,12 +1,13 @@
 #include "runtime/qol_game_options.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 #include <string>
 
 namespace chase::runtime {
 namespace {
 
-constexpr std::size_t kLanguageOffset = 1, kFlagsOffset = 3, kSoundOffset = 4, kMusicOffset = 6;
+constexpr std::size_t kFlagsOffset = 3, kSoundOffset = 4, kMusicOffset = 6;
 constexpr int kFirstLanguage = 1, kLastLanguage = 9;
 
 void requireVolume(int volume) {
@@ -65,6 +66,19 @@ void QolGameOptions::setInvertCamera(bool invert) {
 }
 
 void QolGameOptions::openLanguages() { collect(page_.a(int(OptionsRow::Language), options_)); }
+
+void QolGameOptions::chooseLanguage(int language) {
+    if (language < kFirstLanguage || language > kLastLanguage) throw std::out_of_range("language out of range 1 to 9: " + std::to_string(language));
+    const auto row = std::find(kLanguageTable.begin(), kLanguageTable.end(), std::uint8_t(language));
+    languages_.enter();
+    languages_.a(int(row - kLanguageTable.begin()));
+    if (languages_.update(false, options_).languageChanged) languageChanged_ = true;
+}
+
+void QolGameOptions::saved() {
+    languageChanged_ = false;
+    page_.saveDone();
+}
 
 OptionsPageRequest QolGameOptions::takePageRequest() {
     const OptionsPageRequest request = pageRequest_;

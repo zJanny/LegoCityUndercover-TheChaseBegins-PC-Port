@@ -4,7 +4,8 @@
 // the Language applies on close; driven through the menu controller by 20261101-qolui3-F on 2026-11-01).
 // Options block: recorded from a save state by 20261028-uiport-servant on 2026-10-28, paused on the Options page after mission 1-3,
 // slot 1 in use, sound effects 5, music 5, Invert camera on, language 1 (as pinned in tests/qol/game_options_test.cpp). The block
-// 8a 01 01 23 0a 05 08 05 holds the volumes of slot 1 at +5 (sound 5) and +7 (music 5). Cases written by 20261030-qolpanels-A, 2026-10-30.
+// Language applies by the port's LanguagesPage (a, then update with the list closed) written by 20261112-qolpc-B on 2026-11-12; the mixer
+// starts at the slot volumes of the same block (QOLSET-61). 8a 01 01 23 0a 05 08 05 holds the volumes of slot 1 at +5 (sound 5) and +7 (music 5). Cases written by 20261030-qolpanels-A, 2026-10-30.
 #include "qol/active_settings.hpp"
 #include "qol/menu_stores.hpp"
 #include "qol/ui_menu.hpp"
@@ -15,6 +16,7 @@
 #include <filesystem>
 #include <iostream>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -122,21 +124,52 @@ void leavingWithoutChangeSavesNothing() {
     Fixture f("nochange");
     Menu m(f.ports);
     m.open();
+    f.gains.calls.clear();
     m.step(Key::Down);
     m.step(Key::Escape);
     require(!std::filesystem::exists(f.saveFile) && f.gains.calls.empty(), "no change, no save and no gain");
 }
 
-void languageOnCloseRequestsThePage() {
+void mixerStartsAtTheSlotVolumes() {
+    Fixture f("start");
+    Menu m(f.ports);
+    m.open();
+    require(f.gains.calls.size() == 1 && f.gains.calls[0].first && *f.gains.calls[0].first == 0.5f && f.gains.calls[0].second && *f.gains.calls[0].second == 0.5f,
+        "opening the menu sets the mixer to the volumes of slot 1 (sound 5, music 5), as the Game tab shows them (QOLSET-61)");
+    Fixture g("start-same");
+    chase::runtime::QolGameSetup setup;
+    setup.loadFile = g.loadFile;
+    setup.saveFile = g.saveFile;
+    setup.soundVolume = 5;
+    setup.musicVolume = 5;
+    int calls = 0;
+    setup.setGains = [&calls](std::optional<float>, std::optional<float>) { ++calls; };
+    auto port = chase::runtime::qolGamePortFactory(setup)();
+    require(calls == 0, "volumes already at the slot's change nothing");
+    setup.loadFile.clear();
+    setup.soundVolume = 7;
+    setup.musicVolume = 3;
+    port = chase::runtime::qolGamePortFactory(setup)();
+    require(calls == 0, "no slot in use: the mixer stays at the start volumes");
+}
+
+void languageOnCloseAppliesThroughTheLanguagesPage() {
     Fixture f("language");
     Menu m(f.ports);
     m.open();
     for (int i = 0; i < 3; ++i) m.step(Key::Down);
     m.step(Key::Right);
+    require(m.stores.game()->language() == 1 && !std::filesystem::exists(f.saveFile), "the language stays until the menu closes (answer 4)");
     const qol::MenuEffects closed = m.step(Key::Escape);
     require(closed.language == 2, "the chosen language is handed over on close (answer 4)");
-    require(m.stores.game()->language() == 1 && f.gains.calls.empty() && !std::filesystem::exists(f.saveFile),
-        "the port asks for the Languages page and the language stays (stand-in QOLSET-S6)");
+    require(m.stores.game()->language() == 2, "the Languages page puts French into the options");
+    const chase::save::LoadResult saved = chase::save::load(f.saveFile);
+    require(saved.found && saved.status == chase::save::Status::Ok && saved.image && saved.image->language() == 2 && saved.image->soundVolume(1) == 5,
+        "the language is saved and the other options are kept");
+    chase::runtime::QolGameSetup reopened;
+    reopened.loadFile = f.saveFile;
+    reopened.saveFile = f.saveFile;
+    require(chase::runtime::qolGamePortFactory(reopened)()->language() == 2, "the menu opened on the saved file shows the new language");
 }
 
 void freshSaveUsesTheDefaults() {
@@ -154,6 +187,16 @@ void freshSaveUsesTheDefaults() {
 
 void rejections() {
     Fixture f("reject");
+    chase::runtime::QolGameSetup wrongLanguage;
+    wrongLanguage.loadFile = f.loadFile;
+    wrongLanguage.saveFile = f.saveFile;
+    bool wrong = false;
+    try {
+        chase::runtime::qolGamePortFactory(wrongLanguage)()->chooseLanguage(10);
+    } catch (const std::out_of_range&) {
+        wrong = true;
+    }
+    require(wrong, "a language outside 1 to 9 is rejected");
     chase::runtime::QolGameSetup setup;
     setup.loadFile = f.directory + "/missing.dat";
     bool threw = false;
@@ -182,7 +225,8 @@ int main() {
     readsTheRecordedBlock();
     editsReachMixerAndSave();
     leavingWithoutChangeSavesNothing();
-    languageOnCloseRequestsThePage();
+    mixerStartsAtTheSlotVolumes();
+    languageOnCloseAppliesThroughTheLanguagesPage();
     freshSaveUsesTheDefaults();
     rejections();
     return failures == 0 ? 0 : 1;

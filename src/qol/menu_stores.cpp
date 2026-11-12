@@ -44,7 +44,7 @@ void MenuStores::commit(const MenuEffects& effects) {
     if (effects.windowChanged && ports_.applyWindow) ports_.applyWindow(settings_);
     if (effects.controlsChanged && ports_.controlsChanged) ports_.controlsChanged();
     if (!game_) return;
-    if (effects.language && *effects.language != game_->language()) game_->openLanguages();
+    if (effects.language && *effects.language != game_->language()) game_->chooseLanguage(*effects.language);
     if (effects.gameChanged || effects.language) game_->applied();
     if (effects.closed) game_->left();
 }

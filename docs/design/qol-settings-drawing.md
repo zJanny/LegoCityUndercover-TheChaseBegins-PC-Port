@@ -37,7 +37,7 @@ Answers of the user to the lead's questions (2026-10-30; the quoted labels are t
 1. Font: "Noto Sans" (SIL OFL; its coverage of Latin-1 and Cyrillic is needed for the language names).
 2. UI scale option: "No, scale with window": everything is sized from the window height; a scale option can come later if missed.
 3. Volume sliders (the original has 11 steps, 0 to 10): "0–100 in steps of 10": each step is exactly one original step.
-4. Language row: "Selector, applies on close": `< English >` cycles the game's languages; the language takes effect when the menu closes.
+4. Language row: "Selector, applies on close": `< English >` cycles the game's languages; the language takes effect when the menu closes. Confirmed by the user on 2026-11-12 ("Yes, as built"): the selector is applied and saved on close through the port's Languages page logic, the flag grid is not shown in the menu, and texts and pictures are not reloaded right away.
 5. The two entry points (slot-screen PC Settings bar, pause-wheel entry): "Keep game art": only the menu that opens is in the new style.
 6. Ends of lists: "Tabs wrap, rows don't": E on the last tab goes to the first; Down on the last row stays; Up on the first row goes to the tab bar.
 7. Hold or toggle on the Controls tab: "Mode column per action": columns Action, Slot 1, Slot 2, Mode, with `< Hold >` or `< Toggle >` for the actions that have it; both slots follow it.

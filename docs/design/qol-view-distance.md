@@ -29,5 +29,4 @@ Room loading rule (2026-11-03, asked by 20261103-large-E, relayed by the lead): 
 
 Extra rooms active (2026-11-07, relayed by the lead): asked "with View distance above x1.0 or the widened view on, the extra rooms also become active (traffic, pedestrians, attack characters and scripts), not only drawn; at x20 all 43 rooms. Keep it that way?": "Keep: load fully". The rooms the View distance and the widened view add behave like rooms the game loads itself: they are drawn, reported loaded to the level scripts, and used by the traffic, the pedestrians and the attack characters.
 
-Open (not decided by the user):
-- The help text of the row: none is shown until the user approves a wording (QOLVD-4 in the feature file).
+Help text of the row (the user, 2026-11-12, relayed by the lead, option "Short"): "How far the world is drawn. Higher values load more rooms and cost speed."
