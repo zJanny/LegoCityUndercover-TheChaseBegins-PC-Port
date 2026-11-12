@@ -1,4 +1,5 @@
 #include "game_level.hpp"
+#include "runtime/chase_end_flow.hpp"
 #include "runtime/traffic_ground_world.hpp"
 #include "runtime/traffic_leave_snap.hpp"
 #include "runtime/vehicle_chase_events.hpp"
@@ -33,19 +34,20 @@ void LevelSession::chasedCarImpact(std::size_t vehicleIndex, float speed, const 
     runtime::VehicleAiRecord* ai = levelScripts.vehicleAi().mutableRecord(instance);
     if (!ai || !ai->chased) return;
     runtime::VehicleRecord& record = *levelScripts.vehicles().mutableRecord(boardingRecords[vehicleIndex]);
-    const std::optional<runtime::DamageMessage> message =
-        runtime::chasedCarContactDamage(ai->driver, {other.playerVehicle, other.destroyed, speed});
-    if (!message) return;
-    const runtime::ChasedCarDamageReply reply = runtime::chasedCarDamage(ai->driver, record, *message);
-    if (!reply.consumed) {
-        const runtime::DamageOutcome outcome = runtime::vehicleDamage(record, *message, false);
+    const std::optional<runtime::ChasedCarContactResult> contact =
+        runtime::chasedCarContact(ai->driver, record, {other.playerVehicle, other.destroyed, speed});
+    if (!contact) return;
+    runtime::Vector3& velocity = vehicleDrives[vehicleIndex].rigid.velocity;
+    for (float& component : velocity) component *= contact->velocityScale;
+    if (!contact->reply.consumed) {
+        const runtime::DamageOutcome outcome = runtime::vehicleDamage(record, contact->message, false);
         if (outcome.heartLost) {
             vehicleDamageEffects(vehicleIndex, outcome);
-            std::cout << "vehicle " << instance << ": heart lost (" << speed << " m/s), " << unsigned(record.hearts) << " left\n";
+            std::cout << "vehicle " << instance << ": heart lost (" << speed << " m/s), " << unsigned(record.hearts) << " left at update " << updatesForLog << '\n';
         }
         return;
     }
-    if (reply.chaseEnded) std::cout << "vehicle " << instance << ": driver state 6 requested at update " << updatesForLog << '\n';
+    if (contact->reply.chaseEnded) std::cout << "vehicle " << instance << ": driver state 6 requested at update " << updatesForLog << '\n';
 }
 
 std::optional<runtime::AiMatrix> LevelSession::scriptCarNodeMatrix(const std::string& lowerVehicle) const {

@@ -6,6 +6,7 @@ Subtopic of [traffic-ai-driver.md](traffic-ai-driver.md): how a chased car's dri
 
 - The only writer of the requested driver state 6 is the vehicle handler 0x19293c: a hard contact of the player's vehicle on a car in state 5 sends the car a damage message, and the hit on the last heart requests state 6. Entering state 6 fires VehicleChaseEnded at the car. [§2026-11-08T12:09:08](#ts-20261108-120908)
 - Port: `vehicle_chase_events` turns the contact into the request of state 6; the stolen car's driver is stepped and enters state 6 at its next update ([traffic-driver-states.md §2026-11-12T00:08:58](traffic-driver-states.md#ts-20261112-000858)).
+- The contact message also scales the car's body velocity by a factor of the closing speed (0.9 below 12 m/s, 0.8 below 24, 0.7 below 36, else 0.4); the damage message is delivered at once; the player's police car takes the stolen car through five hits (hearts 5 to 1, 128 updates apart) to the chase end and the chaser's jump out in `chase-game`. [§2026-11-12T10:03:42+01:00](#ts-20261112-100342)
 
 <a id="ts-20261108-120908"></a>
 
@@ -28,3 +29,26 @@ Port choices, all under SCRIPT-S336: `chasedCarImpact` sets the driver state to 
 Unknowns:
 - The velocity change on the contact (0x24092c, 0x248850, 0x229920), whether message 0 is delivered at once or queued by 0x244fc8, the global at 0x3772b8 and 0x376c78 (SCRIPT-S336).
 - How many hearts `1-4_Stolen_Vehicle` has (the vehicle table row and `HealthOverride`) and so how many hits the chase takes (SCRIPT-415).
+
+<a id="ts-20261112-100342"></a>
+
+## 2026-11-12T10:03:42+01:00 — The contact's velocity change, the delivery of the damage message and the chase end in a real run (llvm-objdump of game.arm.elf, `chase-game` runs; no REA session, no emulator)
+
+Evidence: round 20261112-trafficfeed, agent 20261112-trafficfeed-A, 2026-11-12; llvm-objdump (armv6k, vfp2) of 0x1929c0..0x192adc with the literals 0x192cf8..0x192d0c (read as floats from the code image), 0x24092c, 0x229920, 0x248850, 0x244fc8, 0x252c14. Pinned by CTests `chased-car-contact` (made-up cars) and `game-chase-end-1-4` (slow, needs the game data). Answers the first unknown of [§2026-11-08T12:09:08](#ts-20261108-120908).
+
+**The velocity change (0x192a64..0x192ad0).** After sending the damage message the handler computes n = trunc(closing speed / 12.0) (0x192cfc; 0x252c14 truncates) and takes the factor 0.9 (0x192d00) for n = 0, 0.8 (0x192d04) for 1, 0.7 (0x192d0c) for 2 and 0.4 (0x192d08) for every other n. It then takes the body (0x242554 = entity +0x84; with no body nothing follows), reads the linear velocity (0x24092c: three floats from body +0x7c, offsets 0x13c..0x144, the fourth is 0), multiplies the three components by the factor (0x248850) and writes them back with the fourth component 0 (0x229920). The change comes after the message and does not depend on its reply: the hit on the last heart scales the velocity too, and so does any contact in state 5 with the hold at 0 until the driver step enters state 6.
+
+**The delivery of the message.** 0x244fc8(entity, 0, message) reads the kind byte +0x12 of the entity, takes the pointer at +0x14 of its 40-byte row in the table at 0x583124 and, when it is not 0, tail-calls it with the entity and the message: the damage message is delivered at once, not queued. This answers the delivery unknown of SCRIPT-S336.
+
+**What hits the stolen car's hearts.** Only this contact path in state 5: each contact of the player's vehicle above 3 m/s sends one heart (word +0xc = 1, kind 11); with more than one heart left the base handler takes it and the driver's hold +0xac = 128 refuses further contacts for 128 updates; on the last heart state 6 is requested. `1-4_Stolen_Vehicle` has 5 hearts (the target display of VehicleSetChased shows 5 of 5), so the chase takes five hits at least 128 updates apart.
+
+**In the port.** `src/runtime/chase_end_flow.*` (`chasedCarContact`, `chasedCarVelocityScale`) joins the contact message, the reply and the factor; `LevelSession::chasedCarImpact` scales the car's rigid body velocity inside the contact callback of the vehicle world and logs `vehicle V: heart lost (S m/s), N left at update U`.
+
+**The real run.** `chase-game --call-script 1-4_Hatch_Open` seats the player in `1-4_Police_Car02` at update 713 (VehicleJumpIn by the script), the chase starts at update 770. The test places the seated car in the stolen car's way with `at X Y Z FACING` (facing 90 is +x, 270 is -x, 0 is +z, 180 is -z) five times, at positions taken from the stolen car's own line in a port run: heart lost at updates 840 (4 left), 1124 (3), 1310 (2), 1718 (1), then the driver requests state 6 at update 1864 and enters it at 1865 (VehicleChaseEnded at the car, `1-4_Car_Crash` starts), the chaser starts to exit at update 1897 (1 s after the script start plus the exit's own updates) and has left the car at 1919, where the arrest after the crash makes him arrestable. Update numbers are the port's.
+
+Port choices (SCRIPT-S340): the velocity is scaled in the port's contact callback, which runs per contact point before the solver of the same step; where the original's contact message arrives relative to its solver is not read, and the closing speed 0x19b5c4 is the port's `manifoldImpactSpeed`, not compared with the original's.
+
+Unknowns:
+- How the original's chase goes (the speed and line of the stolen car, how many hits a player needs, the jump out's timing): no oracle state of mission 1-4 exists. A state would need to be recorded in mission 1-4 after the skylight scene, with the player seated in the police car behind the stolen car while the chase runs, ideally with the stolen car on its last heart (SCRIPT-457).
+- The special case of the car `7-9_RexCar` and the base handler after the contact message (SCRIPT-S336).
+

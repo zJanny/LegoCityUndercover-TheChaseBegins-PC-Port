@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1138 open items and stand-ins, 201 linked to game usage, 937 with unknown reach.
+Items: 1139 open items and stand-ins, 200 linked to game usage, 939 with unknown reach.
 
 ## Top 50 overall
 
@@ -57,7 +57,7 @@ Items: 1138 open items and stand-ins, 201 linked to game usage, 937 with unknown
 | 21 | [ANIM-S13](features/animation-characters.md?display=source#L25) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The player's script clip (PlayCharAnim on Player1) is shown at full weight from the native's update instead ... |
 | 22 | [SCRIPT-S269](features/script-system-hud-natives.md?display=source#L18) | 538 | 0 | 7 | 0 | 1 stand-in | `setactivewaypoint` | SetActiveWayPoint: the vehicle waypoint global (`WaypointSet::vehicleWaypoint`) is kept but its reader, which ... |
 | 23 | [SCRIPT-S274](features/script-system-natives-state.md?display=source#L22) | 537 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `positionobject`, `positionplayer` | Message 8 of PositionObject / PositionPlayer to the player shows the player's scene instance ... |
-| 24 | [SCRIPT-447](features/script-system-missions-1-4.md?display=source#L31) | 498 | 0 | 8 | 1 | 1 stand-in, 1 implemented | `positionobject`, `vehiclesetai` | Step the driver of a record of VehicleSetAI alone: its state 0 holds the car at the node matrix of the call ... |
+| 24 | [SCRIPT-447](features/script-system-missions-1-4.md?display=source#L35) | 498 | 0 | 8 | 1 | 1 stand-in, 1 implemented | `positionobject`, `vehiclesetai` | Step the driver of a record of VehicleSetAI alone: its state 0 holds the car at the node matrix of the call ... |
 | 25 | [SCRIPT-274](features/script-system-natives-animation.md?display=source#L43) | 497 | 0 | 8 | 2 | 3 stand-in | `loadanimation`, `playanimation`, `unloadanimation` | LoadAnimation and UnloadAnimation keep a name list only (0x23e6e4 / 0x23e518 load and release are not ported) ... |
 | 26 | [CAMERA-55](features/camera.md?display=source#L46) | 495 | 0 | 8 | 0 | 1 implemented | `positionobject` | After PositionObject of `1-1_Release_Car_Script` the port's police car stays on its locator while the ... |
 | 27 | [SCRIPT-S4](features/script-system.md?display=source#L25) | 484 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `dcamcutscenewait`, `waitfordcam` | A function without a handler does nothing and continues at once; `chase-game` prints its name the first time ... |
@@ -138,7 +138,7 @@ Items: 1138 open items and stand-ins, 201 linked to game usage, 937 with unknown
 
 ## Scripts and missions
 
-133 of 287 items linked.
+132 of 288 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -276,7 +276,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [script-system-missions-1-4-conduct.md](features/script-system-missions-1-4-conduct.md): SCRIPT-441 (+3), SCRIPT-428 (+2), SCRIPT-433 (+1), SCRIPT-442, SCRIPT-S326, SCRIPT-S329, SCRIPT-S330, SCRIPT-S333, SCRIPT-S334, SCRIPT-S335
 - [script-system-missions-1-4-fight.md](features/script-system-missions-1-4-fight.md): SCRIPT-423 (+1), SCRIPT-S320, SCRIPT-S321, SCRIPT-S322, SCRIPT-S324
 - [script-system-missions-1-4-roof.md](features/script-system-missions-1-4-roof.md): SCRIPT-430 (+1), SCRIPT-439 (+1), SCRIPT-S328, SCRIPT-S332
-- [script-system-missions-1-4.md](features/script-system-missions-1-4.md): SCRIPT-415 (+5), SCRIPT-453 (+2), SCRIPT-454 (+2), SCRIPT-443 (+1), SCRIPT-445, SCRIPT-449, SCRIPT-S336
+- [script-system-missions-1-4.md](features/script-system-missions-1-4.md): SCRIPT-415 (+5), SCRIPT-453 (+2), SCRIPT-454 (+2), SCRIPT-443 (+1), SCRIPT-457 (+1), SCRIPT-445, SCRIPT-449, SCRIPT-S336, SCRIPT-S340
 - [script-system-missions-reference.md](features/script-system-missions-reference.md): SCRIPT-359 (+1), SCRIPT-360 (+1), SCRIPT-370 (+1), SCRIPT-S289, SCRIPT-S292, SCRIPT-S293, SCRIPT-S299
 - [script-system-missions.md](features/script-system-missions.md): SCRIPT-284 (+1), SCRIPT-115, SCRIPT-142, SCRIPT-221, SCRIPT-S141, SCRIPT-S236, SCRIPT-S237, SCRIPT-S243, SCRIPT-S255
 - [script-system-natives-animation.md](features/script-system-natives-animation.md): SCRIPT-324 (+3), SCRIPT-352 (+2), SCRIPT-325 (+1), SCRIPT-334 (+1), SCRIPT-405 (+1), SCRIPT-S284 (+1), SCRIPT-344, SCRIPT-353, SCRIPT-S262, SCRIPT-S266, SCRIPT-S267
