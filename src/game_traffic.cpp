@@ -245,6 +245,7 @@ void LevelSession::driveTrafficCars(float dt) {
     };
     step.bodies = trafficBodies.hooks(trafficBodyWorld);
     step.now = trafficClock();
+    feedTrafficCharacters(step);
     syncTrafficDriverFields(true);
     const std::vector<chase::runtime::TrafficCarMove> moves = traffic.driveCars(step, updatesForLog, objectState);
     syncTrafficDriverFields(false);

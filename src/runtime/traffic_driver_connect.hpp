@@ -77,7 +77,7 @@ struct TrafficDriveStep {
     // The hook setListed of state 5: the car's chase markers (setTrafficChaseMarkers).
     std::function<void(std::size_t car, bool on)> chaseMarkers;
     // The grid gather 0x237f30 of the contact step 0x29cc38 (characters, mask 4) and the slide 0x21a73c of what it listed.
-    // makeTrafficContactGather (traffic_character_gather.hpp) is the gather. STAND-IN TRAFFIC-S39: unset, as in chase-game, it lists nothing.
+    // makeTrafficContactGather (traffic_character_gather.hpp) is the gather, set by chase-game (game_traffic_characters.cpp); unset it lists nothing.
     std::function<std::vector<TrafficContactEntry>(std::size_t car, const AiVec3& centre, const AiVec3& halfExtents,
                                                    const TrafficContactDescriptor& descriptor, unsigned maxEntries)>
         gatherContacts;

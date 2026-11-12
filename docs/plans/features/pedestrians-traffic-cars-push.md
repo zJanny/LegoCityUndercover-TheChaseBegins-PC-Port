@@ -24,7 +24,7 @@ IN_PROGRESS, updated 2026-11-12T08:18:22+01:00. `trafficPushVector` ports 0x1f49
 
 - [ ] TRAFFIC-54 — Read the mesh test, the oriented test and the world slide that the push vector calls, the turn branch of the mesh path, and the writers of the list of excluded kinds. blocks: TRAFFIC-S40, TRAFFIC-56. evidence: [traffic-car-push.md §2026-11-12T08:17:17](../../re/traffic-car-push.md#ts-20261112-081717)
 - [ ] TRAFFIC-55 — Read the writers of the super knockback's damage word, the throw finisher's tests and combat hit, the reader of record byte +0x15, and what enters the states 0x99 and 0x199. blocks: TRAFFIC-S41. evidence: [traffic-car-push.md §2026-11-12T08:17:17](../../re/traffic-car-push.md#ts-20261112-081717)
-- [ ] TRAFFIC-56 — Supply `TrafficPushWorld` and `TrafficPushShapes` in `chase-game` from its entities and collision, and apply `deliverCarPush` to the pushed characters. needs: TRAFFIC-53, TRAFFIC-54. blocks: TRAFFIC-S34. evidence: [traffic-car-push.md §2026-11-12T08:17:17](../../re/traffic-car-push.md#ts-20261112-081717)
+- [ ] TRAFFIC-56 — Supply `TrafficPushWorld` and `TrafficPushShapes` in `chase-game` from its entities and collision, and apply `deliverCarPush` to the pushed characters. needs: TRAFFIC-53, TRAFFIC-54, TRAFFIC-S44. blocks: TRAFFIC-S34, TRAFFIC-63. evidence: [traffic-car-push.md §2026-11-12T08:17:17](../../re/traffic-car-push.md#ts-20261112-081717)
 
 ## 6. Findings summary
 

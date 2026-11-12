@@ -59,6 +59,16 @@ TrafficWorldBox trafficShapeWorldBox(const AiMatrix& matrix, const AiVec3& centr
     return box;
 }
 
+TrafficWorldBox trafficEntryWorldBox(const TrafficGridEntry& entry) {
+    AiMatrix matrix = entry.nodeMatrix;
+    if (entry.extraMatrix) matrix = multiply(*entry.extraMatrix, entry.nodeMatrix);
+    return trafficShapeWorldBox(matrix, entry.shapeCentre, entry.shapeHalf);
+}
+
+std::size_t trafficGridCellIndex(const TrafficGridLayout& layout, const std::array<std::uint8_t, 3>& cell) {
+    return (std::size_t(cell[2]) * layout.counts[2] + cell[1]) * layout.counts[0] + cell[0];
+}
+
 std::array<std::uint8_t, 3> trafficGridCell(const TrafficGridLayout& layout, const AiVec3& point) {
     std::array<std::uint8_t, 3> cell{};
     for (int axis = 0; axis < 3; ++axis) {
@@ -105,9 +115,19 @@ std::vector<TrafficContactEntry> gatherTrafficGrid(const TrafficGrid& grid, cons
     for (unsigned y = first[1]; y <= last[1]; ++y) {
         for (unsigned z = first[2]; z <= last[2]; ++z) {
             for (unsigned x = first[0]; x <= last[0]; ++x) {
-                for (std::size_t i = 0; i < grid.entries.size(); ++i) {
+                std::vector<std::uint32_t> inCell;
+                if (grid.cellLists.empty()) {
+                    for (std::size_t i = 0; i < grid.entries.size(); ++i) {
+                        const Placed& at = placed[i];
+                        if (x < at.low[0] || x > at.high[0] || y < at.low[1] || y > at.high[1] || z < at.low[2] || z > at.high[2]) continue;
+                        inCell.push_back(std::uint32_t(i));
+                    }
+                } else {
+                    const std::size_t cell = trafficGridCellIndex(layout, {std::uint8_t(x), std::uint8_t(y), std::uint8_t(z)});
+                    if (cell < grid.cellLists.size()) inCell = grid.cellLists[cell];
+                }
+                for (const std::uint32_t i : inCell) {
                     const Placed& at = placed[i];
-                    if (x < at.low[0] || x > at.high[0] || y < at.low[1] || y > at.high[1] || z < at.low[2] || z > at.high[2]) continue;
                     const TrafficGridEntry& entry = grid.entries[i];
                     if ((flags[i] & kEntryVisited) != 0) continue;
                     if ((descriptor.include & entry.mask) == 0) continue;

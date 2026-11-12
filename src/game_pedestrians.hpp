@@ -15,6 +15,7 @@
 #include "runtime/pedestrian_system.hpp"
 #include "runtime/room_streaming.hpp"
 
+#include <array>
 #include <cstddef>
 #include <functional>
 #include <map>
@@ -59,6 +60,14 @@ public:
     void updateSystem(const SystemInputs& inputs, assets::PlacedObjectState& state);
     // The entity pass: each live pedestrian's update, its clips and its posed body.
     void updateCharacters(render::Scene& scene, const CharacterInputs& inputs, const assets::PlacedObjectState& state);
+    // The enabled pedestrians' node matrices and entity boxes (0x242df4 of the body model's node bounds), for the traffic contact grid.
+    struct LiveCharacter {
+        std::size_t slot = 0;
+        std::array<runtime::PedestrianVec3, 4> node{};
+        runtime::PedestrianVec3 shapeCentre{};
+        runtime::PedestrianVec3 shapeHalf{};
+    };
+    std::vector<LiveCharacter> liveCharacters(const assets::PlacedObjectState& state) const;
     // The room pass 0x2e6ce4 for the enabled pedestrians (game_pedestrian_rooms.cpp).
     std::vector<runtime::PedestrianRoomMove> moveRooms(const runtime::StreamRooms& rooms, const std::map<int, runtime::RoomBox>& boxes,
                                                        int currentRoom, int playerRoom, const assets::PlacedObjectState& state);
@@ -74,6 +83,7 @@ private:
         const render::CharacterRig* rig = nullptr;
         runtime::AnimationSlots animation;
         runtime::PedestrianVec3 boundsCentre{};
+        runtime::PedestrianVec3 boundsHalf{};
     };
     std::optional<std::uint32_t> clipOf(const std::string& animationClass, runtime::PedestrianClip clip);
     bool clipFinished(std::size_t slot, runtime::PedestrianClip clip);

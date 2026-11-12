@@ -6,8 +6,6 @@ Ranges of item IDs held by parallel agents, named like `20261021-audio-A`. The p
 |---|---|---|---|---|
 | SCRIPT | 457 | 459 | 20261112-trafficfeed-A | 2026-11-12T09:46:56+01:00 |
 | SCRIPT-S | 340 | 341 | 20261112-trafficfeed-A | 2026-11-12T09:46:56+01:00 |
-| TRAFFIC | 61 | 63 | 20261112-trafficfeed-B | 2026-11-12T09:46:57+01:00 |
-| TRAFFIC-S | 44 | 44 | 20261112-trafficfeed-B | 2026-11-12T09:46:57+01:00 |
 | TRAFFIC | 64 | 66 | 20261112-trafficfeed-C | 2026-11-12T09:46:57+01:00 |
 | TRAFFIC-S | 45 | 46 | 20261112-trafficfeed-C | 2026-11-12T09:46:57+01:00 |
 | DISG | 1 | 8 | 20261112-trafficfeed-D | 2026-11-12T09:46:57+01:00 |

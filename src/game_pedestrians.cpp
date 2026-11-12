@@ -7,6 +7,8 @@
 #include <cctype>
 #include <cmath>
 #include <iostream>
+#include <tuple>
+#include <utility>
 
 namespace game_pedestrians {
 
@@ -41,10 +43,10 @@ float arrivalRadiusOf(assets::FuseArchive& archive, const assets::CharacterObjec
     return runtime::pedestrianEntityBox({centre[0], centre[1], centre[2]}, {half[0], half[1], half[2]}).radius;
 }
 
-runtime::PedestrianVec3 boundsCentreOf(assets::FuseArchive& archive, const assets::CharacterObject& character) {
+std::pair<runtime::PedestrianVec3, runtime::PedestrianVec3> boundsOf(assets::FuseArchive& archive, const assets::CharacterObject& character) {
     float centre[3] = {0, 0, 0}, half[3] = {0, 0, 0};
-    if (!assets::modelBounds(archive, assets::meshModelPath(character.appearance.body), centre, half)) return {0, 0, 0};
-    return {centre[0], centre[1], centre[2]};
+    if (!assets::modelBounds(archive, assets::meshModelPath(character.appearance.body), centre, half)) return {};
+    return {{centre[0], centre[1], centre[2]}, {half[0], half[1], half[2]}};
 }
 }
 
@@ -69,7 +71,7 @@ void LevelPedestrians::load(assets::FuseArchive& archive, const assets::Level& l
             const assets::CharacterObject& character = characters[found->second];
             slot.animationClass = character.animationClass.empty() ? kGenericAnimationClass : character.animationClass;
             slot.instance = *placed[found->second];
-            slot.boundsCentre = boundsCentreOf(archive, character);
+            std::tie(slot.boundsCentre, slot.boundsHalf) = boundsOf(archive, character);
             const std::string bodyPath = assets::meshModelPath(character.appearance.body);
             auto rig = rigs_.find(bodyPath);
             if (rig == rigs_.end()) rig = rigs_.emplace(bodyPath, render::loadCharacterRig(archive, bodyPath)).first;
