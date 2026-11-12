@@ -65,6 +65,7 @@ game_player::PlayerAnimation LevelSession::arrestMovePlayer(const runtime::Stick
         const auto entry = characterTakedowns.find(name);
         const auto hit = characterHits.find(name);
         if (entry == characterTakedowns.end() || hit == characterHits.end() || entry->second.arrest.active()) return std::nullopt;
+        if (const auto crashed = crashArrests.candidate(name, enabledObjectTrigger("characteravoidarrest", name))) return crashed;
         runtime::ArrestCandidate candidate;
         candidate.state = entry->second.states.state();
         candidate.arrestHealth = hit->second.target.arrestHealth;
@@ -109,6 +110,7 @@ void LevelSession::updateCharacterArrests(float dt) {
         if (step.done) {
             objectState.destroyed.insert(name);
             objectState.disabled.insert(name);
+            crashArrests.remove(name);
             std::cout << "character " << name << ": arrested (destroyed, disabled) at update " << updatesForLog << '\n';
         }
     }

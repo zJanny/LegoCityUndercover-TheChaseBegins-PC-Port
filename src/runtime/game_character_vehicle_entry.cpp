@@ -55,9 +55,11 @@ void LevelSession::applyCharacterVehicleStep(const runtime::CharacterVehicleStep
         else if (event.kind == runtime::BoardingEventKind::Exiting) levelScripts.vehicles().playerExited(record);
     }
     if (step.step.takesControl && levelCharacters) levelCharacters->place(step.character, facingMatrix(step.step.position, step.step.facing));
-    for (const runtime::CharacterLeftVehicle& left : characterVehicles->takeLeft())
+    for (const runtime::CharacterLeftVehicle& left : characterVehicles->takeLeft()) {
         std::cout << "character " << left.character << ": left vehicle " << left.vehicle << " at " << left.position[0] << ' ' << left.position[1] << ' '
                   << left.position[2] << " at update " << updatesForLog << '\n';
+        characterLeftVehicle(left);
+    }
 }
 
 void LevelSession::stepCharacterVehicles(float dt) {

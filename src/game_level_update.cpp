@@ -26,6 +26,7 @@ void LevelSession::advance(const runtime::PadState& liveInput) {
     });
     else if (updates + shared.scriptOffset < scriptLength) {
         applyScriptTeleports(updates + shared.scriptOffset);
+        applyScriptVehicleExits(updates + shared.scriptOffset);
         const float dt = runtime::scaledStepDt(kScriptDt, levelScripts.bulletTime().timeScale());
         updateBulletTime(kScriptDt);
         simulate(dt, scriptedPad(updates + shared.scriptOffset));

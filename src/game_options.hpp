@@ -66,6 +66,7 @@ struct ScriptStep {
     int touchX = 0, touchY = 0;
     std::array<float, 3> position{};
     std::optional<float> facingDegrees;
+    std::string leftVehicleCharacter, leftVehicleVehicle;
 };
 
 std::vector<ScriptStep> parseScript(const std::string& text);

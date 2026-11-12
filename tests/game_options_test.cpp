@@ -93,6 +93,10 @@ void testValidValues() {
         teleports[1].position[2] != 1071.25f || !teleports[1].facingDegrees || *teleports[1].facingDegrees != -30.0f ||
         teleports[2].facingDegrees || teleports[0].teleport)
         fail("parseScript teleport steps changed");
+    const std::vector<game_options::ScriptStep> exits = game_options::parseScript("0 0 3;left-vehicle 1-4_Chaser 1-4_Car;0 0 1 A");
+    if (exits.size() != 3 || exits[1].updates != 0 || exits[1].leftVehicleCharacter != "1-4_Chaser" || exits[1].leftVehicleVehicle != "1-4_Car" ||
+        !exits[0].leftVehicleCharacter.empty())
+        fail("parseScript left-vehicle step changed");
 
     const game_options::Options variables = parseArgs({"--set-variable", "Lobby_Dcam_Intro=1", "--set-variable", "Other=-2.5"});
     if (variables.variables.size() != 2 || variables.variables[0].first != "Lobby_Dcam_Intro" || variables.variables[0].second != 1.0f || variables.variables[1].second != -2.5f)
@@ -164,6 +168,8 @@ void testRejections() {
     expectRejected({"--script", "at 1 two 3"}, "--script: not a number: 'two'");
     expectRejected({"--script", "0 150 40 AB C"}, "--script: expected X Y COUNT [BUTTONS]: '0 150 40 AB C'");
     expectRejected({"--script", "touch 159 65"}, "--script: expected touch X Y COUNT: 'touch 159 65'");
+    expectRejected({"--script", "left-vehicle chaser"}, "--script: expected left-vehicle CHARACTER VEHICLE: 'left-vehicle chaser'");
+    expectRejected({"--script", "left-vehicle a b c"}, "--script: expected left-vehicle CHARACTER VEHICLE: 'left-vehicle a b c'");
     expectRejected({"--script", "touch 159 65 3 A"}, "--script: expected touch X Y COUNT: 'touch 159 65 3 A'");
     expectRejected({"--script", "touch 320 65 3"}, "--script: out of range, allowed 0 to 319: '320'");
     expectRejected({"--script", "touch 159 -1 3"}, "--script: out of range, allowed 0 to 239: '-1'");

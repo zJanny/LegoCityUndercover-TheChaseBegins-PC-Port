@@ -7,6 +7,7 @@ The player's arrest of a level character lying arrestable after a takedown: the 
 - An A tap (ctrl+0xe bit 0x80: A held for 1 to 9 updates, then released) in ground locomotion with nothing carried searches like the grab search but with the player's melee range ctrl+0x80 and characters only; the character found is arrested when 0x2107e0 passes: arrest health 0, no CharacterAvoidArrest trigger, not paired (0x21e0d4), in a stun state whose enter lowers the arrest health, with a row of non-zero arrest damage. [§2026-11-02T22:34:47](#ts-20261102-223447)
 - The player enters ARRESTING 322 (`cuffing`, turns to the target by at most 0x1770 per update, IDLE when the clip ends); the target is asked for ARREST 323 (clip u16 +6 of its sheet 2 row, `cuffed_back` or `cuffed_front`), then ARRESTED 324 (u16 +8, the idle loop), which unlists it, raises CharacterArrested and, once ctrl+0x24c passes 1.0 s, sets the destroyed bit (the spawner's done bit) and disables the entity. [§2026-11-02T22:34:47](#ts-20261102-223447)
 - Port: `src/runtime/character_arrest.*`, glue `src/runtime/game_character_arrest.cpp`; nothing of it is measured in the oracle. [§2026-11-02T22:34:47](#ts-20261102-223447)
+- After the car crash of mission 1-4 `1-4_Car_Crash` only makes the chaser jump out; CharacterArrested of the chaser starts `1-4_RobberCaught`, which spawns `1-4_MissionEnd`. The chaser has Health 3 and ArrestHealth 2 like a goon; what makes him arrestable is not found (0x21ddb8 is the arrest of a fall and of message 0x80000003, not of a car). Port: a character that left a vehicle is arrestable by the A tap (stand-in COMBAT-S9, `src/runtime/arrest_after_crash.*`). [§2026-11-12T00:02:29](#ts-20261112-000229)
 - Open: the fight end 0x20bd4c of the ARREST enter, 0x229e54, the second CharacterArrested raise, the AI request and 0x24ce78 at the end, the grab paths of an A tap on a character that is not arrestable, AUTO ARRESTED 311 and the other arrest 0x21ddb8.
 
 <a id="ts-20261102-223447"></a>
@@ -52,3 +53,33 @@ The player's arrest of a level character lying arrestable after a takedown: the 
 - 0x20bd4c (the end of a fight's combat object, the counters +0x34..+0x38 and 0x210480), 0x229e54, 0x21e854, 0x24ce78, the object at sub +0x38, and the owner of the second CharacterArrested raise.
 - The grab paths of an A tap on a character that is not arrestable (0x19bd98, 0x19bfc0, 0x1d38fc, 0x16bf8c), AUTO ARRESTED 311 (enter 0x28bb14) and the arrest 0x21ddb8, and what arrests `1-4_Booster_Strange_Chaser` at the end of the chase.
 - What `1-4_Character_Arrestable_Script` calls (it runs for one update in the port).
+
+<a id="ts-20261112-000229"></a>
+
+## 2026-11-12T00:02:29+01:00 — The arrest after the car crash of mission 1-4: the script chain, the chaser's data and the other arrest function (llvm-objdump of artifacts/game/game.arm.elf and the C++ level loader, 20261111-chase-D; no emulator)
+
+### Method
+
+- The scripts of lvl_01 listed with the C++ level loader (`parseLevel`, `LevelScript::calls`) and the level objects with `tools/convert_levels.py`. llvm-objdump (`--triple=armv6k --mattr=+vfp2`) of 0x21ddb8, 0x21de38, 0x21decc, 0x1d4ce0, the message handler 0x18e4c8 (the case 0x80000003 at 0x18f680), 0x28bb14 and the writers of sub +0x131 (0x2b24bc, 0x307a00, 0x3080f8). REA was not used. Nothing is measured; no oracle request was made.
+
+### The chain
+
+- `1-4_Car_Crash` (started by VehicleChaseEnded of `1-4_Stolen_Vehicle`): VehicleSetForcedStop `1-4_Police_Car02` 1, Wait 1, VehicleJumpOut `1-4_Booster_Strange_Chaser`, wait 0.3, VehicleSetLocked `1-4_Police_Car02` 0, VehicleAllowJumpOut `1-4_Police_Car02` 1, VehicleJumpOut Player1, CharSetAllowVehicleEntry Player1 0. The script itself arrests nobody.
+- The CharacterArrested trigger of `1-4_Booster_Strange_Chaser` starts `1-4_RobberCaught` (cutscene `1_4_e` loaded, the cops and `1-4_Booster_End` enabled, the player placed at `1-4_Chase_End_Position`, `StreamRoomIn "Room17"`, the cutscene played, then SpawnScript `1-4_MissionEnd`), which sets MissionInProgress 0 and StoryProgress 5 and spawns `1-5_MissionStart`. `1-4_Booster_Strange_02` (class `chars/char_boosterstrange`, room 18) has a CharacterArrested trigger to `1-4_Pursuit_Booster_Spawner_Script`, whose only call is SpawnScript `1-4_RobberCaught`.
+- The chaser is a normal bad guy of the level: class `chars/char_ai_actor`, Health 3, ArrestHealth 2, AIBadGuy 1, AICombatBehaviour 2, AIViewDistance 10, AIDontChase 0, AIIgnorePlayer 0, placed in room 24 at (589.7457, 27.566, 941.3903) (level data); `1-4_BoosterChaser_Spawner` (StartSpawned 0, WaitForDead 1) is another object of the same room.
+
+### The other arrest function
+
+- 0x21ddb8(entity) is the arrest without the states: it raises CharacterArrested (`0x23cee8(*0x375ff8, entity, entity, 255, 0)`) for the character and again with the first entry of the current room's list, calls 0x241304, sets entity +0xc bit 4 (destroyed), calls 0x24ce78 and ends in 0x2428c0 (disabled), the same calls as the end of ARRESTED. Its two callers: 0x18f6c0 in the message handler 0x18e4c8 (message 0x80000003, after 0x21decc(entity), which clears the entity from the six-entry engaged table when it is a boss or its AI request is 1, with the side bit ctrl+0xd8 bit 5) and 0x1d4d50 in the per-update function 0x1d4ce0 of the characters. Both first run 0x21de38(entity, ctrl, sub, flag): it is 1 when ctrl+0x2b4 (the fall distance, [audio.md](audio.md)) reaches sub +0x1c; with the flag 1 and ctrl+0x314 bit 6 clear it also asks 0x250810 / 0x24c118 for a result of -1; the message path also arrests when sub +0x131 bits 6..7 are not 0. Neither caller has anything to do with a car.
+- The state AUTO ARRESTED 311 (0x137, enter 0x28bb14: the row's clip u16 +2, ctrl+0x24c set to a constant, 0x229e54, 0x21e700 and CharacterArrested like the enter of ARRESTED) is requested by the hook 0x29ad90 of 0x133 and 0x136 when sub +0x131 bits 6..7 are not 0 (read by 20261102-mission14b-B). Writers of those two bits: 0x2b24bc (the value 2, when 0x21de38 holds or the bits already read 2), 0x307a6c (2, after a per-class test) and 0x30816c (1, after 0x20bd4c, when the target's arrest health is not above the move row's arrest damage byte). The callers of these three were not read.
+- Nothing read ties the arrest of the chaser to leaving a car: VehicleJumpOut of a character goes through the event 200 and 0x322a04 / 0x322aa4 ([vehicles-waypoints.md §2026-10-15T11:35:00](vehicles-waypoints.md#ts-20261015-113500)); the state requests in that code were listed but not read to their end.
+
+### Port
+
+- `src/runtime/arrest_after_crash.*`: `CrashArrestTargets` (fed by the `CharacterLeftVehicle` of `character_vehicle_entry.hpp`) (STAND-IN COMBAT-S9: a character that left a vehicle passes the arrest test of 0x2107e0 as if it lay in PUTDOWN STUN with arrest health 0 and a non-zero arrest damage, until it is arrested; a CharacterAvoidArrest trigger still refuses it). The A tap, ARRESTING, ARREST, ARRESTED and the CharacterArrested raise are those of the entry above; ARREST and ARRESTED use sheet 2 row 0 (clips 317 `cuffed_front` and 318 `cuffed_front_idle`) because the character was never thrown. Glue `src/runtime/game_arrest_after_crash.cpp`; the development script step `left-vehicle CHARACTER VEHICLE` raises the same event by hand, and also releases the character from its spawner (the test does not run the chase that spawns the chaser).
+- Tests: `arrest-after-crash` (the targets, the arrest states from IDLE: ARRESTED ends 30 updates after its enter at 1/30 s), `arrest-after-crash-real-data` (the trigger and the SpawnScript above in lvl_01) and `game-arrest-after-crash-1-4`.
+
+### Unknowns
+
+- What the original does between the chaser's exit from the car and the arrest: his AI state and fight (he has Health 3 and ArrestHealth 2 like a goon, so he may have to be thrown twice), whether a special state, flag or message makes him arrestable at once, and which path of the A tap (0x2107e0 or a grab path) arrests him. This needs the vehicle-exit code (0x322aa4 and what it requests) and an oracle run of the chase end.
+- The callers of the three writers of sub +0x131 bits 6..7, the use of sub +0x1c and ctrl+0x2b4 by 0x21de38, and the owner of the second CharacterArrested raise.

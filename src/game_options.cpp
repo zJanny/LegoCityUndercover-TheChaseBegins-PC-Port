@@ -56,8 +56,17 @@ ScriptStep parseTouch(const std::vector<std::string>& fields, const std::string&
     return step;
 }
 
+ScriptStep parseLeftVehicle(const std::vector<std::string>& fields, const std::string& text) {
+    if (fields.size() != 3) strict::reject("expected left-vehicle CHARACTER VEHICLE", text);
+    ScriptStep step;
+    step.leftVehicleCharacter = fields[1];
+    step.leftVehicleVehicle = fields[2];
+    return step;
+}
+
 ScriptStep parseStep(const std::string& text) {
     const std::vector<std::string> fields = strict::words(text);
+    if (!fields.empty() && fields[0] == "left-vehicle") return parseLeftVehicle(fields, text);
     if (!fields.empty() && fields[0] == "at") return parseTeleport(fields, text);
     if (!fields.empty() && fields[0] == "touch") return parseTouch(fields, text);
     if (fields.size() < 3 || fields.size() > 4) strict::reject("expected X Y COUNT [BUTTONS]", text);

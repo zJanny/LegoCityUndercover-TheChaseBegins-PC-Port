@@ -77,6 +77,7 @@
 #include "runtime/prop_bouncer.hpp"
 #include "runtime/prop_wobbly_destructible.hpp"
 #include "runtime/player_attack.hpp"
+#include "runtime/arrest_after_crash.hpp"
 #include "runtime/character_arrest.hpp"
 #include "runtime/character_takedown.hpp"
 #include "runtime/fall_arrest_engaged.hpp"
@@ -355,6 +356,10 @@ private:
     game_player::PlayerAnimation arrestMovePlayer(const chase::runtime::StickIntent& intent, bool jumpPressed, bool usePressed, bool attackHeld, bool arrestHeld,
                                                   bool attackAllowed, float dt);
     void updateCharacterArrests(float dt);
+    // The arrest of a character that left a wrecked car (runtime/arrest_after_crash.hpp; glue src/runtime/game_arrest_after_crash.cpp).
+    chase::runtime::CrashArrestTargets crashArrests;
+    void characterLeftVehicle(const chase::runtime::CharacterLeftVehicle& event);
+    void applyScriptVehicleExits(unsigned index);
     void characterAggro(const std::string& lowerInstance, const chase::runtime::CharacterHitSender& sender);
     // The AI spawners, kind 14 (runtime/ai_spawner.hpp; glue src/runtime/game_ai_spawner.cpp).
     chase::runtime::AiSpawnerSet aiSpawners;
