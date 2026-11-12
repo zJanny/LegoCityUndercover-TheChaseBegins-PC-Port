@@ -28,6 +28,7 @@ void LevelSession::applyScriptNatives() {
         const bool started = request.definition >= 0 && particles.system().start(unsigned(request.definition), {request.position, std::nullopt, 0}) != 0;
         std::cout << "particles " << request.definition << " at " << request.object << (started ? " started" : " refused") << " at update " << updatesForLog << '\n';
     }
+    if (const std::optional<std::string> target = levelScripts.vehicleAi().takeTargetHeartsRequest()) showTargetHearts(*target);
     for (const runtime::ScriptDebrisRequest& request : levelScripts.takeDebrisRequests()) {
         if (effects.debris()) effects.debris()->burst(request.burst, debrisLineStandIn(), debrisLineStandIn());
         std::cout << "debris burst at " << request.object << ": " << request.burst.count << " bricks at update " << updatesForLog << '\n';

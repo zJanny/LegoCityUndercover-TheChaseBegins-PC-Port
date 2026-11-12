@@ -40,8 +40,8 @@ struct ChaseEndEntry {
     bool kinematic = false;       // 0x22a270(entity, 0)
 };
 
-// Entering the driver's state 6 (0x1cb52c): the forced stop of the record is set (0x229be4(entity, 1)). The second event of 0x1cb568 (only with a global
-// object at *0x376c78) is not ported (SCRIPT-S336).
+// Entering the driver's state 6 (0x1cb52c): the forced stop of the record is set (0x229be4(entity, 1)). The second event of 0x1cb568 goes to the level
+// root of the current room's scene (ScriptRunner::fireLevelRootEvent); the driver's state 6 entry reports it as TrafficStoppingEntry::globalEvent.
 ChaseEndEntry chaseEndEntry(VehicleRecord& record);
 
 }

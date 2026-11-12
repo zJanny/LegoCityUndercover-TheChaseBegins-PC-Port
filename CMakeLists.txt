@@ -1969,14 +1969,15 @@ if(BUILD_TESTING)
       PASS_REGULAR_EXPRESSION "script 1-3_Push_Done ended at update [0-9]+\n.*buildit 1-3_crane_bits: stud drop mode.*script 1-3_Crane_Build_it_done started at update [0-9]+\n.*switch 1-3_crane_switch: used at update [0-9]+\n.*switch 1-3_crane_switch: state 3 at update [0-9]+\n.*script 1-3_Start_Rescue_Lawnmower_man started at update [0-9]+\n.*player AI move: started at update [0-9]+ from [0-9. ]+\n.*player AI move: ended at update [0-9]+ at 987.288 [0-9.]+ 1077.79, [0-9]+ updates\n.*player AI move: 60 updates after the end the player is at 987.288 16.80[0-9]* 1077.79\n.*script 1-4_MissionStart started at update [0-9]+")
     # Mission 1-4, the chase (SCRIPT-422, 20261111-chase-B, 2026-11-12): 1-4_Hatch_Open plays cutscene 1_4_c, enables 1-4_Stolen_Vehicle and starts
     # 1-4_Car_Chase, whose VehicleSetChased puts the car's AI driver into state 5 along the level path 1-4_Vehicle_Path at speed 29; the car drives off
-    # on its physics body into the next room and breaks a lamp post. The update numbers are the port's, not measured in the original.
+    # on its physics body into the next room and breaks a lamp post. The update numbers are the port's, not measured in the original. VehicleSetChased
+    # also fills the target display with the car's hearts and portrait (0x230f04, 20261112-traffic-D, 2026-11-12; 5 hearts from the vehicle table row).
     add_test(NAME game-chase-1-4 COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --save-out "${CMAKE_BINARY_DIR}/game-chase-1-4.dat"
       --call-script 1-4_Hatch_Open --script "0 0 900")
     set_tests_properties(game-chase-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
-      PASS_REGULAR_EXPRESSION "script 1-4_Car_Chase started at update [0-9]+\n.*vehicle 1-4_stolen_vehicle: driver state 5 at update 770\n.*vehicle 1-4_Stolen_Vehicle: room 17 -> 16 at update 832\n.*prop Lampost_42: smashed by 1-4_stolen_vehicle at update 881")
+      PASS_REGULAR_EXPRESSION "script 1-4_Car_Chase started at update [0-9]+\n.*target hearts 1-4_stolen_vehicle: 5 of 5 shown, portrait Sprites/portraits/musclecars_falchiongt.png at update 770 \\(not drawn, SCRIPT-455\\)\n.*vehicle 1-4_stolen_vehicle: driver state 5 at update 770\n.*vehicle 1-4_Stolen_Vehicle: room 17 -> 16 at update 832\n.*prop Lampost_42: smashed by 1-4_stolen_vehicle at update 881")
     # Mission 1-4, the arrival at the car showroom (SCRIPT-410): the player walks into the waypoint 1-4_Waypoint_01 from 13 units away, which starts
     # 1-4_ShowroomArrival; cutscene 1_4_a, the booster on the roof, the end of the script with the player at 1-4_P1_GoTo (577.484, 27.5656, 967.533 from the
     # placement of that dummy in the level data, read by 20261101-mission-C on 2026-11-01). The update numbers are the port's, not measured in the original.
@@ -2641,6 +2642,11 @@ target_compile_options(vehicle-chase-events-test PRIVATE -Wall -Wextra -Wpedanti
 add_test(NAME vehicle-chase-events COMMAND vehicle-chase-events-test)
 add_test(NAME vehicle-chase-events-real-data COMMAND vehicle-chase-events-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
 set_tests_properties(vehicle-chase-events-real-data PROPERTIES SKIP_RETURN_CODE 77)
+target_sources(chase_runtime PRIVATE src/runtime/target_hearts_display.cpp)
+add_executable(target-hearts-display-test tests/target_hearts_display_test.cpp)
+target_link_libraries(target-hearts-display-test PRIVATE chase_runtime)
+target_compile_options(target-hearts-display-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME target-hearts-display COMMAND target-hearts-display-test)
 target_sources(chase_runtime PRIVATE src/runtime/character_vehicle_entry.cpp)
 add_executable(character-vehicle-entry-test tests/character_vehicle_entry_test.cpp)
 target_link_libraries(character-vehicle-entry-test PRIVATE chase_runtime)

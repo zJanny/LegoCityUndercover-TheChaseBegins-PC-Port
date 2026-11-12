@@ -1,6 +1,8 @@
 // The end of a car chase (src/runtime/vehicle_chase_events.hpp). The values are transcribed from the instructions of the vehicle handler 0x19293c
 // and the driver state change 0x1cb148 (llvm-objdump of game.arm.elf, 20261108-traffic-C, 2026-11-08, docs/re/traffic-ai-driver.md). With the
-// game data the VehicleChaseEnded event of 1-4_Stolen_Vehicle starts 1-4_Car_Crash.
+// game data the VehicleChaseEnded event of 1-4_Stolen_Vehicle starts 1-4_Car_Crash. The second event of the state 6 entry (0x1cb568) and of the
+// Drive begin (0x307b70) goes to the level root, the owner of the level's triggers without an object name (0x1a553c, 0x23cff4; 20261112-traffic-D,
+// 2026-11-12, llvm-objdump, docs/re/traffic-driver-states.md); in the level data only lvl_04 binds such a trigger (PlayerVehicleEntered), to a script without calls.
 #include "assets/assets.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/script_runner.hpp"
@@ -79,6 +81,25 @@ void synthetic() {
     record.hearts = 0;
     driver = chasedDriver();
     require(!runtime::chasedCarDamage(driver, record, message).consumed, "a car without hearts is not handled");
+
+    assets::Level level;
+    assets::LevelScript script;
+    script.nameHash = assets::nameHash("chase_over");
+    script.calls = {{"=", {"Done", "1"}}};
+    level.scripts.push_back(script);
+    assets::LevelTrigger rootTrigger;
+    rootTrigger.event = "VehicleChaseEnded";
+    rootTrigger.scriptName = "chase_over";
+    level.triggers.push_back(rootTrigger);
+    assets::PlacedObjectState objects;
+    runtime::ScriptRunner runner(level, objects);
+    const float away[3] = {0.0f, 0.0f, 0.0f};
+    runner.fireObjectEvent(runtime::kVehicleChaseEndedEvent, "chased_car");
+    runner.checkTriggers(away);
+    require(!runner.running("chase_over", false), "the event at the car does not start a trigger without an object name");
+    runner.fireLevelRootEvent(runtime::kVehicleChaseEndedEvent);
+    runner.checkTriggers(away);
+    require(runner.running("chase_over", false), "the event at the level root starts the level's trigger without an object name");
 
     record = runtime::VehicleRecord{};
     const runtime::ChaseEndEntry entry = runtime::chaseEndEntry(record);

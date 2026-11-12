@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1131 open items and stand-ins, 199 linked to game usage, 932 with unknown reach.
+Items: 1132 open items and stand-ins, 201 linked to game usage, 931 with unknown reach.
 
 ## Top 50 overall
 
@@ -57,33 +57,33 @@ Items: 1131 open items and stand-ins, 199 linked to game usage, 932 with unknown
 | 21 | [ANIM-S13](features/animation-characters.md?display=source#L25) | 623 | 0 | 8 | 0 | 1 stand-in | `playcharanim` | The player's script clip (PlayCharAnim on Player1) is shown at full weight from the native's update instead ... |
 | 22 | [SCRIPT-S269](features/script-system-hud-natives.md?display=source#L18) | 538 | 0 | 7 | 0 | 1 stand-in | `setactivewaypoint` | SetActiveWayPoint: the vehicle waypoint global (`WaypointSet::vehicleWaypoint`) is kept but its reader, which ... |
 | 23 | [SCRIPT-S274](features/script-system-natives-state.md?display=source#L22) | 537 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `positionobject`, `positionplayer` | Message 8 of PositionObject / PositionPlayer to the player shows the player's scene instance ... |
-| 24 | [SCRIPT-274](features/script-system-natives-animation.md?display=source#L43) | 497 | 0 | 8 | 2 | 3 stand-in | `loadanimation`, `playanimation`, `unloadanimation` | LoadAnimation and UnloadAnimation keep a name list only (0x23e6e4 / 0x23e518 load and release are not ported) ... |
-| 25 | [CAMERA-55](features/camera.md?display=source#L46) | 495 | 0 | 8 | 0 | 1 implemented | `positionobject` | After PositionObject of `1-1_Release_Car_Script` the port's police car stays on its locator while the ... |
-| 26 | [SCRIPT-S4](features/script-system.md?display=source#L25) | 484 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `dcamcutscenewait`, `waitfordcam` | A function without a handler does nothing and continues at once; `chase-game` prints its name the first time ... |
-| 27 | [SCRIPT-38](features/script-system-natives.md?display=source#L27) | 442 | 0 | 7 | 14 | 4 stand-in, 3 none, 1 implemented | `addtosemitranslist`, `addtosemitransnearcameralist`, `effectfadeobject`, `playparticlesgo` +4 | Batch 13 (C, 20): EffectFadeObject, AddToSemiTransNearCameraList, StreamRoomIn ... |
-| 28 | [SCRIPT-346](features/script-system-hud-natives.md?display=source#L38) | 442 | 0 | 7 | 0 | 1 stand-in | `showdialogbg` | The ShowDialogBG byte and the byte +0x485 make 0x2d9d0c hide the timed object 0x5190bc that it otherwise ... |
-| 29 | [VEH-132](features/vehicles-prop-smash.md?display=source#L33) | 0 | 406 | 8 | 0 | - | `leprops/leprop_simpleindestructible` | Measure in the oracle that a leprop_simpleindestructible or a door in the car's way does not stop it (by code ... |
-| 30 | [SCRIPT-36](features/script-system-natives.md?display=source#L25) | 366 | 0 | 7 | 13 | 2 stand-in, 9 implemented | `setforcedstoponmyvehicle`, `stopplayervehicle`, `vehicleallowjumpout`, `vehiclejumpin` +7 | Batch 11 (C, 9 left): VehicleSetLocked, VehicleSetForcedStop, SetForcedStopOnMyVehicle, VehicleAllowJumpOut ... |
-| 31 | [SCRIPT-57](features/script-system-natives-state.md?display=source#L29) | 362 | 0 | 7 | 14 | 3 stand-in, 1 none | `distancefademid`, `enableshadow`, `enableswitch`, `toggleuseable` | Kind-gated natives: the kind of every class is read (`objectKind`); ToggleUseable, EnableSwitch (use-zone ... |
-| 32 | [SCRIPT-S239](features/script-system-natives-world.md?display=source#L34) | 351 | 0 | 7 | 0 | 2 stand-in | `enableswitch`, `toggleuseable` | ToggleUseable and EnableSwitch write the use flag only for instances whose kind registers a use zone ... |
-| 33 | [SCRIPT-294](features/script-system-natives-world.md?display=source#L50) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The hint registry 0x2219bc searches (records at `*(0x58e9a4 + 0x24)`, singleton "LEGOHintBounds"): who adds ... |
-| 34 | [SCRIPT-296](features/script-system-natives-world.md?display=source#L52) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The registration conditions of the use zone: what sets halfword `[entity + 0x10]` bit 7 (post-link of kinds ... |
-| 35 | [SCRIPT-281](features/script-system-natives-world.md?display=source#L47) | 271 | 0 | 6 | 1 | 1 stand-in | `effectfadeobject` | EffectFadeObject: the third node property (0x23f540, flag bit 2), the particle node case, the clock of ... |
-| 36 | [SCRIPT-S232](features/script-system-natives-world.md?display=source#L30) | 271 | 0 | 6 | 0 | 1 stand-in | `effectfadeobject` | EffectFadeObject drives `Scene::setInstanceFade` and the instance visibility of placed objects (and their ... |
-| 37 | [SCRIPT-S11](features/script-system-dcam.md?display=source#L19) | 256 | 0 | 8 | 0 | 1 stand-in | `startdcamtrack` | `StartDCamTrack` looks at the placement position of the object (the live position for the player), not at its ... |
-| 38 | [SCRIPT-S20](features/script-system-natives-state.md?display=source#L19) | 248 | 0 | 7 | 0 | 10 stand-in | `addstuds`, `disablesuperbuiltitsave`, `enablestudsbygroup`, `enablesuperbricks` +6 | Nine batch 27 natives (UnlockAbility, LockAbility, UnlockScanner, SetParachuteDeployHeight ... |
-| 39 | [SCRIPT-351](features/script-system-natives-animation.md?display=source#L38) | 236 | 0 | 8 | 1 | 1 stand-in | `loadanimation` | What decides the load time of LoadAnimation (0x23e6e4 request, load record state byte +8 = 2 in 0x17e588) ... |
-| 40 | [SCRIPT-377](features/script-system-platforms.md?display=source#L28) | 0 | 183 | 8 | 2 | - | `leprops/leprop_platform`, `props/prop_platform` | The rest of the platform class: `orient` and type 7 rotations of platforms without a path, the shape curves ... |
-| 41 | [SCRIPT-388](features/script-system-platforms.md?display=source#L31) | 0 | 183 | 8 | 1 | - | `leprops/leprop_platform`, `props/prop_platform` | The platform's sweep in its entity move (the push of characters beside a sideways move with message 45 ... |
-| 42 | [SCRIPT-S18](features/script-system-natives-state.md?display=source#L18) | 175 | 0 | 7 | 0 | 2 stand-in | `resetobject`, `skiptofinalstate` | The six flag natives and ResetObject / SkipToFinalState store their value or message by instance name without ... |
-| 43 | [SCRIPT-427](features/script-system-missions-1-4-conduct.md?display=source#L27) | 152 | 0 | 5 | 0 | 1 implemented | `subobjectiveenemyenable` | The arrows over the goons the user saw: SubObjectiveEnemyEnable is a no-op in the original and the arrow list ... |
-| 44 | [TRANS-5](features/level-transitions.md?display=source#L33) | 127 | 25 | 7 | 0 | 5 stand-in, 4 none, 1 implemented | `charsetallowvehicleentry`, `playcredits`, `playscriptonstartup`, `positionplayer` +7 | The 31 scripts of the shipped levels that call SceneChange, CharSetAllowVehicleEntry or ... |
-| 45 | [SCRIPT-73](features/script-system-hud-natives.md?display=source#L33) | 148 | 0 | 6 | 1 | 5 stand-in | `disableicon`, `enableminimapwipe`, `enablescanner`, `overridescannable` +1 | Map and scanner natives (EnableMinimapWipe 0x187f28, EnableScanner, OverrideScannable, PanMapToObject, map ... |
-| 46 | [CAMERA-S51](features/camera.md?display=source#L26) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
-| 47 | [SCRIPT-S271](features/script-system-dcam.md?display=source#L21) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | `ShakeScreen` draws its random numbers from `breakRandomStandIn`, the port's stand-in stream; the seed and ... |
-| 48 | [RENDER-62](features/rendering.md?display=source#L45) | 0 | 137 | 8 | 0 | - | `point` | Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces |
-| 49 | [VEH-22](features/vehicles.md?display=source#L35) | 125 | 0 | 7 | 14 | 1 stand-in, 2 implemented | `positionplayer`, `vehiclejumpout`, `vehiclesettopspeed` | Script jump in / out: characters other than the player are ported (event 200 in the states 1 to 3 and 0x11c ... |
-| 50 | [LEVOBJ-S1](features/level-objects.md?display=source#L21) | 0 | 120 | 8 | 0 | - | `chars/char_ai_actor` | Characters other than pedestrians run the idle state of `char_ai_actor` (verified for `char_ai_actor` ... |
+| 24 | [SCRIPT-447](features/script-system-missions-1-4.md?display=source#L31) | 498 | 0 | 8 | 1 | 1 stand-in, 1 implemented | `positionobject`, `vehiclesetai` | Step the driver of a record of VehicleSetAI alone: its state 0 holds the car at the node matrix of the call ... |
+| 25 | [SCRIPT-274](features/script-system-natives-animation.md?display=source#L43) | 497 | 0 | 8 | 2 | 3 stand-in | `loadanimation`, `playanimation`, `unloadanimation` | LoadAnimation and UnloadAnimation keep a name list only (0x23e6e4 / 0x23e518 load and release are not ported) ... |
+| 26 | [CAMERA-55](features/camera.md?display=source#L46) | 495 | 0 | 8 | 0 | 1 implemented | `positionobject` | After PositionObject of `1-1_Release_Car_Script` the port's police car stays on its locator while the ... |
+| 27 | [SCRIPT-S4](features/script-system.md?display=source#L25) | 484 | 0 | 8 | 0 | 1 stand-in, 1 implemented | `dcamcutscenewait`, `waitfordcam` | A function without a handler does nothing and continues at once; `chase-game` prints its name the first time ... |
+| 28 | [SCRIPT-38](features/script-system-natives.md?display=source#L27) | 442 | 0 | 7 | 14 | 4 stand-in, 3 none, 1 implemented | `addtosemitranslist`, `addtosemitransnearcameralist`, `effectfadeobject`, `playparticlesgo` +4 | Batch 13 (C, 20): EffectFadeObject, AddToSemiTransNearCameraList, StreamRoomIn ... |
+| 29 | [SCRIPT-346](features/script-system-hud-natives.md?display=source#L38) | 442 | 0 | 7 | 0 | 1 stand-in | `showdialogbg` | The ShowDialogBG byte and the byte +0x485 make 0x2d9d0c hide the timed object 0x5190bc that it otherwise ... |
+| 30 | [VEH-132](features/vehicles-prop-smash.md?display=source#L33) | 0 | 406 | 8 | 0 | - | `leprops/leprop_simpleindestructible` | Measure in the oracle that a leprop_simpleindestructible or a door in the car's way does not stop it (by code ... |
+| 31 | [SCRIPT-36](features/script-system-natives.md?display=source#L25) | 366 | 0 | 7 | 13 | 2 stand-in, 9 implemented | `setforcedstoponmyvehicle`, `stopplayervehicle`, `vehicleallowjumpout`, `vehiclejumpin` +7 | Batch 11 (C, 9 left): VehicleSetLocked, VehicleSetForcedStop, SetForcedStopOnMyVehicle, VehicleAllowJumpOut ... |
+| 32 | [SCRIPT-57](features/script-system-natives-state.md?display=source#L29) | 362 | 0 | 7 | 14 | 3 stand-in, 1 none | `distancefademid`, `enableshadow`, `enableswitch`, `toggleuseable` | Kind-gated natives: the kind of every class is read (`objectKind`); ToggleUseable, EnableSwitch (use-zone ... |
+| 33 | [SCRIPT-S239](features/script-system-natives-world.md?display=source#L34) | 351 | 0 | 7 | 0 | 2 stand-in | `enableswitch`, `toggleuseable` | ToggleUseable and EnableSwitch write the use flag only for instances whose kind registers a use zone ... |
+| 34 | [SCRIPT-294](features/script-system-natives-world.md?display=source#L50) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The hint registry 0x2219bc searches (records at `*(0x58e9a4 + 0x24)`, singleton "LEGOHintBounds"): who adds ... |
+| 35 | [SCRIPT-296](features/script-system-natives-world.md?display=source#L52) | 342 | 0 | 7 | 1 | 1 stand-in | `toggleuseable` | The registration conditions of the use zone: what sets halfword `[entity + 0x10]` bit 7 (post-link of kinds ... |
+| 36 | [SCRIPT-281](features/script-system-natives-world.md?display=source#L47) | 271 | 0 | 6 | 1 | 1 stand-in | `effectfadeobject` | EffectFadeObject: the third node property (0x23f540, flag bit 2), the particle node case, the clock of ... |
+| 37 | [SCRIPT-S232](features/script-system-natives-world.md?display=source#L30) | 271 | 0 | 6 | 0 | 1 stand-in | `effectfadeobject` | EffectFadeObject drives `Scene::setInstanceFade` and the instance visibility of placed objects (and their ... |
+| 38 | [SCRIPT-S11](features/script-system-dcam.md?display=source#L19) | 256 | 0 | 8 | 0 | 1 stand-in | `startdcamtrack` | `StartDCamTrack` looks at the placement position of the object (the live position for the player), not at its ... |
+| 39 | [SCRIPT-S20](features/script-system-natives-state.md?display=source#L19) | 248 | 0 | 7 | 0 | 10 stand-in | `addstuds`, `disablesuperbuiltitsave`, `enablestudsbygroup`, `enablesuperbricks` +6 | Nine batch 27 natives (UnlockAbility, LockAbility, UnlockScanner, SetParachuteDeployHeight ... |
+| 40 | [SCRIPT-351](features/script-system-natives-animation.md?display=source#L38) | 236 | 0 | 8 | 1 | 1 stand-in | `loadanimation` | What decides the load time of LoadAnimation (0x23e6e4 request, load record state byte +8 = 2 in 0x17e588) ... |
+| 41 | [SCRIPT-377](features/script-system-platforms.md?display=source#L28) | 0 | 183 | 8 | 2 | - | `leprops/leprop_platform`, `props/prop_platform` | The rest of the platform class: `orient` and type 7 rotations of platforms without a path, the shape curves ... |
+| 42 | [SCRIPT-388](features/script-system-platforms.md?display=source#L31) | 0 | 183 | 8 | 1 | - | `leprops/leprop_platform`, `props/prop_platform` | The platform's sweep in its entity move (the push of characters beside a sideways move with message 45 ... |
+| 43 | [SCRIPT-S18](features/script-system-natives-state.md?display=source#L18) | 175 | 0 | 7 | 0 | 2 stand-in | `resetobject`, `skiptofinalstate` | The six flag natives and ResetObject / SkipToFinalState store their value or message by instance name without ... |
+| 44 | [SCRIPT-427](features/script-system-missions-1-4-conduct.md?display=source#L27) | 152 | 0 | 5 | 0 | 1 implemented | `subobjectiveenemyenable` | The arrows over the goons the user saw: SubObjectiveEnemyEnable is a no-op in the original and the arrow list ... |
+| 45 | [TRANS-5](features/level-transitions.md?display=source#L33) | 127 | 25 | 7 | 0 | 5 stand-in, 4 none, 1 implemented | `charsetallowvehicleentry`, `playcredits`, `playscriptonstartup`, `positionplayer` +7 | The 31 scripts of the shipped levels that call SceneChange, CharSetAllowVehicleEntry or ... |
+| 46 | [SCRIPT-73](features/script-system-hud-natives.md?display=source#L33) | 148 | 0 | 6 | 1 | 5 stand-in | `disableicon`, `enableminimapwipe`, `enablescanner`, `overridescannable` +1 | Map and scanner natives (EnableMinimapWipe 0x187f28, EnableScanner, OverrideScannable, PanMapToObject, map ... |
+| 47 | [CAMERA-S51](features/camera.md?display=source#L26) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | The ShakeScreen shake moves only the eye of the gameplay camera (`CameraRig::setEyeShake`); the cutscene ... |
+| 48 | [SCRIPT-S271](features/script-system-dcam.md?display=source#L21) | 145 | 0 | 7 | 0 | 1 stand-in | `shakescreen` | `ShakeScreen` draws its random numbers from `breakRandomStandIn`, the port's stand-in stream; the seed and ... |
+| 49 | [RENDER-62](features/rendering.md?display=source#L45) | 0 | 137 | 8 | 0 | - | `point` | Point lights (type 2) against the oracle: lvl_00 `Point`/`Point01` (Intensity 2, MaxRange 1) on baked surfaces |
+| 50 | [VEH-22](features/vehicles.md?display=source#L35) | 125 | 0 | 7 | 14 | 1 stand-in, 2 implemented | `positionplayer`, `vehiclejumpout`, `vehiclesettopspeed` | Script jump in / out: characters other than the player are ported (event 200 in the states 1 to 3 and 0x11c ... |
 
 ## Player and camera
 
@@ -138,7 +138,7 @@ Items: 1131 open items and stand-ins, 199 linked to game usage, 932 with unknown
 
 ## Scripts and missions
 
-131 of 285 items linked.
+133 of 287 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -155,7 +155,7 @@ Items: 1131 open items and stand-ins, 199 linked to game usage, 932 with unknown
 
 ## World and levels
 
-6 of 109 items linked.
+6 of 108 items linked.
 
 | # | Item | Calls | Placed | Main levels | Unblocks | Natives | Linked to | Gap |
 |---|---|---|---|---|---|---|---|---|
@@ -236,7 +236,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [movies-cutscenes.md](features/movies-cutscenes.md): MOVIE-22 (+1), MOVIE-24 (+1), MOVIE-36 (+1), MOVIE-37 (+1), MOVIE-S33 (+1), MOVIE-1, MOVIE-12, MOVIE-20, MOVIE-21, MOVIE-3, MOVIE-35, MOVIE-4, MOVIE-40, MOVIE-41, MOVIE-S10, MOVIE-S11, MOVIE-S2, MOVIE-S21, MOVIE-S3, MOVIE-S30, MOVIE-S31, MOVIE-S32, MOVIE-S34, MOVIE-S36
 - [particles.md](features/particles.md): PART-4 (+1), PART-6 (+1), PART-5, PART-7, PART-S1, PART-S2, PART-S3, PART-S4
 - [pedestrians-traffic-cars-driver-body.md](features/pedestrians-traffic-cars-driver-body.md): TRAFFIC-39 (+1), TRAFFIC-40 (+1), TRAFFIC-41 (+1), TRAFFIC-S28, TRAFFIC-S29
-- [pedestrians-traffic-cars-driver.md](features/pedestrians-traffic-cars-driver.md): TRAFFIC-45 (+4), TRAFFIC-35 (+1), TRAFFIC-42 (+1), TRAFFIC-44 (+1), TRAFFIC-46 (+1), TRAFFIC-48 (+1), TRAFFIC-49 (+1), TRAFFIC-S27, TRAFFIC-S32, TRAFFIC-S33, TRAFFIC-S34, TRAFFIC-S35, TRAFFIC-S36
+- [pedestrians-traffic-cars-driver.md](features/pedestrians-traffic-cars-driver.md): TRAFFIC-45 (+4), TRAFFIC-35 (+1), TRAFFIC-42 (+1), TRAFFIC-46 (+1), TRAFFIC-48 (+1), TRAFFIC-49 (+1), TRAFFIC-S27, TRAFFIC-S32, TRAFFIC-S33, TRAFFIC-S34, TRAFFIC-S35, TRAFFIC-S36
 - [pedestrians-traffic-cars-gather.md](features/pedestrians-traffic-cars-gather.md): TRAFFIC-52 (+1), TRAFFIC-53 (+1), TRAFFIC-S39
 - [pedestrians-traffic-cars-junction.md](features/pedestrians-traffic-cars-junction.md): TRAFFIC-38 (+2), TRAFFIC-31 (+1), TRAFFIC-S13, TRAFFIC-S17, TRAFFIC-S20
 - [pedestrians-traffic-cars-movement.md](features/pedestrians-traffic-cars-movement.md): TRAFFIC-29 (+1), TRAFFIC-30 (+1), TRAFFIC-S11, TRAFFIC-S23, TRAFFIC-S24

@@ -108,6 +108,7 @@
 #include "runtime/head_icon.hpp"
 #include "runtime/vehicle_prop_smash.hpp"
 #include "runtime/vehicle_hud.hpp"
+#include "runtime/target_hearts_display.hpp"
 #include "runtime/scene_change.hpp"
 #include "runtime/scene_start.hpp"
 #include "runtime/frame_pacer.hpp"
@@ -306,6 +307,8 @@ private:
     void playPropSound(std::uint16_t id, const std::array<float, 3>& position);
     void poseVehicleWheels(std::size_t vehicle);
     void syncVehicleHud();
+    void showTargetHearts(const std::string& vehicle);
+    std::optional<chase::runtime::AiMatrix> scriptCarNodeMatrix(const std::string& lowerVehicle) const;
     void updateHeadIcon(float dt);
     void drawHeadIcon(chase::frontend::Canvas& top);
     void loadObjectiveBoxes(const std::vector<chase::assets::ObjectCollision>& placed);
@@ -627,6 +630,7 @@ private:
     chase::runtime::VehiclePairManifolds vehiclePairs;
     std::vector<std::string> vehicleTableNames;
     chase::runtime::VehicleHud vehicleHud;
+    chase::runtime::TargetHeartsDisplay targetHearts;
     chase::runtime::HeadIcon headIcon;
     float vehicleWorldTime = 0;
     std::vector<chase::runtime::VehicleCameraSubject> vehicleCameras;

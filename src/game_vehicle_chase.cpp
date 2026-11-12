@@ -48,6 +48,28 @@ void LevelSession::chasedCarImpact(std::size_t vehicleIndex, float speed, const 
     if (reply.chaseEnded) std::cout << "vehicle " << instance << ": driver state 6 requested at update " << updatesForLog << '\n';
 }
 
+std::optional<runtime::AiMatrix> LevelSession::scriptCarNodeMatrix(const std::string& lowerVehicle) const {
+    for (const runtime::BoardingVehicle& vehicle : boardingVehicles)
+        if (vehicle.instance == lowerVehicle) return nodeRows(vehicle.matrix);
+    return std::nullopt;
+}
+
+void LevelSession::showTargetHearts(const std::string& vehicle) {
+    runtime::TargetHeartsSource source;
+    source.entity = vehicle;
+    for (std::size_t i = 0; i < boardingVehicles.size(); ++i)
+        if (boardingVehicles[i].instance == vehicle) {
+            const runtime::VehicleRecord& record = levelScripts.vehicles().records()[boardingRecords[i]];
+            source.kind = runtime::TargetHeartsKind::Vehicle;
+            source.hearts = record.hearts;
+            source.most = record.health;
+            if (record.vehicleType < vehicleTableNames.size()) source.portraitName = vehicleTableNames[record.vehicleType];
+        }
+    runtime::setTargetHearts(targetHearts, source);
+    std::cout << "target hearts " << vehicle << ": " << targetHearts.hearts << " of " << targetHearts.most << (targetHearts.shown ? " shown" : " off")
+              << ", portrait " << targetHearts.portrait << " at update " << updatesForLog << " (not drawn, SCRIPT-455)\n";
+}
+
 std::optional<runtime::BodyInputs> LevelSession::driveScriptCar(std::size_t vehicleIndex, float dt) {
     return runScriptCar(vehicleIndex, dt, false);
 }
@@ -57,7 +79,7 @@ void LevelSession::postStepScriptCar(std::size_t vehicleIndex, float dt) { runSc
 std::optional<runtime::BodyInputs> LevelSession::runScriptCar(std::size_t vehicleIndex, float dt, bool postStep) {
     const runtime::BoardingVehicle& vehicle = boardingVehicles[vehicleIndex];
     runtime::VehicleAiRecord* ai = levelScripts.vehicleAi().mutableRecord(vehicle.instance);
-    // STAND-IN SCRIPT-S323: only a car put into the chase by VehicleSetChased is driven; a record of VehicleSetAI alone is not stepped.
+    // STAND-IN SCRIPT-S323: only a car put into the chase by VehicleSetChased is driven; a record of VehicleSetAI alone is not stepped (SCRIPT-447).
     if (!ai || !ai->chased || (ai->driver.flags & runtime::kAiDriverFlagAi) == 0) return std::nullopt;
     runtime::VehicleRecord& record = *levelScripts.vehicles().mutableRecord(boardingRecords[vehicleIndex]);
     const VehicleDrive& drive = vehicleDrives[vehicleIndex];
@@ -73,6 +95,8 @@ std::optional<runtime::BodyInputs> LevelSession::runScriptCar(std::size_t vehicl
     frame.vehicleState = record.state;
     frame.gear = drive.drivetrain.gear;
     frame.playerInVehicle = boarding && boarding->seatedVehicle().has_value();
+    // *0x376c78, the current room, is set by the player start 0x2e6354 and cleared only by the level teardown 0x3035c0.
+    frame.globalObject = true;
     frame.routes = &*scriptCarRoutes;
     runtime::AiDriverRecord* driver = &ai->driver;
     const runtime::TrafficGroundWorld ground = runtime::trafficGroundWorld(collision, [](std::uint32_t) {});
@@ -101,6 +125,7 @@ std::optional<runtime::BodyInputs> LevelSession::runScriptCar(std::size_t vehicl
             vehicleDamageEffects(vehicleIndex, smoke);
             std::cout << "vehicle " << instance << ": chase ended at update " << updatesForLog << '\n';
             levelScripts.fireObjectEvent(event.stopping.event, instance);
+            if (event.stopping.globalEvent) levelScripts.fireLevelRootEvent(event.stopping.event);
             break;
         }
         case runtime::TrafficStateEventKind::Destroy: {

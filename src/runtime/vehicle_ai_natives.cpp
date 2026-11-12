@@ -2,11 +2,16 @@
 
 namespace chase::runtime {
 
+AiMatrix VehicleAiNatives::nodeMatrix(const std::string& lowerVehicle, const AiMatrix& call) const {
+    if (!nodeMatrix_) return call;
+    return nodeMatrix_(lowerVehicle).value_or(call);
+}
+
 VehicleAiRecord& VehicleAiNatives::create(const std::string& lowerVehicle, const AiMatrix& node) {
     VehicleAiRecord record;
     AiDriverHooks hooks;
     hooks.setKinematic = [&record](bool on) { record.kinematic = on; };
-    record.driver = createAiDriverRecord(kAiDriverDefaultHeightOffset, node, hooks);
+    record.driver = createAiDriverRecord(kAiDriverDefaultHeightOffset, nodeMatrix(lowerVehicle, node), hooks);
     return records_[lowerVehicle] = record;
 }
 
@@ -17,6 +22,7 @@ void VehicleAiNatives::setChased(const std::string& lowerVehicle, const AiMatrix
     VehicleAiRecord& record = found != records_.end() ? found->second : create(lowerVehicle, node);
     AiDriverRecord& driver = record.driver;
     driver.flags = static_cast<std::uint8_t>(driver.flags | kAiDriverFlagAi);
+    targetHeartsRequest_ = lowerVehicle;
     record.kinematic = false;
     record.requestedVehicleState = kVehicleChasedRequestedState;
     if (driver.state == kAiStateSteer) driver.state = kAiStateRoute;
@@ -25,10 +31,16 @@ void VehicleAiNatives::setChased(const std::string& lowerVehicle, const AiMatrix
     driver.speed = 0.0f;
     driver.targetSpeed = speed;
     driver.route = routeHash;
-    driver.routeDistance = nearest_ ? nearest_(routeHash, node[3], kVehicleChasedNearestSamples, kVehicleChasedNearestScale) : 0.0f;
+    driver.routeDistance = nearest_ ? nearest_(routeHash, nodeMatrix(lowerVehicle, node)[3], kVehicleChasedNearestSamples, kVehicleChasedNearestScale) : 0.0f;
     driver.stateUpdates = 0;
     record.routeHash = routeHash;
     record.chased = true;
+}
+
+std::optional<std::string> VehicleAiNatives::takeTargetHeartsRequest() {
+    std::optional<std::string> taken;
+    taken.swap(targetHeartsRequest_);
+    return taken;
 }
 
 const VehicleAiRecord* VehicleAiNatives::find(const std::string& lowerVehicle) const {

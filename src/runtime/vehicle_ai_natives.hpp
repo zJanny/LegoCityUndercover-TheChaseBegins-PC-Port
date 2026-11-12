@@ -1,8 +1,8 @@
 #pragma once
 // VehicleSetAI 0x1bfb50 -> 0x1796e8 and VehicleSetChased 0x26fe54 -> 0x1afd38 (docs/re/scripts-missions-1-4.md): the vehicle gets the AI driver record
 // at record +0x2a4 (ai_driver_input.hpp) and VehicleSetChased puts it into the chase: vehicle state request 2, driver state 5 requested, the speeds and
-// the route. The driver update, the route follower and the vehicle body are not connected to these records, so the stolen car of mission 1-4 does not
-// drive (STAND-IN SCRIPT-S323). No SDL dependency.
+// the route. chase-game steps the driver of a chased car on the vehicle's physics body (traffic_driver_states.hpp); a record of VehicleSetAI alone is
+// not stepped (STAND-IN SCRIPT-S323). No SDL dependency.
 #include "runtime/ai_driver_input.hpp"
 #include "runtime/traffic_driver_calls.hpp"
 #include "runtime/traffic_driver_steering.hpp"
@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -48,15 +49,23 @@ public:
     void setRouteNearest(std::function<float(std::uint32_t route, const AiVec3& position, unsigned samples, float scale)> nearest) {
         nearest_ = std::move(nearest);
     }
+    // The node matrix 0x250810 of a vehicle, which 0x1796e8 stores at +0x18 and VehicleSetChased samples the route at; without a source or for an
+    // unknown vehicle the matrix of the call is used.
+    void setNodeMatrixSource(std::function<std::optional<AiMatrix>(const std::string& lowerVehicle)> source) { nodeMatrix_ = std::move(source); }
+    // 0x230f04(entity) of VehicleSetChased: the vehicle whose hearts the target display shows (target_hearts_display.hpp), taken once.
+    std::optional<std::string> takeTargetHeartsRequest();
     const VehicleAiRecord* find(const std::string& lowerVehicle) const;
     VehicleAiRecord* mutableRecord(const std::string& lowerVehicle);
     std::size_t size() const { return records_.size(); }
 
 private:
+    AiMatrix nodeMatrix(const std::string& lowerVehicle, const AiMatrix& call) const;
     VehicleAiRecord& create(const std::string& lowerVehicle, const AiMatrix& node);
 
     std::map<std::string, VehicleAiRecord> records_;
     std::function<float(std::uint32_t, const AiVec3&, unsigned, float)> nearest_;
+    std::optional<std::string> targetHeartsRequest_;
+    std::function<std::optional<AiMatrix>(const std::string&)> nodeMatrix_;
 };
 
 }

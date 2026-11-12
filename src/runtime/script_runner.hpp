@@ -172,6 +172,11 @@ public:
     // The same for the other events the vehicle and character code raises by name (PlayerVehicleEntered, PlayerVehicleExiting): the first enabled
     // trigger of that event whose owner object is `lowerInstance`.
     void fireObjectEvent(const std::string& lowerEvent, const std::string& lowerInstance);
+    // 0x23cee8(type, 0x23c188(*(*0x376c78 + 0x28)), ...): the event at the level root of the current room's scene (owner 0). The trigger
+    // set-up 0x1a553c makes the owner of a trigger without an object name the owner whose data holds it, so the level's own triggers
+    // without an object name are the level root's.
+    void fireLevelRootEvent(const std::string& lowerEvent) { fireObjectEvent(lowerEvent, kLevelRootOwner); }
+    static constexpr const char* kLevelRootOwner = "";
     // World position of a placed object by lower-case instance name (the node of an object bound check); false when unknown.
     using ObjectPositionSource = std::function<bool(const std::string&, float[3])>;
     void setObjectPositionSource(ObjectPositionSource source) { objectPosition_ = std::move(source); }
