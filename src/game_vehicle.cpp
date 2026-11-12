@@ -77,6 +77,7 @@ void LevelSession::driveVehicles(float dt) {
     if (!levelScripts.playerControlTaken() && !carry.busy() && !cutscenePlaying())
         playerInput = runtime::readDriveInput({pad.slot(kSlotStickX).value, pad.channel(14).value, pad.channel(15).value, pad.channel(16).value, pad.channel(17).value});
     const int steps = runtime::vehicleWorldSteps(vehicleWorldTime, dt);
+    stepTrafficBodies(steps);
     const CollisionItem* floorMesh = floorItem();
     std::vector<runtime::VehicleWorldBody> bodies;
     std::vector<runtime::VehicleRecord> scaled;

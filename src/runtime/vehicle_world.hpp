@@ -39,8 +39,8 @@ struct VehicleShapeBoxes {
 };
 VehicleShapeBoxes vehicleShapeBoxes(const VehicleRecord& record, const float entityCentre[3], const float entityHalf[3]);
 // The mass scale body+0x84 of a vehicle: 2 from the begin of the player's Jump In (state 0x11a, 0x31fffc) until the begin of his Jump Out (state
-// 0x11b, 0x3222f4 sets 1), else 1 (the parked worker in the oracle). The value 2 is the global 0x3745b4 as the oracle held it (the data image
-// holds 0 there; its writer is not read).
+// 0x11b, 0x3222f4 sets 1), else 1 (the parked worker in the oracle). The value 2 is the global 0x3745b4, which the static initialiser 0x34498c
+// stores (kPlayerVehicleMassScale in traffic_car_body.hpp; the oracle held the same).
 float vehicleMassScale(bool playerVehicle);
 
 // STAND-IN VEH-S82: whether a vehicle is a dynamic body of the Bullet world. The link 0x156f74 adds the body (0x243300 with 1), makes it

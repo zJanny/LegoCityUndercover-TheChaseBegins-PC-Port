@@ -154,6 +154,7 @@ void LevelSession::loadTraffic() {
         for (std::size_t i = 0; i < boardingVehicles.size(); ++i)
             if (boardingVehicles[i].instance == name) trafficBoarding[car] = i;
     }
+    loadTrafficBodies();
     setupTrafficCarLights();
 }
 
@@ -226,6 +227,7 @@ void LevelSession::driveTrafficCars(float dt) {
         body.gearSpeed = levelScripts.vehicles().records()[boardingRecords[*index]].topSpeed;
         return body;
     };
+    step.bodies = trafficBodies.hooks(trafficBodyWorld);
     for (const chase::runtime::TrafficCarMove& move : traffic.driveCars(step, updatesForLog, objectState)) {
         const std::optional<std::size_t> index = trafficBoarding[move.car];
         if (!index) continue;
@@ -247,6 +249,7 @@ bool LevelSession::placeTrafficCar(const chase::runtime::TrafficCarPlacement& pl
         for (std::size_t axis = 0; axis < 3; ++axis) matrix[row * 4 + axis] = rows[row][axis];
     matrix[15] = 1.0f;
     placeVehicleAt(*index, matrix);
+    trafficBodies.spawn(placement.car, placement.floorCell, rows, trafficBodyFloor());
     VehicleDrive& drive = vehicleDrives[*index];
     drive.floorTracker = {};
     drive.history = chase::runtime::VehicleMatrixHistory(matrix);

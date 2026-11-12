@@ -43,7 +43,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [vehicles](vehicles.md) | IN_PROGRESS | VEH-7 driving collision; VEH-21 driving details; VEH-10 sounds |
 | [vehicles-damage](vehicles-damage.md) | IN_PROGRESS | VEH-125 debris line tests; VEH-140 rest of the debris pickup; VEH-121 rest of the break effects; VEH-120 rest of the return |
 | [vehicles-physics](vehicles-physics.md) | IN_PROGRESS | VEH-42 inertia; VEH-50 air control; VEH-54 jump-out braking |
-| [vehicles-physics-collision](vehicles-physics-collision.md) | IN_PROGRESS | VEH-102 sphere contact at a wall; VEH-70 Bullet contact details; VEH-91 vehicle activation |
+| [vehicles-physics-collision](vehicles-physics-collision.md) | IN_PROGRESS | VEH-102 sphere contact at a wall; VEH-70 Bullet contact details; VEH-141 activation rule for parked vehicles |
 | [vehicles-prop-smash](vehicles-prop-smash.md) | IN_PROGRESS | VEH-131 oracle check of a kind 67 smash; VEH-134 hit sequence and lights modes; VEH-130 lamp post one update early |
 | [vehicles-boarding](vehicles-boarding.md) | IN_PROGRESS | VEH-19 boarding gates and exit probes; VEH-20 boarding state reactions; VEH-80 head icons |
 
@@ -83,7 +83,8 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | [pedestrians-traffic-pedestrians](pedestrians-traffic-pedestrians.md) | IN_PROGRESS | run in chase-game with room moves; PED-5 message slot; PED-27 fade point cameras |
 | [pedestrians-traffic-pedestrians-fade](pedestrians-traffic-pedestrians-fade.md) | IN_PROGRESS | PED-21 faded-out pedestrians not removed; PED-22 node radius source; PED-23 node draw pass |
 | [pedestrians-traffic-pedestrians-vehicles](pedestrians-traffic-pedestrians-vehicles.md) | IN_PROGRESS | vehicle test and set-up layer table run in chase-game; PED-18 cutscene layer table; PED-19 vehicle list filter |
-| [pedestrians-traffic-cars-driver](pedestrians-traffic-cars-driver.md) | IN_PROGRESS | AI driver runs on the cars (states 0 to 3) with the whistle stop and brake lights; TRAFFIC-36 states 4 to 8; TRAFFIC-11 vehicle body; TRAFFIC-33 brake light parts |
+| [pedestrians-traffic-cars-driver](pedestrians-traffic-cars-driver.md) | IN_PROGRESS | AI driver runs on the cars (states 0 to 3) with the whistle stop and brake lights; TRAFFIC-36 states 4 to 8; TRAFFIC-33 brake light parts |
+| [pedestrians-traffic-cars-driver-body](pedestrians-traffic-cars-driver-body.md) | IN_PROGRESS | kinematic vehicle body per traffic car, follows the node; TRAFFIC-39 collision with the player's car; TRAFFIC-40 driver fields in the vehicle record |
 | [pedestrians-traffic-cars](pedestrians-traffic-cars.md) | IN_PROGRESS | cars spawn, drive and leave in chase-game on the junction routes; TRAFFIC-14 path record index; TRAFFIC-12 other levels |
 | [pedestrians-traffic-cars-movement](pedestrians-traffic-cars-movement.md) | IN_PROGRESS | route mover, stop test, junction choice and queue run on the cars; TRAFFIC-29 ground cast order; TRAFFIC-30 colour of the probe |
 | [pedestrians-traffic-cars-junction](pedestrians-traffic-cars-junction.md) | IN_PROGRESS | junction records, light cycle and traffic light looks ported and wired (TRAFFIC-25 done); TRAFFIC-31 room type of the junction rooms, TRAFFIC-26 light prop update |

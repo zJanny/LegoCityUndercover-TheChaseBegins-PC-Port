@@ -72,6 +72,8 @@ TrafficJunctionWorld junctionWorld() {
 struct Run {
     TrafficManager manager;
     TrafficDrivers drivers;
+    TrafficCarBodies bodies;
+    TrafficCarBodies::World bodyWorld;
     TrafficJunctionWorld world = junctionWorld();
     AiRouteFunctions functions = routes();
     GameRandom random{0x1234u};
@@ -85,6 +87,8 @@ struct Run {
         manager.routeTable() = world.routes;
         drivers.load({kHeight});
         node = pedestrianPlacement({0.0f, kHeight, 10.0f}, {0.0f, 0.0f, 1.0f});
+        bodyWorld.node = [this](std::size_t) { return node; };
+        bodies.load({TrafficCarBodies::Car{}}, {node}, -39.0f);
         drivers.start(0, kRoadIn, 1, 1.0f, node);
         manager.cars()[0].disabled = false;
     }
@@ -103,6 +107,7 @@ struct Run {
             body.gearSpeed = 40.0f;
             return std::optional<TrafficCarBody>(body);
         };
+        drive.bodies = bodies.hooks(bodyWorld);
         TrafficDriveResult result = drivers.drive(manager, world, functions, drive, random);
         for (const TrafficCarMove& move : result.moves) node = move.node;
         events.insert(events.end(), result.events.begin(), result.events.end());
@@ -117,7 +122,7 @@ struct Run {
 
 void spawnSteps() {
     Run run;
-    require(run.drivers.car(0).kinematic, "0x1796e8 makes the car kinematic");
+    require(run.bodies.body(0).rigidFlags == 0x182u, "0x1796e8 makes the car kinematic");
     require(run.driver().state == kAiStateHold && run.driver().requestedState == kAiStateStart && run.driver().route == kRoadIn &&
                 run.driver().signal == 1 && run.driver().routeDistance == 1.0f && run.driver().heightOffset == kHeight,
             "the spawn writes 0/1, the route, its signal object, the parameter and +0x74");
@@ -129,6 +134,9 @@ void spawnSteps() {
     run.step();
     require(run.driver().state == kAiStateRoute && run.driver().cruiseSpeed >= 8.0f && run.driver().cruiseSpeed < 12.0f, "state 2 with +0x6c in 8 .. 12");
     require(run.manager.cars()[0].route == 0u, "the manager's view of the route is its index in the route list");
+    for (int update = 0; update < 5; ++update) run.step();
+    const AiVec3& velocity = run.bodies.body(0).velocity;
+    require(velocity[2] > 0.0f && velocity[0] == 0.0f && velocity[1] == 0.0f, "the mover stores the kinematic body's velocity along the node's forward row");
 }
 
 void movesStopsAndGoes() {

@@ -24,7 +24,7 @@ Transcribed from the code into the tests `pedestrian-blocked`, `pedestrian-walk`
 ## 5. Open items
 
 - [ ] PED-18 — `chase-game` does not push the cutscene layer table at a cutscene start (0x196734, 0x16c060) or pop it at its end (0x2fae68), and does not run the cutscene mode's pedestrian update 0x164240. blocks: PED-S10. evidence: [pedestrians-inputs.md §2026-10-20T14:11:29](../../re/pedestrians-inputs.md#ts-20261020-141129).
-- [ ] PED-19 — Which vehicle bodies have the flag +0xc4 bit 0 that the list rebuild 0x2e2bc8 requires, what entity bit 5 of +0x10 is, and whether a vehicle's +0x5c comes from 0x23aff8. needs: VEH-91. blocks: PED-S9. evidence: [pedestrians-inputs.md §2026-10-20T14:11:29](../../re/pedestrians-inputs.md#ts-20261020-141129).
+- [ ] PED-19 — Which vehicle bodies have the flag +0xc4 bit 0 that the list rebuild 0x2e2bc8 requires, what entity bit 5 of +0x10 is, and whether a vehicle's +0x5c comes from 0x23aff8. blocks: PED-S9. evidence: [pedestrians-inputs.md §2026-10-20T14:11:29](../../re/pedestrians-inputs.md#ts-20261020-141129).
 
 ## 6. Findings summary
 

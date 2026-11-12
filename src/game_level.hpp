@@ -259,6 +259,9 @@ private:
     void loadTraffic();
     void enterTrafficScene();
     void updateTrafficSystem();
+    void loadTrafficBodies();
+    const chase::runtime::FloorMesh* trafficBodyFloor();
+    void stepTrafficBodies(int worldSteps);
     void updateTrafficJunctions(float dt);
     void driveTrafficCars(float dt);
     void applyTrafficFades();
@@ -645,6 +648,9 @@ private:
     game_traffic::LevelTraffic traffic;
     std::vector<std::optional<std::size_t>> trafficBoarding;
     std::vector<int> trafficFadeShown;
+    chase::runtime::TrafficCarBodies trafficBodies;
+    chase::runtime::TrafficCarBodies::World trafficBodyWorld;
+    std::optional<chase::runtime::FloorMesh> trafficFloorMesh;
     chase::runtime::TrafficCarLights trafficCarLights;
     std::vector<bool> trafficLightsDisabled;
     std::vector<std::array<std::array<float, 3>, 4>> trafficGlowLocal;

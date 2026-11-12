@@ -9,6 +9,7 @@
 #include "assets/pregen_traffic.hpp"
 #include "runtime/ai_driver_input.hpp"
 #include "runtime/game_random.hpp"
+#include "runtime/traffic_car_body.hpp"
 #include "runtime/traffic_car_lights.hpp"
 #include "runtime/traffic_driver_calls.hpp"
 #include "runtime/traffic_driver_steering.hpp"
@@ -33,8 +34,6 @@ AiRouteFunctions trafficDriverRouteFunctions(const TrafficJunctions& junctions, 
 struct TrafficDriverCar {
     AiDriverRecord driver;
     AiDriverVehicle vehicle;
-    // STAND-IN TRAFFIC-S28: the kinematic switch 0x22a270 -> 0x213c74 only sets this flag; the port makes no physics body for the car.
-    bool kinematic = false;
     TrafficSteeringState steering;  // the record's bytes +0x7a..+0xa3
     // The brake lights of the vehicle record (+0x2ac..+0x2d8). Their parts are not set up (TRAFFIC-33), so 0x278b78 does nothing yet.
     TrafficBrakeLights brakeLights;
@@ -64,6 +63,9 @@ struct TrafficDriveStep {
     std::uint32_t clock = 0;
     // The vehicle of a car; none for a car without a vehicle, which is not updated.
     std::function<std::optional<TrafficCarBody>(std::size_t car)> body;
+    // The cars' physics bodies (TrafficCarBodies::hooks): the kinematic switch 0x22a270, the mover's test of rigid +0xcc bit 1 and its
+    // velocity 0x229920. Members left empty stand for a car without a physics body: no switch, not kinematic, no velocity.
+    TrafficBodyHooks bodies;
     // The brake lights and the node culling bits of the cars (TRAFFIC-33, TRAFFIC-37); without it the lights are not set up and the node is
     // taken as hidden (STAND-IN TRAFFIC-S35).
     TrafficCarLights* lights = nullptr;
@@ -95,8 +97,9 @@ struct TrafficDriveResult {
 
 class TrafficDrivers {
 public:
-    // 0x1796e8 for each car of the level load 0x2dfa78 (+0x74 = the car's 0x20af24, +0xaf bit 0, 0x22a270(entity, 1)). Its +0x18 copy of
-    // the level node is replaced by the spawn before any reader, so the rows start at 0.
+    // 0x1796e8 for each car of the level load 0x2dfa78 (+0x74 = the car's 0x20af24, +0xaf bit 0). Its 0x22a270(entity, 1) is done by the
+    // load of the bodies (TrafficCarBodies::load). Its +0x18 copy of the level node is replaced by the spawn before any reader, so the
+    // rows start at 0.
     void load(const std::vector<float>& heightOffsets);
     // 0x2def8c steps 3 and 5: +0x79 = 1, +0x78 = 0, +0xaf bit 0, +4 = the route, +0 = its signal object, +0x64 = the point's parameter,
     // +0x18 = the placement matrix.

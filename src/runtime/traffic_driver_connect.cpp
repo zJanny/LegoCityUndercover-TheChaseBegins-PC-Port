@@ -49,7 +49,7 @@ void TrafficDrivers::load(const std::vector<float>& heightOffsets) {
     for (const float heightOffset : heightOffsets) {
         TrafficDriverCar car;
         AiDriverHooks hooks;
-        hooks.setKinematic = [&car](bool on) { car.kinematic = on; };
+        hooks.setKinematic = [](bool) {};
         car.driver = createAiDriverRecord(heightOffset, AiMatrix{}, hooks);
         cars_.push_back(car);
     }
@@ -97,7 +97,9 @@ TrafficDriveResult TrafficDrivers::drive(TrafficManager& manager, TrafficJunctio
         bool moved = false;
 
         AiDriverHooks hooks;
-        hooks.setKinematic = [&car](bool on) { car.kinematic = on; };
+        hooks.setKinematic = [&](bool on) {
+            if (step.bodies.switchKinematic) step.bodies.switchKinematic(index, on);
+        };
         hooks.signalLetsPass = [&](std::uint32_t signal) { return trafficJunctionAllowsCar(needJunction(world, signal).layout, car.driver.route); };
         hooks.leaveSignalQueue = [&](std::uint32_t signal) { leaveTrafficJunctionQueue(needJunction(world, signal), car.driver, entity); };
         hooks.snapTarget = [&] { snapTrafficTarget(car.driver, step.ground); };
@@ -129,10 +131,12 @@ TrafficDriveResult TrafficDrivers::drive(TrafficManager& manager, TrafficJunctio
             frame.node = node;
             frame.dt = step.dt;
             frame.radius = body->radius;
-            frame.kinematic = car.kinematic;
+            frame.kinematic = step.bodies.kinematic && step.bodies.kinematic(index);
             frame.gearSpeed = body->gearSpeed;
             frame.routes = &routes;
-            node = runTrafficRouteMover(driver, frame, world, hooks, random).node;
+            const TrafficMoverResult moverResult = runTrafficRouteMover(driver, frame, world, hooks, random);
+            node = moverResult.node;
+            if (moverResult.velocity && step.bodies.setVelocity) step.bodies.setVelocity(index, *moverResult.velocity);
             moved = true;
         };
 

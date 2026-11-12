@@ -13,7 +13,8 @@ Format and loaders of `Pregen/Traffic/<level>_Traffic.bin` and `Pregen/Pedestria
 - The loaders see the list 0x589a18 as 0x1ed57c rebuilds it just before the scene enter (pool order, loaded scenes only), with the current room of `Player1Start` or of the transition's destination. [§2026-10-20T13:13:47](#ts-20261020-131347)
 - No path gets a node (path +0x18) at run time: only the natives EffectAttachParticlesToPath and EffectLinkPathToObject set it, and no script calls them. So the samplers never transform the position or the tangent. [pedestrians-character.md §2026-10-20T13:09:29](pedestrians-character.md#ts-20261020-130929)
 - The traffic floor cell (point +0x28 of the loaded record, "+40") is the cell of the level's `collision_floor` graph that contains the point in the xz plane, found by 0x1edaac: a bisection on the distance to the first corners, then an outward scan. It is ported as `findTrafficFloorCell`; 2418 of the 2421 points of the six levels with a master model find a cell. [§2026-10-25T12:36:20](#ts-20261025-123620)
-- Open: the radius the cell lists were built with, the points without a floor cell and the reader of the cell in the vehicle body, the other scenes loaded with a street level.
+- The readers of the cell in the vehicle body (+0x8c) are the cell tracker 0x20c0e4, the floor pass and the wheel ray; a point without a cell writes −1 and the tracker searches at the body's position: [traffic-car-body.md §2026-11-12T00:10:13](traffic-car-body.md#ts-20261112-001013).
+- Open: the radius the cell lists were built with, whether the tracker finds a cell for the points without one, the other scenes loaded with a street level.
 
 <a id="ts-20261020-111620"></a>
 

@@ -8,7 +8,7 @@ The spawn data of the pedestrian manager 0x51b33c and the traffic manager 0x5274
 
 ## 2. Status
 
-IN_PROGRESS, updated 2026-10-25T12:43:03+01:00. Both spawn files decode in `chase_assets` (all 14 shipped files, census pinned) together with the cell lookup 0x1eb490. The pedestrian file is used by `PedestrianSystem` and the traffic file by `TrafficSystem` in `chase-game` ([pedestrians-traffic-pedestrians.md](pedestrians-traffic-pedestrians.md), [pedestrians-traffic-cars.md](pedestrians-traffic-cars.md)). `deriveSpawnFields` computes the fields the loaders derive (path record, tangent, room) for both kinds; `deriveTrafficFloorCells` computes the traffic floor cell.
+IN_PROGRESS, updated 2026-11-12T00:15:05+01:00. Both spawn files decode in `chase_assets` (all 14 shipped files, census pinned) together with the cell lookup 0x1eb490. The pedestrian file is used by `PedestrianSystem` and the traffic file by `TrafficSystem` in `chase-game` ([pedestrians-traffic-pedestrians.md](pedestrians-traffic-pedestrians.md), [pedestrians-traffic-cars.md](pedestrians-traffic-cars.md)). `deriveSpawnFields` computes the fields the loaders derive (path record, tangent, room) for both kinds; `deriveTrafficFloorCells` computes the traffic floor cell.
 
 ## 3. Verified behaviour
 
@@ -27,11 +27,11 @@ IN_PROGRESS, updated 2026-10-25T12:43:03+01:00. Both spawn files decode in `chas
 
 ## 5. Open items
 
-- [ ] PREGEN-6 — 3 traffic points (1 in lvl_01, 2 in lvl_04) lie in no cell of the floor graph; what the original stores and how the spawn then uses it. needs: PREGEN-7. evidence: [pregen-traffic.md §2026-10-25T12:36:20](../../re/pregen-traffic.md#ts-20261025-123620)
-- [ ] PREGEN-7 — What reads the floor cell in the vehicle body (+0x8c, written by the traffic spawn). blocks: PREGEN-6, TRAFFIC-11. evidence: [pregen-traffic.md §2026-10-25T12:36:20](../../re/pregen-traffic.md#ts-20261025-123620)
+- [ ] PREGEN-6 — 3 traffic points (1 in lvl_01, 2 in lvl_04) lie in no cell of the floor graph. The spawn then writes −1 and the body's cell tracker searches at the body's position (read); whether that search finds a cell for these points is not checked. evidence: [traffic-car-body.md §2026-11-12T00:10:13](../../re/traffic-car-body.md#ts-20261112-001013)
 
 ## 6. Findings summary
 
+- The readers of the floor cell in the vehicle body: [traffic-car-body.md §2026-11-12T00:10:13](../../re/traffic-car-body.md#ts-20261112-001013).
 - Spawn files, loaders, quadtree, census; which manager loads which file: [pregen-traffic.md §2026-10-20T11:16:20](../../re/pregen-traffic.md#ts-20261020-111620).
 - The derived fields and the one-axis deviation of 72 stored positions: [pregen-traffic.md §2026-10-20T12:11:03](../../re/pregen-traffic.md#ts-20261020-121103).
 - The loaded-level list and the current room when the loaders run: [pregen-traffic.md §2026-10-20T13:13:47](../../re/pregen-traffic.md#ts-20261020-131347).
