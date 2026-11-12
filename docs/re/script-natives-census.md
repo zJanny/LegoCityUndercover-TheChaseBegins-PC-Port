@@ -124,7 +124,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | RideableSetPath | 0x26376c | 2 | 20 / 0 / 0 / 0 | 1 | C | 37 |  |
 | ToggleUpdateFlag | 0x270094 | 2 | 20 / 0 / 0 / 0 | 3 | A | 26 | handled; doors honour the flag (reader: update loop 0x1a4098), other readers open (SCRIPT-56, SCRIPT-S18) |
 | StopPlayerVehicle | 0x27c040 | 1 | 18 / 8 / 0 / 0 | 4 | done | 36 | [vehicles-waypoints.md §2026-10-15T11:35](vehicles-waypoints.md#ts-20261015-113500) |
-| VehicleSetChased | 0x26fe54 | 3 | 18 / 2 / 0 / 0 | 8 | stand-in | 36 | SCRIPT-S323, SCRIPT-422 |
+| VehicleSetChased | 0x26fe54 | 3 | 18 / 2 / 0 / 0 | 8 | stand-in | 36 | SCRIPT-S323, SCRIPT-446 |
 | VehicleSetInvulnerable | 0x2ad904 | 2 | 17 / 2 / 0 / 0 | 6 | C | 36 |  |
 | ?! | 0x18a7e4 | 3 | 16 / 7 / 0 / 0 | 7 | done |  |  |
 | WarningDialogBox | 0x2700d4 | 1 | 16 / 7 / 0 / 0 | 7 | done |  |  |
@@ -179,7 +179,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | SetForcedStopOnMyVehicle | 0x2b9df0 | 2 | 5 / 4 / 2 / 0 | 2 | done | 36 | first argument is a character; no effect while it is on foot (always, until VEH-4): [vehicles-system.md §2026-10-14T23:59:31](vehicles-system.md#ts-20261014-235931) |
 | ShowLevelText | 0x1cdc54 | 0 | 5 / 1 / 1 / 0 | 5 | stand-in | 30 | heading box drawn, start time a stand-in: [script-text.md §2026-10-14T16:51](script-text.md#ts-20261014-165143) |
 | ShowTally | 0x194f78 | 5 | 5 / 0 / 0 / 0 | 1 | stand-in | 30 | call recorded only: [script-text.md §2026-10-14T15:25](script-text.md#ts-20261014-152500) |
-| VehicleSetAI | 0x1bfb50 | 1 | 5 / 1 / 0 / 0 | 5 | stand-in | 36 | SCRIPT-S323, SCRIPT-422 |
+| VehicleSetAI | 0x1bfb50 | 1 | 5 / 1 / 0 / 0 | 5 | stand-in | 36 | SCRIPT-S323, SCRIPT-447 |
 | VehicleSetDCamPathFollow | 0x27be1c | 3 | 5 / 0 / 0 / 0 | 3 | C | 28 | not read |
 | activeduringdcam | 0x26f978 | 2 | 4 / 0 / 0 / 0 | 3 | A | 26 | handled, flag recorded (SCRIPT-S18) |
 | AIStalkPlayer | 0x1cd88c | 2 | 4 / 0 / 0 / 0 | 1 | stand-in | 34 | state 27 recorded; update 0x2c1c90 not ported (SCRIPT-104); returns 1 ([ai-states.md §2026-10-14T21:21](ai-states.md#ts-20261014-212158)): [ai-natives.md §2026-10-14T16:33](ai-natives.md#ts-20261014-163311) |
@@ -249,7 +249,7 @@ This file has no dated entries: the table is edited in place. When a native is r
 | StudMagnetScene | 0x2638e8 | 1 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
 | UnlockScanner | 0x1cdeb0 | 0 | 1 / 1 / 1 / 0 | 1 | A | 27 | handled as stand-in (SCRIPT-S20, batch 27 entry) |
 | UsePet | 0x172184 | 2 | 1 / 0 / 0 / 0 | 1 | done | 35 | empty handler, returns 1: [script-natives-party.md §2026-10-19T15:53:02](script-natives-party.md#ts-20261019-155302) |
-| VehicleSetThrowObjects | 0x2ad940 | 2 | 1 / 0 / 0 / 0 | 1 | C | 36 |  |
+| VehicleSetThrowObjects | 0x2ad940 | 2 | 1 / 0 / 0 / 0 | 1 | done | 36 |  |
 | VehicleShop | 0x1b278c | 1 | 1 / 0 / 0 / 0 | 1 | C | 39 |  |
 | walnuts_startphase2 | 0x291730 | 1 | 1 / 0 / 0 / 0 | 1 | stand-in | 35 | boss requested state 2 recorded (SCRIPT-S278, SCRIPT-339): [script-natives-party.md §2026-10-19T15:53:02](script-natives-party.md#ts-20261019-155302) |
 | ChangeCharTokenTexture | 0x2ad7c0 | 1 | 0 / 0 / 0 / 7 | 0 | C | 38 |  |

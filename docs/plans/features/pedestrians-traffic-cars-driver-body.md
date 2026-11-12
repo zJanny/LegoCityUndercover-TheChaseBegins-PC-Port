@@ -19,7 +19,7 @@ IN_PROGRESS, updated 2026-11-12T01:15:05+01:00. Each traffic car has its kinemat
 
 ## 5. Open items
 
-- [ ] TRAFFIC-39 — Put the kinematic traffic bodies into the vehicle world step so that the player's car collides with them, and send the contact message that makes a hit car dynamic. needs: TRAFFIC-36. blocks: TRAFFIC-S28. evidence: [traffic-car-body.md §2026-11-12T00:10:13](../../re/traffic-car-body.md#ts-20261112-001013)
+- [ ] TRAFFIC-39 — Put the kinematic traffic bodies into the vehicle world step so that the player's car collides with them, and send the contact message that makes a hit car dynamic, with `TrafficCarBodies::World::copyInputs` connected to `copyVehicleRecordInputs`. blocks: TRAFFIC-S28. evidence: [traffic-car-body.md §2026-11-12T00:10:13](../../re/traffic-car-body.md#ts-20261112-001013)
 - [ ] TRAFFIC-40 — Move the fields the driver writes into the vehicle record (brake, hand brake, hearts), apply the mover's engine value and show the kinematic wheel spin on the wheel nodes. blocks: TRAFFIC-S28. evidence: [traffic-car-body.md §2026-11-12T00:10:13](../../re/traffic-car-body.md#ts-20261112-001013)
 - [ ] TRAFFIC-41 — Read the removal's disable down to the update list test, the layer class and room of the other levels' cars, the body step out of the world, the body link's order and flag +0xc4 bit 0; measure body +0x8c right after a spawn. blocks: TRAFFIC-S29. evidence: [traffic-car-body.md §2026-11-12T00:10:13](../../re/traffic-car-body.md#ts-20261112-001013)
 

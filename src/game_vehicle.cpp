@@ -46,6 +46,8 @@ void LevelSession::loadBoardingVehicles(const std::map<std::string, std::pair<st
     }
     loadVehicleCameras();
     std::cout << "boardable vehicles: " << boardingVehicles.size() << '\n';
+    scriptCarRoutes = runtime::levelPathRouteFunctions(level);
+    levelScripts.vehicleAi().setRouteNearest(scriptCarRoutes->nearest);
     levelScripts.vehicles().setBoardingHandler([this](runtime::BoardingRequestKind kind, const std::string& character, const std::string& vehicle) {
         if (character == "player1") scriptBoardingRequest(kind, vehicle);
         else characterBoardingRequest(kind, character, vehicle);
@@ -95,8 +97,10 @@ void LevelSession::driveVehicles(float dt) {
         if (driven && drive.started)
             if (const std::optional<runtime::DamageMessage> message = runtime::stuckDestroyMessage(drive.stuck, record.forcedStop != 0)) applyVehicleDamage(i, *message, 0.0f);
         if (drive.wreck.active) continue;
-        if (!runtime::vehicleHasDynamicBody(record, driven || drive.started, objectState.isDisabled(vehicle.instance))) continue;
-        const float massScale = runtime::vehicleMassScale(massScaled && *massScaled == i);
+        const runtime::VehicleAiRecord* chasedAi = levelScripts.vehicleAi().find(vehicle.instance);
+        const bool chased = chasedAi && chasedAi->chased && !chasedAi->kinematic;
+        if (!runtime::vehicleHasDynamicBody(record, driven || drive.started || chased, objectState.isDisabled(vehicle.instance))) continue;
+        const float massScale = chased ? runtime::kChasedCarMassScale : runtime::vehicleMassScale(massScaled && *massScaled == i);
         if (!drive.started) {
             drive.started = true;
             drive.awake = true;
@@ -124,6 +128,7 @@ void LevelSession::driveVehicles(float dt) {
                                                   runtime::vehicleCollisionBody(scaled.back(), drive.shape.collisionLow, drive.shape.collisionHigh, massScale), &drive.boxContacts};
         runtime::VehicleWorldBody body{i, &drive.rigid, &drive.drivetrain, &drive.awake, &scaled.back(), runtime::bodyInputs(command), floors.back() ? &*floors.back() : nullptr, &drive.wheels};
         body.controls.driver = driven;
+        if (const std::optional<runtime::BodyInputs> inputs = driveScriptCar(i, dt)) body.controls = *inputs;
         body.destroyed = record.destroyed;
         if (driven) body.impact = [this, i](float speed, const runtime::ContactOther& other, const runtime::Vector3& point) { vehicleImpact(i, speed, other, point); };
         else if (const runtime::VehicleAiRecord* ai = levelScripts.vehicleAi().find(vehicle.instance); ai && ai->chased)
@@ -162,6 +167,7 @@ void LevelSession::driveVehicles(float dt) {
         scene.setTransform(placedSceneIndex[drive.placedIndex], boardingVehicles[i].matrix);
         poseVehicleWheels(i);
     }
+    for (const std::size_t i : members) postStepScriptCar(i, dt);
     suppressDrivenVehicleCollision();
 }
 

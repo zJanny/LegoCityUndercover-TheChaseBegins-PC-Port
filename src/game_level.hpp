@@ -16,6 +16,7 @@
 #include "game_characters.hpp"
 #include "game_pedestrians.hpp"
 #include "game_traffic.hpp"
+#include "runtime/traffic_driver_states.hpp"
 #include "game_traffic_lights.hpp"
 #include "game_cutscene.hpp"
 #include "game_hand_items.hpp"
@@ -314,6 +315,9 @@ private:
     void drawObjectiveArrows(const chase::render::Mat4& viewProjection, const chase::render::Mat4& viewToWorld);
     void vehicleImpact(std::size_t vehicleIndex, float speed, const chase::runtime::ContactOther& other, const chase::runtime::Vector3& point);
     void chasedCarImpact(std::size_t vehicleIndex, float speed, const chase::runtime::ContactOther& other);
+    std::optional<chase::runtime::BodyInputs> driveScriptCar(std::size_t vehicleIndex, float dt);
+    void postStepScriptCar(std::size_t vehicleIndex, float dt);
+    std::optional<chase::runtime::BodyInputs> runScriptCar(std::size_t vehicleIndex, float dt, bool postStep);
     void vehicleBrickBurst(std::size_t vehicleIndex, const chase::runtime::Vector3& point, int superBrickValue);
     std::optional<chase::runtime::DebrisSuperBlock> destroyedSuperBlock(const std::optional<chase::runtime::DebrisSuperBlock>& block, const std::array<float, 16>& node);
     std::optional<chase::runtime::DebrisSuperBlock> contactSuperBlock(std::size_t vehicleIndex, int value);
@@ -473,6 +477,8 @@ private:
     std::vector<std::size_t> wheelNumbers;
     std::vector<std::pair<chase::runtime::Vector3, float>> wheelBounds;
     chase::runtime::GameRandom breakRandomStandIn{game_characters::kStandInSeed};
+    chase::runtime::GameRandom scriptCarRandomStandIn{game_characters::kStandInSeed};
+    std::optional<chase::runtime::AiRouteFunctions> scriptCarRoutes;
     bool cameraSnapRequest = false;
     std::vector<chase::assets::Placement> placedObjects;
     std::vector<int> placedRooms;

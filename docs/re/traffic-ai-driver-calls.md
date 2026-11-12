@@ -12,7 +12,7 @@ Subtopic of [traffic.md](traffic.md); the AI driver is in [traffic-ai-driver.md]
 - 0x2c87a8 stops all traffic while the clock 0x241098 is below a time the cop whistle state (0x1b2 COPWHISTLE) sets to clock + 120 + random % 60. The lights 0x278b78 are the brake lights: two mesh parts with an alpha level and up to four glow effects. [§2026-11-08T12:12:24](#ts-20261108-121224)
 - The push 0x2baef0, the characters' message 45 and the whistle state 0x1b2 are read and ported in [traffic-car-push.md](traffic-car-push.md) (`src/runtime/traffic_car_push.*`, test `traffic-car-push`).
 - The brake light parts, glow parts and glow effect of 0x278b78 are written by the vehicle's parameter reader 0x1658a8 from the class values `BrakeLightModel%02u`, `BrakeLightLocator%02u` and `BrakeLightParticle`; the port draws them. [traffic-car-lights.md §2026-11-12T00:10:29](traffic-car-lights.md#ts-20261112-001029)
-- Port: `src/runtime/traffic_driver_calls.*` (test `traffic-driver-calls`), not connected to `ai_driver_input` yet (TRAFFIC-2).
+- Port: `src/runtime/traffic_driver_calls.*` (test `traffic-driver-calls`), connected to the driver's hooks by `traffic_driver_states` ([traffic-driver-states.md §2026-11-12T00:08:58](traffic-driver-states.md#ts-20261112-000858)). The unknown state 6 calls and 0x1bc660 of the entry below are read there.
 
 <a id="ts-20261108-121224"></a>
 

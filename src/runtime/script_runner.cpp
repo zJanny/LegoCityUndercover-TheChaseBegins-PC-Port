@@ -1,4 +1,6 @@
 #include "runtime/script_runner.hpp"
+
+#include "runtime/traffic_driver_calls.hpp"
 #include "runtime/director_hold.hpp"
 #include "runtime/level_start.hpp"
 #include "runtime/script_triggers.hpp"
@@ -28,7 +30,7 @@ enum class Word {
     WarningDialogBox, InformationBox, FadeScreen, PositionObject, PositionPlayer, SceneChange,
     KillScript, ObjectNative, VehicleNative, ProgressNative, MusicNative, SoundNative, TextNative, ObjectiveNative, AiNative, AnimationNative, CutsceneNative, EffectNative, WorldNative, PartyNative,
     SetPropRocking, WaitForPlatform, PlatformNative, PlayParticlesGO, StartDCam, StartDCamTrack, DCamActive, WaitForDCam, EndDCam, SnapCamera, ShakeScreen, Set3DFocusObject, SetDCamStartWait, SetDCamEndWait, CameraFollow, AwardViewer,
-    BulletTime, SpawnDebris2Colour, VehicleSetAI, VehicleSetChased
+    BulletTime, SpawnDebris2Colour, VehicleSetAI, VehicleSetChased, VehicleSetThrowObjects
 };
 
 struct ScriptFunction {
@@ -85,6 +87,7 @@ constexpr ScriptFunction kScriptFunctions[] = {
     {"spawndebris2colour", Word::SpawnDebris2Colour, true},
     {"vehiclesetai", Word::VehicleSetAI, true},
     {"vehiclesetchased", Word::VehicleSetChased, true},
+    {"vehiclesetthrowobjects", Word::VehicleSetThrowObjects, false},
 };
 
 Word wordOf(const std::string& function) {
@@ -277,6 +280,11 @@ std::vector<std::string> ScriptRunner::updateWaypoints(float dt, const float pla
 void ScriptRunner::setCarryGroupTarget(const std::string& lowerTarget, bool enable) {
     objectives_.setSubObjective(waypoints_.carryItWaypoint(), lowerTarget, 2, enable, !state_.isHidden(lowerTarget));
     objectives_.setArrow(2, lowerTarget, enable);
+}
+
+void ScriptRunner::setChaseMarkers(const std::string& car, bool on) {
+    const std::string lowerCar = lower(car);
+    setTrafficChaseMarkers(objectives_, waypoints_.carryItWaypoint(), lowerCar, on, !state_.isHidden(lowerCar));
 }
 
 void ScriptRunner::updateObjectiveMarkers(float dt, SubObjectiveWorld world) {
@@ -485,6 +493,7 @@ ScriptRunner::Result ScriptRunner::native(ScriptThread& thread, const ScriptCall
     case Word::SpawnDebris2Colour: spawnDebris2ColourNative(call); break;
     case Word::VehicleSetAI: vehicleAiNative(call, false); break;
     case Word::VehicleSetChased: vehicleAiNative(call, true); break;
+    case Word::VehicleSetThrowObjects: vehicleThrowObjectsNative(call); break;
     case Word::ObjectNative:
         if (const auto kind = objectNativeKind(lower(call.function)); kind && !args.empty()) {
             if (*kind == ObjectNativeKind::DestroyProp || *kind == ObjectNativeKind::KillObject) {

@@ -122,6 +122,16 @@ std::vector<runtime::TrafficCarMove> LevelTraffic::driveCars(const runtime::Traf
         }
         std::cout << " at update " << update << '\n';
     }
+    for (const runtime::TrafficCarStateEvent& entry : result.states) {
+        std::cout << "traffic car " << system_.slots()[entry.car].instance << ": ";
+        switch (entry.event.kind) {
+        case runtime::TrafficStateEventKind::Placed: std::cout << "placed by its driver"; break;
+        case runtime::TrafficStateEventKind::Stopping: std::cout << "driver state 6"; break;
+        case runtime::TrafficStateEventKind::Destroy: std::cout << "destroyed by its driver"; break;
+        case runtime::TrafficStateEventKind::Throw: std::cout << "throw (no throw objects)"; break;
+        }
+        std::cout << " at update " << update << '\n';
+    }
     report(result.traffic, update, state);
     return std::move(result.moves);
 }
@@ -216,6 +226,9 @@ void LevelSession::driveTrafficCars(float dt) {
                                {box.half[0], box.half[1], box.half[2]}},
                               std::nullopt});
     step.ground = chase::runtime::trafficGroundWorld(collision, [](std::uint32_t) {});
+    step.chaseMarkers = [this](std::size_t car, bool on) {
+        if (const std::optional<std::size_t> index = trafficBoarding[car]) levelScripts.setChaseMarkers(boardingVehicles[*index].instance, on);
+    };
     step.body = [this, &rows](std::size_t car) -> std::optional<chase::runtime::TrafficCarBody> {
         const std::optional<std::size_t> index = trafficBoarding[car];
         if (!index) return std::nullopt;

@@ -86,11 +86,14 @@ struct AiDriverRecord {
 
 // The vehicle record fields the driver code writes.
 struct AiDriverVehicle {
+    float steerInput = 0.0f;           // record +0x288
+    float accelerateInput = 0.0f;      // record +0x28c
     float brakeInput = 0.0f;           // record +0x290
     float handBrakeInput = 0.0f;       // record +0x294
     std::uint8_t health = 0;           // record +0x30c
     std::uint8_t hearts = 0;           // record +0x30d
     std::uint8_t maxHearts = 0;        // record +0x30e
+    std::uint8_t forcedStop = 0;       // record +0x310 (0x229be4)
     bool entityFlag20000 = false;      // entity word +0xc bit 0x20000
 };
 

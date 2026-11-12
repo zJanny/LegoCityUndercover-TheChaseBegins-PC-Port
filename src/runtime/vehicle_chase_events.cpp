@@ -1,5 +1,7 @@
 #include "runtime/vehicle_chase_events.hpp"
 
+#include "runtime/traffic_driver_states.hpp"
+
 namespace chase::runtime {
 
 std::optional<DamageMessage> chasedCarContactDamage(const AiDriverRecord& driver, const ChasedCarContact& contact) {
@@ -35,10 +37,10 @@ ChasedCarDamageReply chasedCarDamage(AiDriverRecord& driver, VehicleRecord& reco
 }
 
 ChaseEndEntry chaseEndEntry(VehicleRecord& record) {
-    record.forcedStop = 1;
+    const TrafficStoppingEntry stopping = enterTrafficStopping(record.forcedStop, false);
     ChaseEndEntry entry;
-    entry.event = kVehicleChaseEndedEvent;
-    entry.smokeEffect = kVehicleSmokeLastHeart;
+    entry.event = stopping.event;
+    entry.smokeEffect = stopping.smokeEffect;
     entry.kinematic = false;
     return entry;
 }

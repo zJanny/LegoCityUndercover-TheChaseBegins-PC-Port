@@ -25,7 +25,7 @@ void VehicleAiNatives::setChased(const std::string& lowerVehicle, const AiMatrix
     driver.speed = 0.0f;
     driver.targetSpeed = speed;
     driver.route = routeHash;
-    driver.routeDistance = 0.0f;
+    driver.routeDistance = nearest_ ? nearest_(routeHash, node[3], kVehicleChasedNearestSamples, kVehicleChasedNearestScale) : 0.0f;
     driver.stateUpdates = 0;
     record.routeHash = routeHash;
     record.chased = true;

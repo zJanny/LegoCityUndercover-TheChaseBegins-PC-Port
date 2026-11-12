@@ -4,6 +4,7 @@
 // which are those of the shipped scripts 1-4_SO_Phase2, 1-4_Car_Chase and 1-4_Hatch_Open (dumped from lvl_01 with the C++ level loader).
 // 20261102-mission14b-C (2026-11-02, REA Ghidra decompile of 0x239330, 0x2ec070, 0x23ae84, 0x23ae50, 0x23878c): 97, 98 and 99 are sounds of the
 // owner, not messages, and the blended value is the scheduler's tick scale C+0x1c; the step values are hand-computed from the rule of 0x100f44.
+// VehicleSetThrowObjects 0x2ad940 was read by 20261111-chase-B (2026-11-12, llvm-objdump); its calls here are made up.
 #include "runtime/bullet_time.hpp"
 #include "runtime/scheduler.hpp"
 #include "runtime/script_runner.hpp"
@@ -121,6 +122,10 @@ void vehicleAiNatives() {
     add(level, "chase_only", {{"VehicleSetChased", {"Other_Car", "1-4_Vehicle_Path", "7"}}});
     add(level, "short_ai", {{"VehicleSetAI", {}}});
     add(level, "short_chase", {{"VehicleSetChased", {"Car", "Path"}}});
+    add(level, "throw_on", {{"VehicleSetThrowObjects", {"1-4_Stolen_Vehicle", "1"}}});
+    add(level, "throw_short", {{"VehicleSetThrowObjects", {"1-4_Stolen_Vehicle"}}});
+    add(level, "throw_off", {{"VehicleSetThrowObjects", {"1-4_Stolen_Vehicle", "0"}}});
+    add(level, "throw_none", {{"VehicleSetThrowObjects", {"No_Record_Car", "1"}}});
     PlacedObjectState state;
     ScriptRunner runner(level, state);
     runner.setObjectPositionSource([](const std::string& name, float out[3]) {
@@ -151,6 +156,14 @@ void vehicleAiNatives() {
     const runtime::VehicleAiRecord* fresh = runner.vehicleAi().find("other_car");
     require(fresh != nullptr && fresh->chased && fresh->driver.flags == runtime::kAiDriverFlagAi, "a vehicle without a record gets one first (0x1afe3c)");
     require(runner.unhandledFunctions().empty(), "both natives have handlers");
+    runner.start("throw_on");
+    require((runner.vehicleAi().find("1-4_stolen_vehicle")->driver.flags & runtime::kAiDriverFlagEffect) != 0, "VehicleSetThrowObjects 1 sets +0xaf bit 1 (0x2ad960..0x2ad96c)");
+    runner.start("throw_short");
+    require((runner.vehicleAi().find("1-4_stolen_vehicle")->driver.flags & runtime::kAiDriverFlagEffect) != 0, "a call with too few arguments does nothing");
+    runner.start("throw_off");
+    require((runner.vehicleAi().find("1-4_stolen_vehicle")->driver.flags & runtime::kAiDriverFlagEffect) == 0, "VehicleSetThrowObjects 0 clears it");
+    runner.start("throw_none");
+    require(runner.vehicleAi().find("no_record_car") == nullptr, "a vehicle without a driver record gets none (0x2ad94c)");
     require(runtime::scriptFunctionSupport("VehicleSetAI") == runtime::ScriptFunctionSupport::StandIn &&
                 runtime::scriptFunctionSupport("VehicleSetChased") == runtime::ScriptFunctionSupport::StandIn,
             "both are stand-ins (SCRIPT-S323)");

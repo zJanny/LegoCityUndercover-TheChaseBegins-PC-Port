@@ -4,7 +4,8 @@ Subtopic of [traffic-ai-driver.md](traffic-ai-driver.md): how a chased car's dri
 
 ## Current state
 
-- The only writer of the requested driver state 6 is the vehicle handler 0x19293c: a hard contact of the player's vehicle on a car in state 5 sends the car a damage message, and the hit on the last heart requests state 6. Entering state 6 fires VehicleChaseEnded at the car. Ported as `vehicle_chase_events`; the car's driver is not stepped yet, so it does not happen in play. [§2026-11-08T12:09:08](#ts-20261108-120908)
+- The only writer of the requested driver state 6 is the vehicle handler 0x19293c: a hard contact of the player's vehicle on a car in state 5 sends the car a damage message, and the hit on the last heart requests state 6. Entering state 6 fires VehicleChaseEnded at the car. [§2026-11-08T12:09:08](#ts-20261108-120908)
+- Port: `vehicle_chase_events` turns the contact into the request of state 6; the stolen car's driver is stepped and enters state 6 at its next update ([traffic-driver-states.md §2026-11-12T00:08:58](traffic-driver-states.md#ts-20261112-000858)).
 
 <a id="ts-20261108-120908"></a>
 

@@ -113,7 +113,7 @@ constexpr float kTrafficContactMoveScale = 0.5f;  // 0x2c9070: the move is cut t
 struct TrafficContactSlideHooks {
     // 0x1fc508(car, owner, 0): the pair does not collide.
     std::function<bool(std::uint32_t owner)> ignorePair;
-    // 0x2baef0(car, move, entry, list, count, slide): the push of one character (message 45, its move); not ported (TRAFFIC-32).
+    // 0x2baef0(car, move, entry, list, count, slide): the push of one character (message 45, its move); makeTrafficCarPush (traffic_car_push.hpp).
     std::function<bool(AiVec3& move, std::size_t entry, std::vector<TrafficContactEntry>& entries, bool slide)> push;
 };
 

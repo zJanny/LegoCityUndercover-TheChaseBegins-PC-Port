@@ -12,6 +12,7 @@
 #include "runtime/traffic_car_body.hpp"
 #include "runtime/traffic_car_lights.hpp"
 #include "runtime/traffic_driver_calls.hpp"
+#include "runtime/traffic_driver_states.hpp"
 #include "runtime/traffic_driver_steering.hpp"
 #include "runtime/traffic_junction_update.hpp"
 #include "runtime/traffic_leave_snap.hpp"
@@ -63,6 +64,16 @@ struct TrafficDriveStep {
     std::uint32_t clock = 0;
     // The vehicle of a car; none for a car without a vehicle, which is not updated.
     std::function<std::optional<TrafficCarBody>(std::size_t car)> body;
+    // The hook setListed of state 5: the car's chase markers (setTrafficChaseMarkers).
+    std::function<void(std::size_t car, bool on)> chaseMarkers;
+    // The grid gather 0x237f30 of the contact step 0x29cc38 (characters, mask 4) and the slide 0x21a73c of what it listed.
+    // STAND-IN TRAFFIC-S32: unset, the gather lists nothing.
+    std::function<std::vector<TrafficContactEntry>(std::size_t car, const AiVec3& centre, const AiVec3& halfExtents,
+                                                   const TrafficContactDescriptor& descriptor, unsigned maxEntries)>
+        gatherContacts;
+    TrafficContactSlideHooks slide;
+    // *0x376c78 is set: entering state 6 fires VehicleChaseEnded a second time at its object.
+    bool globalObject = false;
     // The cars' physics bodies (TrafficCarBodies::hooks): the kinematic switch 0x22a270, the mover's test of rigid +0xcc bit 1 and its
     // velocity 0x229920. Members left empty stand for a car without a physics body: no switch, not kinematic, no velocity.
     TrafficBodyHooks bodies;
@@ -89,10 +100,16 @@ struct TrafficCarMove {
     AiMatrix node{};  // 0x24c118(node, matrix)
 };
 
+struct TrafficCarStateEvent {
+    std::size_t car = 0;
+    TrafficStateEvent event;
+};
+
 struct TrafficDriveResult {
     std::vector<TrafficEvent> traffic;     // removals of the leave call 0x21d6b8
     std::vector<TrafficDriveEvent> events;
     std::vector<TrafficCarMove> moves;
+    std::vector<TrafficCarStateEvent> states;  // the calls of states 4 to 8 (traffic_driver_states)
 };
 
 class TrafficDrivers {
@@ -117,6 +134,7 @@ public:
 
     std::size_t size() const { return cars_.size(); }
     const TrafficDriverCar& car(std::size_t index) const { return cars_.at(index); }
+    TrafficDriverCar& mutableCar(std::size_t index) { return cars_.at(index); }
 
     // The global 0x3745d4 of VehicleSetRaceTrim and the whistle stop of the cop whistle.
     TrafficHeldCar& held() { return held_; }

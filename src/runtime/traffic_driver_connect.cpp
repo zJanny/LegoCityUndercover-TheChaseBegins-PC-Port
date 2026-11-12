@@ -96,7 +96,37 @@ TrafficDriveResult TrafficDrivers::drive(TrafficManager& manager, TrafficJunctio
         AiMatrix node = body->node;
         bool moved = false;
 
+        std::vector<TrafficStateEvent> stateEvents;
+        std::vector<TrafficContactEntry> contacts;
+        TrafficStateContext states;
+        states.driver = &car.driver;
+        states.vehicle = &car.vehicle;
+        states.steering = &car.steering;
+        states.node = &node;
+        states.moved = &moved;
+        states.gearSpeed = body->gearSpeed;
+        states.radius = body->radius;
+        states.globalObject = step.globalObject;
+        if (step.bodies.copyInputs) states.copyInputs = [&step, index] { step.bodies.copyInputs(index); };
+        if (step.bodies.normalGravity) states.normalGravity = [&step, index] { step.bodies.normalGravity(index); };
+        if (step.bodies.wakeBody) states.wakeBody = [&step, index] { step.bodies.wakeBody(index); };
+        if (step.chaseMarkers) states.chaseMarkers = [&step, index](bool on) { step.chaseMarkers(index, on); };
+        states.contacts.gather = [&](const AiVec3& centre, const AiVec3& halfExtents, const TrafficContactDescriptor& descriptor, unsigned maxEntries) {
+            contacts.clear();
+            if (step.gatherContacts) contacts = step.gatherContacts(index, centre, halfExtents, descriptor, maxEntries);
+            return static_cast<std::uint32_t>(contacts.size());
+        };
+        states.contacts.slide = [&](const AiVec3& distance, std::uint32_t) {
+            TrafficContactCar self;
+            self.node = entity + 1;
+            self.radius = body->radius;
+            AiVec3 move = distance;
+            slideTrafficCarContacts(self, move, contacts, step.slide);
+        };
+        states.events = &stateEvents;
+
         AiDriverHooks hooks;
+        connectTrafficDriverStates(hooks, states);
         hooks.setKinematic = [&](bool on) {
             if (step.bodies.switchKinematic) step.bodies.switchKinematic(index, on);
         };
@@ -181,6 +211,7 @@ TrafficDriveResult TrafficDrivers::drive(TrafficManager& manager, TrafficJunctio
         view.route = routeIndex(manager.routeTable(), car.driver.route);
         view.position = node[3];
         if (moved) result.moves.push_back({index, node});
+        for (const TrafficStateEvent& event : stateEvents) result.states.push_back({index, event});
     }
     return result;
 }

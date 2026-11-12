@@ -241,6 +241,9 @@ public:
     const ObjectiveState& objectives() const { return objectives_; }
     // 0x22fbe8 then 0x22fb44: the target joins (or leaves) the carry group (type 2) keyed by the carry-it waypoint 0x230ef4 and the carry arrow list 2.
     void setCarryGroupTarget(const std::string& lowerTarget, bool enable);
+    // The hook setListed of an AI driver's state 5 (setTrafficChaseMarkers): the car's enemy arrow and its place in the enemy group keyed by
+    // the carry-it waypoint.
+    void setChaseMarkers(const std::string& car, bool on);
     // 0x2b9c28: the arrows of the target fade out in the next update.
     void hideObjectiveArrow(const std::string& lowerTarget) { objectives_.requestArrowHide(lowerTarget); }
     // Waypoint class (waypoints.hpp): reaching an active waypoint starts the level script named by its TriggerScript.
@@ -323,6 +326,7 @@ private:
     void bulletTimeNative(const assets::ScriptCall& call);
     void spawnDebris2ColourNative(const assets::ScriptCall& call);
     void vehicleAiNative(const assets::ScriptCall& call, bool chased);
+    void vehicleThrowObjectsNative(const assets::ScriptCall& call);
     void awardViewerNative();
     void destroyNative(const std::string& lowerInstance);
     void fireAiMoveEvents();

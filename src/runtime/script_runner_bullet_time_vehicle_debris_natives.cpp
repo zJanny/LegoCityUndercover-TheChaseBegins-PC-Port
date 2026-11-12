@@ -1,5 +1,7 @@
 #include "runtime/script_runner.hpp"
 
+#include "runtime/traffic_driver_states.hpp"
+
 #include <algorithm>
 #include <cctype>
 
@@ -31,8 +33,21 @@ void ScriptRunner::vehicleAiNative(const assets::ScriptCall& call, bool chased) 
     node[1] = {0.0f, 1.0f, 0.0f};
     node[2] = {0.0f, 0.0f, 1.0f};
     node[3] = {where[0], where[1], where[2]};
-    if (chased) vehicleAi_.setChased(vehicle, node, assets::nameHash(args[1]), read(args[2]));
-    else vehicleAi_.setAi(vehicle, node);
+    if (!chased) {
+        vehicleAi_.setAi(vehicle, node);
+        return;
+    }
+    vehicleAi_.setChased(vehicle, node, assets::nameHash(args[1]), read(args[2]));
+    const std::vector<VehicleRecord>& records = vehicles_.records();
+    for (std::size_t index = 0; index < records.size(); ++index)
+        if (lowerName(records[index].instance) == vehicle) vehicles_.requestState(index, kVehicleChasedRequestedState);
+}
+
+void ScriptRunner::vehicleThrowObjectsNative(const assets::ScriptCall& call) {
+    const auto& args = call.arguments;
+    if (args.size() < kVehicleSetThrowObjectsArguments) return;
+    VehicleAiRecord* record = vehicleAi_.mutableRecord(lowerName(args[0]));
+    setVehicleThrowObjects(record ? &record->driver : nullptr, read(args[1]));
 }
 
 void ScriptRunner::spawnDebris2ColourNative(const assets::ScriptCall& call) {

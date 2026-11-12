@@ -1963,6 +1963,16 @@ if(BUILD_TESTING)
       --script "0 0 130;0 0 120 A;0 0 100;at 1004.431 30.709 1080.533 352.6;0 0 5;0 0 1 A;0 0 850")
     set_tests_properties(game-crane-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       PASS_REGULAR_EXPRESSION "script 1-3_Push_Done ended at update [0-9]+\n.*buildit 1-3_crane_bits: stud drop mode.*script 1-3_Crane_Build_it_done started at update [0-9]+\n.*switch 1-3_crane_switch: used at update [0-9]+\n.*switch 1-3_crane_switch: state 3 at update [0-9]+\n.*script 1-3_Start_Rescue_Lawnmower_man started at update [0-9]+\n.*player AI move: started at update [0-9]+ from [0-9. ]+\n.*player AI move: ended at update [0-9]+ at 987.288 [0-9.]+ 1077.79, [0-9]+ updates\n.*player AI move: 60 updates after the end the player is at 987.288 16.80[0-9]* 1077.79\n.*script 1-4_MissionStart started at update [0-9]+")
+    # Mission 1-4, the chase (SCRIPT-422, 20261111-chase-B, 2026-11-12): 1-4_Hatch_Open plays cutscene 1_4_c, enables 1-4_Stolen_Vehicle and starts
+    # 1-4_Car_Chase, whose VehicleSetChased puts the car's AI driver into state 5 along the level path 1-4_Vehicle_Path at speed 29; the car drives off
+    # on its physics body into the next room and breaks a lamp post. The update numbers are the port's, not measured in the original.
+    add_test(NAME game-chase-1-4 COMMAND chase-game
+      --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+      --config "${CMAKE_BINARY_DIR}/config/controls.cfg"
+      --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --save-out "${CMAKE_BINARY_DIR}/game-chase-1-4.dat"
+      --call-script 1-4_Hatch_Open --script "0 0 900")
+    set_tests_properties(game-chase-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
+      PASS_REGULAR_EXPRESSION "script 1-4_Car_Chase started at update [0-9]+\n.*vehicle 1-4_stolen_vehicle: driver state 5 at update 770\n.*vehicle 1-4_Stolen_Vehicle: room 17 -> 16 at update 832\n.*prop Lampost_42: smashed by 1-4_stolen_vehicle at update 881")
     # Mission 1-4, the arrival at the car showroom (SCRIPT-410): the player walks into the waypoint 1-4_Waypoint_01 from 13 units away, which starts
     # 1-4_ShowroomArrival; cutscene 1_4_a, the booster on the roof, the end of the script with the player at 1-4_P1_GoTo (577.484, 27.5656, 967.533 from the
     # placement of that dummy in the level data, read by 20261101-mission-C on 2026-11-01). The update numbers are the port's, not measured in the original.
@@ -2711,6 +2721,14 @@ target_link_libraries(entity-update-list-test PRIVATE chase_runtime)
 target_compile_options(entity-update-list-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME entity-update-list COMMAND entity-update-list-test)
 
+target_sources(chase_runtime PRIVATE src/runtime/traffic_driver_states.cpp)
+add_executable(traffic-driver-states-test tests/traffic_driver_states_test.cpp)
+target_link_libraries(traffic-driver-states-test PRIVATE chase_runtime chase_assets)
+target_compile_options(traffic-driver-states-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME traffic-driver-states COMMAND traffic-driver-states-test)
+add_test(NAME traffic-driver-states-real-data COMMAND traffic-driver-states-test "${CHASE_ROMFS_DIR}/lego_city3ds.fib" "${CHASE_ROMFS_DIR}/lego_city3ds.csv")
+set_tests_properties(traffic-driver-states-real-data PROPERTIES SKIP_RETURN_CODE 77 LABELS needs-game-data)
+
 target_sources(chase_runtime PRIVATE src/runtime/traffic_ground_world.cpp)
 add_executable(traffic-ground-world-test tests/traffic_ground_world_test.cpp)
 target_link_libraries(traffic-ground-world-test PRIVATE chase_runtime chase_assets)
@@ -2842,7 +2860,7 @@ foreach(test_name ${chase_all_tests})
   set_property(TEST ${test_name} APPEND PROPERTY ENVIRONMENT "XDG_DATA_HOME=${CMAKE_BINARY_DIR}/test-xdg/${test_name}")
 endforeach()
 
-foreach(slow_test game-script-takedown-goon game-script-takedown-arrestable game-script-arrest-goon game-arrest-showroom-1-4 game-arrest-after-crash-1-4 game-goon-conduct-1-4 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-girder-guy-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-bullet-time-1-4 game-ladder-kick-1-4 game-skylight-debris-1-4 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-helipad-collision game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data reflection-real-data)
+foreach(slow_test game-script-takedown-goon game-script-takedown-arrestable game-script-arrest-goon game-arrest-showroom-1-4 game-arrest-after-crash-1-4 game-goon-conduct-1-4 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-girder-guy-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-chase-1-4 game-bullet-time-1-4 game-ladder-kick-1-4 game-skylight-debris-1-4 game-key-use-1-3 game-debris-super-pickup game-cutscene-dog-end game-super-buildit-build game-helipad-collision game-fast-travel-exit game-super-brick-roof game-doorlock-detective-1-2 game-cage-release-1-2 game-mission-1-1 game-mission-1-1-start game-vehicle-drive game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-smash game-vehicle-break game-director-hold game-director-release game-van-escort game-pause-menu waypoint-marker-shot audio-real-data reflection-real-data)
   if(TEST ${slow_test})
     set_property(TEST ${slow_test} APPEND PROPERTY LABELS slow)
   endif()
@@ -2871,7 +2889,7 @@ foreach(game_data_test
   game-script-run game-script-walk game-script-camera game-script-ledge game-vehicle-drive game-van-escort game-cutscene-glass-hidden
   game-cutscene-dog-prop game-super-brick-freeplay game-save-new-game-clean game-save-new-game game-save-reload game-super-brick-roof
   game-cutscene-dog-end game-vehicle-room game-pedestrian-rooms game-vehicle-hit game-vehicle-break game-vehicle-smash game-debris-super-pickup
-  game-mission-1-1 game-detective-1-2 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-girder-guy-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-bullet-time-1-4 game-skylight-debris-1-4 game-garage-key-1-3 game-key-use-1-3 game-use-spot-1-2 game-use-marker-detective-1-2 game-player-script-animation game-super-buildit-prompt
+  game-mission-1-1 game-detective-1-2 game-key-pickup-1-3 game-parts-crate-1-3 game-generator-1-3 game-girder-guy-1-3 game-ledge-lift-1-3 game-fence-vault-1-3 game-push-cart-1-3 game-crane-1-3 game-showroom-1-4 game-chase-1-4 game-bullet-time-1-4 game-skylight-debris-1-4 game-garage-key-1-3 game-key-use-1-3 game-use-spot-1-2 game-use-marker-detective-1-2 game-player-script-animation game-super-buildit-prompt
   game-super-buildit-build game-helipad-collision game-fast-travel-exit game-cage-release-1-2 game-doorlock-detective-1-2 game-mission-1-2-start-timing game-mission-1-1-start game-script-dialog
   game-same-level-entry game-scene-change-exit game-scene-change-entry game-director-hold game-director-release game-script-zipline game-script-zipline-handcuffs
   game-script-attack-table game-script-attack-goon game-script-takedown-goon game-script-takedown-arrestable game-script-arrest-goon game-arrest-showroom-1-4 game-arrest-after-crash-1-4 game-left-vehicle-unknown-character game-script-wobbly-table game-script-bounce game-script-bounce-grab game-script-acrobat-poles game-script-zipline-use-a
