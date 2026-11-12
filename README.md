@@ -157,11 +157,13 @@ For players:
 
 - [Getting started](docs/getting-started.md): requirements, version check, package details, the other programs and more problems.
 - [Development runtime](docs/game-runtime.md): what `chase-game` does and its options.
+  - [What works in the runtime](docs/game-runtime-works.md) and [what is missing](docs/game-runtime-missing.md)
 - [Project status](docs/status.md): what works and what does not.
 - [Controls and the input laboratory](docs/controls.md)
 - [Building the tools](docs/building.md), including tests
 - [Extracting game data](docs/extracting-game-data.md): all extraction and conversion tools
 - [Command reference](docs/commands.md)
+  - [Test list](docs/commands-tests.md): [display](docs/commands-tests-display.md), [simulation](docs/commands-tests-simulation.md), [data](docs/commands-tests-data.md)
 - [Model viewer](docs/model-viewer.md), [sound test](docs/sound-test.md), [video player](docs/fmv-player.md), [debug overlay](docs/debug-overlay.md)
 - [How progress is measured](docs/progress.md)
 
