@@ -4,6 +4,7 @@
 // the route. chase-game steps the driver of a chased car on the vehicle's physics body (traffic_driver_states.hpp); a record of VehicleSetAI alone is
 // not stepped (STAND-IN SCRIPT-S323). No SDL dependency.
 #include "runtime/ai_driver_input.hpp"
+#include "runtime/chased_car_setup.hpp"
 #include "runtime/traffic_driver_calls.hpp"
 #include "runtime/traffic_driver_steering.hpp"
 #include "runtime/vehicle_drivetrain.hpp"
@@ -30,6 +31,7 @@ struct VehicleAiRecord {
     std::uint16_t requestedVehicleState = 0;     // vehicle record +4
     std::uint32_t routeHash = 0;                 // name hash of the level path (driver +4)
     bool chased = false;
+    ChasedNodeBytes node;                        // the node bytes +0xdd / +0xde that 0x1afd38 sets (STAND-IN SCRIPT-S344)
     AiDriverVehicle vehicle;                     // the vehicle record fields the driver writes
     TrafficSteeringState steering;               // the record's bytes +0x7a..+0xa3
     TrafficBrakeLights lights;                   // vehicle record +0x2ac..+0x2d8 (no parts set up, TRAFFIC-33)
@@ -54,6 +56,9 @@ public:
     void setNodeMatrixSource(std::function<std::optional<AiMatrix>(const std::string& lowerVehicle)> source) { nodeMatrix_ = std::move(source); }
     // 0x230f04(entity) of VehicleSetChased: the vehicle whose hearts the target display shows (target_hearts_display.hpp), taken once.
     std::optional<std::string> takeTargetHeartsRequest();
+    // 0x22a6c0 of VehicleSetChased: the level path of a route hash, whose length table with 10 steps is kept per path (path +0x14 / +0x18).
+    void setPathSource(std::function<const assets::LevelPath*(std::uint32_t route)> source) { pathSource_ = std::move(source); }
+    const ChasedPathTable* pathTable(std::uint32_t route) const;
     const VehicleAiRecord* find(const std::string& lowerVehicle) const;
     VehicleAiRecord* mutableRecord(const std::string& lowerVehicle);
     std::size_t size() const { return records_.size(); }
@@ -65,6 +70,8 @@ private:
     std::map<std::string, VehicleAiRecord> records_;
     std::function<float(std::uint32_t, const AiVec3&, unsigned, float)> nearest_;
     std::optional<std::string> targetHeartsRequest_;
+    std::function<const assets::LevelPath*(std::uint32_t)> pathSource_;
+    std::map<std::uint32_t, ChasedPathTable> pathTables_;
     std::function<std::optional<AiMatrix>(const std::string&)> nodeMatrix_;
 };
 

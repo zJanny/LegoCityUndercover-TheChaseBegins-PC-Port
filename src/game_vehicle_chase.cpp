@@ -69,7 +69,7 @@ void LevelSession::showTargetHearts(const std::string& vehicle) {
         }
     runtime::setTargetHearts(targetHearts, source);
     std::cout << "target hearts " << vehicle << ": " << targetHearts.hearts << " of " << targetHearts.most << (targetHearts.shown ? " shown" : " off")
-              << ", portrait " << targetHearts.portrait << " at update " << updatesForLog << " (not drawn, SCRIPT-455)\n";
+              << ", portrait " << targetHearts.portrait << " at update " << updatesForLog << " (not drawn, SCRIPT-462)\n";
 }
 
 std::optional<runtime::BodyInputs> LevelSession::driveScriptCar(std::size_t vehicleIndex, float dt) {

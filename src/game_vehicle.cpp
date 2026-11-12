@@ -48,6 +48,10 @@ void LevelSession::loadBoardingVehicles(const std::map<std::string, std::pair<st
     std::cout << "boardable vehicles: " << boardingVehicles.size() << '\n';
     scriptCarRoutes = runtime::levelPathRouteFunctions(level);
     levelScripts.vehicleAi().setRouteNearest(scriptCarRoutes->nearest);
+    levelScripts.vehicleAi().setPathSource([this](std::uint32_t route) -> const chase::assets::LevelPath* {
+        const auto found = std::find_if(level.paths.begin(), level.paths.end(), [route](const chase::assets::LevelPath& path) { return path.nameHash == route; });
+        return found == level.paths.end() ? nullptr : &*found;
+    });
     levelScripts.vehicleAi().setNodeMatrixSource([this](const std::string& vehicle) { return scriptCarNodeMatrix(vehicle); });
     levelScripts.vehicles().setBoardingHandler([this](runtime::BoardingRequestKind kind, const std::string& character, const std::string& vehicle) {
         if (character == "player1") scriptBoardingRequest(kind, vehicle);

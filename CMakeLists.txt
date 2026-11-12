@@ -1983,7 +1983,7 @@ if(BUILD_TESTING)
       --level levels/levels/lvl_01_cherrytreehills/lvl_01_cherrytreehills_main.blvl --no-start-cutscenes --save-out "${CMAKE_BINARY_DIR}/game-chase-1-4.dat"
       --call-script 1-4_Hatch_Open --script "0 0 900")
     set_tests_properties(game-chase-1-4 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
-      PASS_REGULAR_EXPRESSION "script 1-4_Car_Chase started at update [0-9]+\n.*target hearts 1-4_stolen_vehicle: 5 of 5 shown, portrait Sprites/portraits/musclecars_falchiongt.png at update 770 \\(not drawn, SCRIPT-455\\)\n.*vehicle 1-4_stolen_vehicle: driver state 5 at update 770\n.*traffic car Traffic04: hit, driver requests state 4 at update 826\n.*vehicle 1-4_Stolen_Vehicle: room 17 -> 16 at update 841\n.*prop Lampost_42: smashed by traffic04 at update 884"
+      PASS_REGULAR_EXPRESSION "script 1-4_Car_Chase started at update [0-9]+\n.*target hearts 1-4_stolen_vehicle: 5 of 5 shown, portrait Sprites/portraits/musclecars_falchiongt.png at update 770 \\(not drawn, SCRIPT-462\\)\n.*vehicle 1-4_stolen_vehicle: driver state 5 at update 770\n.*traffic car Traffic04: hit, driver requests state 4 at update 826\n.*vehicle 1-4_Stolen_Vehicle: room 17 -> 16 at update 841\n.*prop Lampost_42: smashed by traffic04 at update 884"
       FAIL_REGULAR_EXPRESSION "heart lost")
     # SCRIPT-415 / SCRIPT-448: the player's police car (seated by 1-4_Hatch_Open at update 713) is placed in the stolen car's way with `at X Y Z FACING`
     # (facing 90 = +x, 270 = -x, 0 = +z, 180 = -z) five times, 128 updates apart at least (the hold of the hit); the hits take the hearts 5 to 1 and the fifth ends the
@@ -2672,6 +2672,15 @@ add_executable(target-hearts-display-test tests/target_hearts_display_test.cpp)
 target_link_libraries(target-hearts-display-test PRIVATE chase_runtime)
 target_compile_options(target-hearts-display-test PRIVATE -Wall -Wextra -Wpedantic)
 add_test(NAME target-hearts-display COMMAND target-hearts-display-test)
+target_sources(chase_runtime PRIVATE src/runtime/chase_target_display.cpp src/runtime/chased_car_setup.cpp)
+add_executable(target-display-calls-test tests/target_display_calls_test.cpp)
+target_link_libraries(target-display-calls-test PRIVATE chase_runtime)
+target_compile_options(target-display-calls-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME target-display-calls COMMAND target-display-calls-test)
+add_executable(chased-car-setup-test tests/chased_car_setup_test.cpp)
+target_link_libraries(chased-car-setup-test PRIVATE chase_runtime chase_assets)
+target_compile_options(chased-car-setup-test PRIVATE -Wall -Wextra -Wpedantic)
+add_test(NAME chased-car-setup COMMAND chased-car-setup-test)
 target_sources(chase_runtime PRIVATE src/runtime/character_vehicle_entry.cpp)
 add_executable(character-vehicle-entry-test tests/character_vehicle_entry_test.cpp)
 target_link_libraries(character-vehicle-entry-test PRIVATE chase_runtime)

@@ -1,7 +1,7 @@
 #pragma once
 // The hearts display of a chased target (docs/re/traffic-driver-states.md): 0x230f04(entity) fills the HUD object 0x517f34 with the target's
 // portrait and hearts and switches it on or off. VehicleSetChased 0x1afd38 calls it with the car, the vehicle return 0x22b30c with a car whose
-// driver is in state 5, VehicleSetRaceTrim 0x26d8c4 and 0x28548c with 0 (off). The draw of the object is not ported (SCRIPT-455). No SDL dependency.
+// driver is in state 5, VehicleSetRaceTrim 0x26d8c4 and 0x28548c with 0 (off). The draw of the object is not ported (SCRIPT-462). No SDL dependency.
 #include <cstdint>
 #include <string>
 

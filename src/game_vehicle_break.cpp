@@ -1,4 +1,5 @@
 #include "game_level.hpp"
+#include "runtime/chase_target_display.hpp"
 #include "runtime/vehicle_wheel_pose.hpp"
 
 #include <iostream>
@@ -94,6 +95,9 @@ void LevelSession::returnVehicle(std::size_t vehicleIndex) {
         if (hud) hud->setHearts(record.hearts, true);
         cameraSnapRequest = true;
     }
+    const runtime::VehicleAiRecord* ai = levelScripts.vehicleAi().find(vehicle.instance);
+    if (runtime::vehicleReturnShowsTarget(seated && *seated == vehicleIndex, ai ? std::optional<std::uint8_t>(ai->driver.state) : std::nullopt))
+        showTargetHearts(vehicle.instance);
     std::cout << "vehicle " << vehicle.instance << ": back with " << unsigned(record.hearts) << " hearts at update " << updatesForLog
               << " (stand-in VEH-S99: no fade-in 0x252068, other vehicles not pushed away 0x231108, body at the heading only)\n";
 }

@@ -35,6 +35,14 @@ void VehicleAiNatives::setChased(const std::string& lowerVehicle, const AiMatrix
     driver.stateUpdates = 0;
     record.routeHash = routeHash;
     record.chased = true;
+    if (pathSource_)
+        if (const assets::LevelPath* path = pathSource_(routeHash)) pathTables_[routeHash] = chasedPathTable(*path);
+    chasedNodeTest(true, record.node);
+}
+
+const ChasedPathTable* VehicleAiNatives::pathTable(std::uint32_t route) const {
+    const auto found = pathTables_.find(route);
+    return found == pathTables_.end() ? nullptr : &found->second;
 }
 
 std::optional<std::string> VehicleAiNatives::takeTargetHeartsRequest() {
