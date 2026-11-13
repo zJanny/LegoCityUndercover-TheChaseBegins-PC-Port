@@ -64,7 +64,7 @@ The Windows build uses GCC and the libraries of [MSYS2](https://www.msys2.org/) 
 The MSYS2 UCRT64 packages:
 
 ```sh
-pacman -S mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-sdl2-compat mingw-w64-ucrt-x86_64-libepoxy mingw-w64-ucrt-x86_64-ffmpeg
+pacman -S --needed mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-sdl2-compat mingw-w64-ucrt-x86_64-libepoxy mingw-w64-ucrt-x86_64-ffmpeg
 ```
 
 Run the build and the tests in the UCRT64 window that keeps the Windows `PATH`. Open it from Git Bash in the project folder:
@@ -86,14 +86,14 @@ ctest --test-dir build -j"$(nproc)" --output-on-failure
 - The tests need Git, which the window finds through the Windows `PATH` (`-use-full-path`).
 - Run the Python tests in Git Bash: `python3 -m unittest discover -s tests -p 'test_*.py' -v`.
 - On Windows the tests that start `chase-game` or `chase-viewer` without a window are skipped. SDL's offscreen mode needs `libEGL.dll`, which MSYS2 does not have. The list is in [the Windows test notes](plans/features/windows-tests.md).
-- The extraction and conversion tools load `build/libchase_assets_c.dll`. Set `CHASE_ASSETS_LIB` as shown in [Extracting game data](extracting-game-data.md#3-unpack-the-asset-archive).
+- The extraction and conversion tools load `build/libchase_assets_c.dll`. They find it themselves on Windows; `CHASE_ASSETS_LIB` is optional there and names another path ([Extracting game data](extracting-game-data.md#3-unpack-the-asset-archive)).
 - `-DCHASE_BUILD_TESTS=ON` builds the tests again after a build with `-DCHASE_BUILD_TESTS=OFF`, as in the README. Without tests the build needs no Python setting.
 
 ### Linux tests in WSL
 
 A change on Windows to code that Linux shares also has to pass the Linux build and tests ([Windows rules](rules/windows.md#linux-stays-green)). You run them in WSL, the Linux subsystem of Windows, with an Ubuntu distribution and the Debian packages of the README. The tests that run `chase-game` offscreen need OpenGL 4.6 in WSL, which comes from your graphics card through Mesa's D3D12 driver.
 
-1. Install WSL with an Ubuntu distribution, as in [Microsoft's guide](https://learn.microsoft.com/windows/wsl/install), and the Debian packages of the README in Ubuntu. Install a current graphics driver with WSL support. Then update WSL in PowerShell:
+1. Install WSL with an Ubuntu distribution, as in [Microsoft's guide](https://learn.microsoft.com/windows/wsl/install), and the Debian packages of the README in Ubuntu. Install a current graphics driver with WSL support. Check with `wsl --list` in PowerShell that Ubuntu is listed. Then update WSL:
 
    ```powershell
    wsl --update
@@ -106,11 +106,13 @@ A change on Windows to code that Linux shares also has to pass the Linux build a
    sudo apt install mesa-utils
    ```
 
-   Then end WSL in PowerShell, so the next start has the new groups. Replace `Ubuntu` with the name that `wsl -l` shows:
+   Then end WSL in PowerShell, so the next start has the new groups:
 
    ```powershell
-   wsl -t Ubuntu
+   wsl --shutdown
    ```
+
+   `wsl --shutdown` ends every WSL session, so run it yourself only when no other program or agent session uses WSL.
 
 3. Check the driver in WSL:
 

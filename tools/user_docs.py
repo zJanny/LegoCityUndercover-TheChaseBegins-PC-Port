@@ -14,6 +14,18 @@ SOURCE_OPTION = re.compile(r'"(--[a-z][a-z0-9-]*)"')
 PROGRAM = re.compile(r"add_executable\((chase-[a-z0-9-]+)")
 PROGRAM_NAME = re.compile(r"(?<![\w/.-])chase-[a-z][a-z0-9-]*(?![\w-])")
 PATH = re.compile(r"(?<![\w/.-])((?:tools|src|tests|docs)/[\w./-]*[\w/])(?![\w./-])")
+SEGMENT_SPLIT = re.compile(r"\s*(?:\|\||&&|[|;])\s*")
+ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=")
+EXTERNAL_OPTIONS = {
+    "cmake": {"--build", "--version"},
+    "ctest": {"--output-on-failure", "--test-dir"},
+    "gcc": {"--version"},
+    "git": {"--amend", "--branch", "--signoff"},
+    "graphify": {"--help"},
+    "pacman": {"--needed"},
+    "pip": {"--user"},
+    "wsl": {"--install", "--list", "--shutdown", "--update"},
+}
 SOURCE_SUFFIXES = {".cpp", ".hpp", ".py", ".txt", ".cmake", ".sh", ".md", ".glsl", ".json"}
 SKIPPED_DIRS = {"artifacts", "build", "graphify-out", ".git", "node_modules"}
 
@@ -34,6 +46,22 @@ def code_fragments(path):
         else:
             for match in CODE_SPAN.finditer(line):
                 yield number, match.group(1)
+
+
+def command_name(segment):
+    for word in segment.split():
+        if ASSIGNMENT.match(word) or word == "sudo":
+            continue
+        name = word.replace("\\", "/").rsplit("/", 1)[-1]
+        return name[:-4] if name.endswith(".exe") else name
+    return ""
+
+
+def fragment_options(fragment):
+    for segment in SEGMENT_SPLIT.split(fragment):
+        program = command_name(segment)
+        for option in OPTION.findall(segment):
+            yield option, program
 
 
 def repository_files(root):
@@ -81,8 +109,8 @@ def user_doc_errors(root):
         for path in docs:
             for number, fragment in code_fragments(path):
                 where = f"{path.relative_to(root).as_posix()}:{number}"
-                for option in OPTION.findall(fragment):
-                    if option not in known:
+                for option, command in fragment_options(fragment):
+                    if option not in known and option not in EXTERNAL_OPTIONS.get(command, ()):
                         errors.append(f"{where}: user-doc-option-unknown: {option} is in no source, tool or test; remove it from the doc or fix its name")
                 for program in PROGRAM_NAME.findall(fragment):
                     if program not in programs:

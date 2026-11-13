@@ -27,6 +27,7 @@ None.
 
 - [ ] WINTEST-17 — question for the user: `git worktree remove` deletes the game data behind a worktree's `artifacts` junction, with `--force` and also without it on a clean worktree (decoy check by the reviewer of 20261113-winopen-D, 2026-11-13), and so may `git clean -x`, `rm -rf` or a cleanup of agent worktrees outside `merge_agent.py`; the hooks re-create the junction in every agent worktree. Which guard do you want: a hook that refuses these commands while the junction exists, a rule in the lead-round skill and CONTRIBUTING.md, or both? evidence: `tools/merge_agent.py` `remove_directory_link`
 - [ ] WINTEST-10 — The Azahar oracle tools (`tools/azahar_oracle.py`, `tools/oracle_motion.py`) assume Linux (Xvfb, `os.killpg`, `signal.SIGKILL`, `os.kill(pid, 0)`, which terminates the process on Windows); they are not ported, the four launch tests skip; evidence: `tools/azahar_oracle.py` `kill_group`, `free_display`
+- [ ] WINTEST-19 — `tests/test_azahar_oracle_touch.py` (`until_released`, `until_touched`) failed once in WSL (seen by the lead, 2026-11-12, failure text not recorded) and did not fail in 70 WSL runs of the file (30 plain and 40 under 32 busy loops; 20261113-winopen-E, 2026-11-13, fresh clone). Question for the lead: what was the exact failure text? Both helpers read the first packet before checking the deadline, so a stale packet of the previous state is returned when the 5 s deadline passes first; a fix needs the text to pick the cause; evidence: `tests/test_azahar_oracle_touch.py` `until_released`
 
 ## 6. Findings summary
 

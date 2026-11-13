@@ -86,6 +86,8 @@ ERROR_RULES = [
             ("README.md", r".*", "install section"),
             ("docs/getting-started.md", r".*", "install section"),
             ("docs/building.md", r".*", "install section"),
+            ("tools/user_docs.py", r"\"pacman\"", "the external program whose option the user docs name"),
+            ("tests/test_user_docs.py", r"\bpacman\b", "tests of the external program options"),
         ],
     ),
 ]

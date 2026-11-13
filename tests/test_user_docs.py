@@ -55,6 +55,31 @@ class UserDocsTest(unittest.TestCase):
         (self.root / 'docs' / 'commands.md').write_text(COMMANDS + '\n`x.py --keep`\n', encoding='utf-8', newline='\n')
         self.assertEqual(self.errors('user-doc-option-unknown'), [])
 
+    def write_commands(self, extra):
+        (self.root / 'docs' / 'commands.md').write_text(COMMANDS + extra, encoding='utf-8', newline='\n')
+
+    def test_listed_external_program_may_use_its_listed_options(self):
+        self.write_commands('\n`wsl --shutdown`, `gcc --version`\n\n```\nsudo pacman -S --needed git\nPATH=x wsl.exe --update && wsl --list\n```\n')
+        self.assertEqual(self.errors('user-doc-option-unknown'), [])
+
+    def test_listed_external_program_with_an_unlisted_option_is_rejected(self):
+        self.write_commands('\n`wsl --reboot`, `gcc --shutdown`\n\n```\nwsl --list --verbose\n```\n')
+        found = self.errors('user-doc-option-unknown')
+        self.assertEqual(len(found), 3)
+        for option in ('--reboot', '--shutdown', '--verbose'):
+            self.assertTrue(any(option in e for e in found), option)
+
+    def test_unlisted_program_cannot_use_an_external_option(self):
+        self.write_commands('\n`ping --shutdown`, `--shutdown`\n\n```\nfoo --version\n```\n')
+        self.assertEqual(len(self.errors('user-doc-option-unknown')), 3)
+
+    def test_external_options_do_not_open_our_programs(self):
+        self.write_commands('\n`chase-game --shutdown`, `git --branch x | chase-game --version`\n')
+        found = self.errors('user-doc-option-unknown')
+        self.assertEqual(len(found), 2)
+        self.assertTrue(any('--shutdown' in e for e in found))
+        self.assertTrue(any('--version' in e for e in found))
+
     def test_program_must_be_documented_and_exist(self):
         (self.root / 'CMakeLists.txt').write_text('add_executable(chase-game src/game.cpp)\nadd_executable(chase-tool src/t.cpp)\n', encoding='utf-8', newline='\n')
         self.assertEqual(len(self.errors('user-doc-program-undocumented')), 1)

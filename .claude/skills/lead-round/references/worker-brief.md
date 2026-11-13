@@ -15,6 +15,7 @@ You are worker {{agent}} of round {{round}} of the PC port of *LEGO City Underco
   - [optional: linux-port] `docs/re/oracle.md` before any emulator use
   - [optional: other plans] the spec entries this package implements: {{docs/design links}}
 - **First command, in your worktree root:** `[ -e artifacts ] || ln -s {{main}}/artifacts artifacts` (the guard matters: a pre-tool hook may have made the link already, and a second `ln -s` would create a stray link inside the user's `artifacts/`)
+  - [optional: windows-port] On Windows the hook makes a directory junction, and the same guard applies. In Git Bash: `[ -e artifacts ] || cmd //c mklink /J artifacts "{{main}}\artifacts"`; in PowerShell: `if (-not (Test-Path artifacts)) { New-Item -ItemType Junction -Path artifacts -Target {{main}}\artifacts }`. Write `{{main}}` as a Windows path there.
 - **Scratch code goes to the scratchpad directory of your system prompt, never to `artifacts/`** (it is shared with the user and the lead; a hook denies `.cpp`/`.hpp` writes there). Never delete anything in the main checkout's `artifacts/` except your own `artifacts/oracle/{{agent}}-out` folders and `artifacts/scratch/`; for anything else ask `main` with `SendMessage`.
 - **Graphify is your first action after reading.** The graph is only in the main checkout. Start with these queries, list every query you ran in your report, and check each answer against the source:
   {{2 to 4 lines: `graphify query "<q>" --graph {{main}}/graphify-out/graph.json`}}
@@ -26,7 +27,13 @@ You are worker {{agent}} of round {{round}} of the PC port of *LEGO City Underco
   - Behaviour comes only from the approved spec entries above. What they do not decide: ask `main` with `SendMessage` and continue other work; never choose it yourself.
   - With every option at its default, game behaviour stays unchanged: the port's tests stay as they are and pass.
   - [optional: qol] The feature is off by default and switched only by the user's toggle mechanism ({{toggle, with its design entry}}). If that mechanism does not exist, stop: tell `main` that the user has to define and implement it first, and do no QoL work.
-  - [optional: windows-port] Build and test on the Windows machine; say "not verified on Windows" otherwise. Platform code only in its own files. For shared code, run the WSL Linux check of `docs/rules/windows.md` ("Linux stays green") and report `Linux green (WSL)`; if WSL is missing or wrong, stop and warn `main` with the command and its output, never work around it.
+  - [optional: windows-port] Build and test on the Windows machine; say "not verified on Windows" otherwise. Platform code only in its own files. For shared code, run the WSL Linux check of `docs/rules/windows.md` ("Linux stays green") and report `Linux green (WSL)`; if WSL is missing or wrong, stop and warn `main` with the command and its output, never work around it. Also name these in every Windows brief:
+    - Build in a folder inside the worktree, in Git Bash, with the MSYS2 tools on `PATH` and the Ninja generator, as in `docs/commands-windows.md` and `docs/building.md`.
+    - Never set `GIT_*` environment variables (a hook denies it), also not inside `wsl.exe -e bash -c '...'`; use `git -C <folder>`.
+    - The WSL check runs only in a fresh clone in the WSL home, after committing, with `export GALLIUM_DRIVER=d3d12`, `-j4`, and the artifacts linked into the clone with `ln -s /mnt/<drive>/<main checkout>/artifacts artifacts`. Never `wsl --shutdown`, `wsl -t` or `wsl --terminate` (other agents use WSL), and never install or reconfigure WSL.
+    - The branch passes the full Windows Python suite (`python3 -m unittest discover -s tests -p 'test_*.py'`) and the full `ctest` on top of main alone, without another worker's branch: merge main into the branch and run both before the final commit.
+    - Never write into the main checkout's `artifacts/` except through the output of a documented tool.
+    - After `python3 tools/check_doc_links.py --fix`, `git ls-files --eol` shows `w/lf` for every text file.
 - **Generic over hardcoded:** one rule for all users, as the original (or the spec) does it. A special case needs evidence from the original or the spec.
 - **Reserved IDs:** {{ranges}}. Use them in order from the first one, and report the unused ones. Take no other IDs.
 - **Long commands:** run builds and tests in the foreground or with `run_in_background`, which reports when they exit. Never wait in a `pgrep -f` loop: the pattern matches your own shell command, so the loop never ends.

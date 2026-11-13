@@ -78,7 +78,7 @@ Send all launches in **one message** so they run in parallel. Launch the servant
 | servant (`linux-port` only) | general-purpose | none | sonnet | `You are the emulator servant <round>-servant of round <round>. Read your brief <path> and follow it completely.` |
 | docs auditor (only when the user approved the audit) | general-purpose | `worktree` | sonnet | `You are the docs auditor <round>-audit of round <round>. Read .claude/skills/lead-round/references/docs-review.md and do its audit mode. Plan: <the round's plan>.` |
 
-Give each agent the description `<round>-X <short title>`. Run them in the background. Merge the auditor's branch like the recorder's, with the docs reviewer only.
+Give each agent the description `<round>-X <short title>`. Run them in the background. In a `windows-port` round the workers' worktrees get a directory junction for `artifacts` (the hook makes it; the brief's Windows form of the first command is the same guard), and the brief carries the Windows lessons of its `[optional: windows-port]` bullet. Merge the auditor's branch like the recorder's, with the docs reviewer only.
 
 ## During the round: relay, don't analyse
 
@@ -128,6 +128,16 @@ python3 tools/merge_agent.py prepare <branch> 2>&1 | tail -25
 - **The last merge of the round** also carries the round-end line (see "Round end"): add `--log <plan> <line file>`.
 
 A `windows-port` branch that touches shared code also needs `Linux green (WSL)` from the check in `docs/rules/windows.md` ("Linux stays green") before `finish`. When WSL is missing or wrong, warn the user with the command and its output and wait; never merge around it.
+
+**On Windows** run every `merge_agent.py` step (`sync`, `prepare`, `check`, `finish`, `close`) in Git Bash with the Python folder and the MSYS2 tools on `PATH` and the Ninja generator:
+
+```sh
+PY_DIR="$(dirname "$(command -v python3)")"; PATH="$PY_DIR:/c/msys64/ucrt64/bin:$PATH" CMAKE_GENERATOR=Ninja python3 tools/merge_agent.py <step> ...
+```
+
+The prefix is needed only while the tool does not find the MSYS2 tools and the generator itself (open item WINBUILD-4 in `docs/plans/features/windows-build.md`; the current form is in `docs/commands-windows.md`). The `finish` gate below applies unchanged. Check that the branch passed the full Windows Python suite and the full `ctest` on top of main alone, as its brief demands.
+
+A worktree's `artifacts` junction points into the main checkout's data: never remove a worktree folder (`rm -r`, `git worktree remove`, a recursive delete in any tool) while the junction still exists, because that has deleted the main checkout's `artifacts/` before. Remove the junction first with `cmd //c rmdir <worktree>rtifacts` (no `/s`), check that the main `artifacts/` still lists its data, and only then remove the worktree. `merge_agent.py` does this itself once WINTEST-8 in `docs/plans/features/windows-python-tools.md` is closed; until then do it by hand.
 
 Then, as **two separate Bash calls**:
 
