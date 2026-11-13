@@ -83,6 +83,7 @@ ctest --test-dir build -j"$(nproc)" --output-on-failure
 
 - `-G Ninja` selects the Ninja build tool. The build writes the programs as `build/*.exe` and the library as `build/libchase_assets_c.dll`.
 - `-DPython3_EXECUTABLE` sets the Python that the Python checks of `ctest` use. FFmpeg brings MSYS2's own Python, which comes first in this window, so name the python.org Python here. The `py` launcher prints its path.
+- The programs read their paths as UTF-8: a manifest in every `.exe` sets the code page of the process, so folders with letters outside the Windows ANSI code page (for example Cyrillic or Japanese) work for options such as `--config`. This needs Windows 10 version 1903 or later. The Python tools that load the native library do not accept such folders yet.
 - The tests need Git, which the window finds through the Windows `PATH` (`-use-full-path`).
 - Run the Python tests in Git Bash: `python3 -m unittest discover -s tests -p 'test_*.py' -v`.
 - On Windows the tests that start `chase-game` or `chase-viewer` without a window are skipped. SDL's offscreen mode needs `libEGL.dll`, which MSYS2 does not have. The list is in [the Windows test notes](plans/features/windows-tests.md).

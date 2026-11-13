@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1170 open items and stand-ins, 205 linked to game usage, 965 with unknown reach.
+Items: 1171 open items and stand-ins, 205 linked to game usage, 966 with unknown reach.
 
 ## Top 50 overall
 
@@ -207,7 +207,7 @@ No linked items.
 
 ## Windows port (`windows-port` plan)
 
-0 of 14 items linked.
+0 of 15 items linked.
 
 No linked items.
 
@@ -308,7 +308,7 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [windows-build.md](features/windows-build.md): WINBUILD-7 (+2), WINBUILD-5, WINBUILD-8, WINTEST-23
 - [windows-hooks.md](features/windows-hooks.md): WINTEST-3
 - [windows-line-endings.md](features/windows-line-endings.md): WINTEST-11
-- [windows-platform.md](features/windows-platform.md): WINPLAT-1, WINPLAT-3, WINPLAT-4
+- [windows-platform.md](features/windows-platform.md): WINPLAT-1, WINPLAT-3, WINPLAT-7, WINPLAT-8
 - [windows-python-tools.md](features/windows-python-tools.md): WINTEST-10, WINTEST-17, WINTEST-19
 - [windows-tests.md](features/windows-tests.md): WINTEST-13 (+1), WINTEST-2
 - [world-streaming.md](features/world-streaming.md): WSTREAM-9 (+5), WSTREAM-30 (+2), WSTREAM-32 (+1), WSTREAM-10, WSTREAM-11, WSTREAM-12, WSTREAM-14, WSTREAM-31, WSTREAM-4, WSTREAM-5, WSTREAM-S1, WSTREAM-S3, WSTREAM-S30, WSTREAM-S31, WSTREAM-S32, WSTREAM-S33

@@ -55,7 +55,8 @@ You use two windows:
 
 Requirements:
 
-- Windows 11, x86_64, with a graphics driver for OpenGL 4.6.
+- Windows 11, x86_64, with a graphics driver for OpenGL 4.6. Windows 10 needs version 1903 or later for paths with letters outside the ANSI code page; Windows 10 has not been tested.
+- CMake 3.19 or newer; the MSYS2 UCRT64 package is newer.
 - About 3 GB of disk space for the project and 2 GB for the MSYS2 packages.
 - [Git for Windows](https://git-scm.com/download/win).
 - [Python 3.11 or newer for Windows](https://www.python.org/downloads/windows/), with the `py` launcher (part of the installer). The commands call it as `python3`. In Git Bash, `python3 -V` must print `Python 3.11` or newer. If it opens the Microsoft Store or prints nothing, set up `python3` as described below.

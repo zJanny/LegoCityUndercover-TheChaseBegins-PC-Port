@@ -75,6 +75,7 @@ Back to the [documentation list](../README.md#more-documentation).
 | `save-core` | Save file checks, synthetic data, no SDL |
 | `save-default-path` | Default save path from `XDG_DATA_HOME` and `HOME`; skipped on Windows, where the save folder is not built yet |
 | `file-replace` | Atomic replacement of the save file on the platform of the build (POSIX or Windows): new file, replace, no temporary file left, errors for a missing folder and a folder as target |
+| `utf8-path-prepare`, `utf8-path-copy`, `utf8-path-argument`, `utf8-path-argument-missing`, `utf8-path-cleanup` | On Windows: `chase-input-lab` reads its controls file from a folder named with Cyrillic and Japanese letters (outside the ANSI code page), and the error for a missing file there names the folder correctly; the first two create the folder and its controls file, and `utf8-path-cleanup` removes the folder. On Linux one test `utf8-path-argument` is skipped, because Linux reads UTF-8 paths unchanged |
 | `save-real-data` | Completion totals from the game tables; needs `artifacts/romfs`, skips with code 77 otherwise |
 
 ## Other test pages

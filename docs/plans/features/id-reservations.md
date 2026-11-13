@@ -6,4 +6,3 @@ Ranges of item IDs held by parallel agents, named like `20261021-audio-A`. The p
 |---|---|---|---|---|
 | WINTEST | 14 | 16 | 20261113-winopen-A | 2026-11-13T00:30:23+01:00 |
 | WINPLAT | 5 | 6 | 20261113-winopen-B | 2026-11-13T00:30:23+01:00 |
-| WINPLAT | 7 | 8 | 20261113-winopen-C | 2026-11-13T00:30:23+01:00 |
