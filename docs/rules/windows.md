@@ -39,7 +39,7 @@ Every agent that works for the `windows-port` plan reads this file in full after
 
 - Toolchain: MSYS2 UCRT64 GCC, flags as on Linux. Dependencies (SDL2, epoxy, FFmpeg, pkg-config): MSYS2 package manager, nothing vendored.
 - Commands: the CMake and ctest commands of CLAUDE.md "Commands" run in the MSYS2 UCRT64 shell with the Ninja generator (`-G Ninja`); recorded in `docs/commands.md` and `docs/building.md` by the first Windows session.
-- Packaging: none for now. Saves: `%APPDATA%\<name>` in a Windows platform file.
+- Packaging: a zip of the programs, DLLs and extraction tools, built by the Windows CI job and published on a version tag, never with game data (spec: [windows-toolchain.md §2026-11-13T08:23:35](../design/windows-toolchain.md#ts-20261113-082335)). Saves: `%APPDATA%\<name>` in a Windows platform file.
 - Tests that cannot run on Windows are skipped with a reason and listed in the feature file. Windows CI: a GitHub job once the first local build passes, none on Forgejo.
 - ID prefixes: WINBUILD (toolchain, CMake), WINPLAT (platform files), WINTEST (tests and tools).
 

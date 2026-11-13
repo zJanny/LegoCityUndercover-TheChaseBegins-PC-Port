@@ -87,6 +87,8 @@ ERROR_RULES = [
             ("docs/getting-started.md", r".*", "install section"),
             ("docs/building.md", r".*", "install section"),
             ("tools/user_docs.py", r"\"pacman\"", "the external program whose option the user docs name"),
+            ("tools/package_windows.py", r"pacman", "asks the MSYS2 package manager which package owns each bundled DLL"),
+            ("tests/test_package_windows.py", r"pacman", "tests of the package lookup with a fake package manager"),
             ("tests/test_user_docs.py", r"\bpacman\b", "tests of the external program options"),
         ],
     ),

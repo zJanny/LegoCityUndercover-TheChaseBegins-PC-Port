@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
 
 concurrency:
@@ -46,6 +47,8 @@ jobs:
   windows-build-and-test:
     runs-on: windows-latest
     timeout-minutes: 60
+    permissions:
+      contents: write
     env:
       SDL_AUDIODRIVER: dummy
     defaults:
@@ -87,3 +90,51 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_*.py'
       - name: CTest without slow and game-data tests
         run: ctest --test-dir build -j"$(nproc)" -LE 'slow|needs-game-data' --output-on-failure
+      - name: Package the Windows zip
+        id: package
+        run: |
+          python="$(cygpath -m "$pythonLocation")/python.exe"
+          case "$GITHUB_REF" in
+            refs/tags/v*) version="$GITHUB_REF_NAME" ;;
+            *) version="$(git rev-parse --short=8 HEAD)" ;;
+          esac
+          "$python" tools/package_windows.py --version "$version" --commit "$(git rev-parse HEAD)" \
+            --repository "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" --output-dir release --runtime-dir "$(cygpath -m /ucrt64/bin)"
+          echo "zip=release/chase-windows-$version.zip" >> "$GITHUB_OUTPUT"
+      - name: Start the zip with only System32 on the PATH
+        shell: pwsh
+        env:
+          ZIP: ${{ steps.package.outputs.zip }}
+          SDL_VIDEODRIVER: dummy
+        run: |
+          $folder = Join-Path $env:RUNNER_TEMP 'unzipped'
+          Expand-Archive -Path $env:ZIP -DestinationPath $folder
+          $root = (Get-ChildItem $folder -Directory | Select-Object -First 1).FullName
+          Set-Location $root
+          $python = Join-Path $env:pythonLocation 'python.exe'
+          $env:PATH = 'C:\Windows\System32'
+          $output = & .\build\chase-input-lab.exe --smoke-test | Out-String
+          Write-Host $output
+          if ($LASTEXITCODE -ne 0 -or $output -notmatch 'smoke test passed') { throw 'chase-input-lab did not start from the zip' }
+          & $python -I -c "import sys; sys.path.insert(0, 'tools'); import chase_native; chase_native.library(); print('libchase_assets_c.dll loaded')"
+          if ($LASTEXITCODE -ne 0) { throw 'libchase_assets_c.dll did not load from the zip' }
+      - name: Upload the zip as a workflow artifact
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: chase-windows
+          path: ${{ steps.package.outputs.zip }}
+          if-no-files-found: error
+      - name: Publish the GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZIP: ${{ steps.package.outputs.zip }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$ZIP" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "$ZIP" --verify-tag --title "$GITHUB_REF_NAME" \
+              --notes "Windows development build. Not a playable game yet. It contains no game data: extract it from your own game image with the bundled tools (Python 3.11 or newer needed). See README.txt inside the zip."
+          fi

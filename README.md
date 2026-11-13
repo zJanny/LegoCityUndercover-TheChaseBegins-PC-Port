@@ -93,6 +93,10 @@ build/chase-game
 
 A window opens. It shows the start screens of the original game: logos, language list, slot list and the intro movie. After the title card the level starts, and you can move the main character. To quit, close the window, or press Escape for the pause menu, choose PC Settings and then Quit game on the Game tab. The window is borderless full screen; F11 switches to a window and back.
 
+### Windows download
+
+On Windows you can skip building: the [Releases tab](https://github.com/zJanny/LegoCityUndercover-TheChaseBegins-PC-Port/releases) of the repository offers chase-windows-VERSION.zip for each tagged version. It holds the programs with the libraries they need, the extraction tools and a `README.txt`, and no game data. Unzip it anywhere. You still need your own game image and [Python 3.11 or newer](https://www.python.org/downloads/windows/) to extract the game files. It is still not playable, only the development runtime; the steps are in [Getting started](docs/getting-started.md#windows-zip). No release has been published yet. To build it yourself, follow the steps below.
+
 ### Quick start on Windows
 
 You need [Git for Windows](https://git-scm.com/download/win) (it brings Git Bash) and [Python 3.11 or newer](https://www.python.org/downloads/windows/). In Git Bash, `python3 -V` must print 3.11 or newer ([details](docs/getting-started.md#on-windows)).
@@ -184,13 +188,13 @@ All keys and how to change them: [Controls](docs/controls.md).
 | Script commands | 56 of 239 (23.4%) | Different commands the level scripts call that the port runs. They cover 68.5% of all calls. 142 more run with a stand-in result. |
 | Object types | 169 of 506 (33.4%) | Different object types in the levels that the port treats with recovered rules (collision, doors, studs). They cover 56.6% of all placed objects. |
 | Game files read | 99.8% of files, 100.0% of data | Files in the game archive (12836) that the port can decode, by count and by size. |
-| Open work | 676 open items, 536 stand-ins | Known gaps and temporary guesses in 46 feature areas. It has no total to reach; watch the trend. |
+| Open work | 678 open items, 536 stand-ins | Known gaps and temporary guesses in 46 feature areas. It has no total to reach; watch the trend. |
 | Checked against the original | 561 tests, 233 recorded traces | Automatic tests, and recordings of the original game that the tests compare with. |
 | Game code documented | 3169 of about 7575 (41.8%) | Functions of the game program that the notes or the source point to. The total is an estimate. |
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-11-13, commit ca87e0bc. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-11-13, commit 89bcd3b3. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## More documentation

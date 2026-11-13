@@ -77,6 +77,17 @@ Set up `python3` once:
 - **Saves.** The game saves to `%APPDATA%\chase\savegame.dat`, normally `C:\Users\<you>\AppData\Roaming\chase\savegame.dat`, and creates the folder. At the start the game prints the full path, for example `save: new game in slot 0, save requests write C:\Users\<you>\AppData\Roaming\chase\savegame.dat`. Start from it with `build/chase-game --save "$APPDATA/chase/savegame.dat" --slot 0` instead of the `~/.local/share` path of the README.
 - **Tests and tools.** [Building the tools](building.md#build-on-windows) has the test commands and the Python setting for the tests.
 
+## Windows zip
+
+Instead of building, you can use the zip from the [Releases tab](../README.md#windows-download) (chase-windows-VERSION.zip, one per tagged version; none has been published yet). It is a development build, not a playable game, and it contains no game data.
+
+- Unzip it anywhere. It has `build\` (the programs and their libraries), `tools\` (the Python extraction tools), `config\`, `licenses\`, `LICENSE` and a `README.txt` with the same steps.
+- You need [Python 3.11 or newer](https://www.python.org/downloads/windows/) and your own decrypted `.cci` image. Open a terminal (PowerShell or Command Prompt) in the unzipped folder and run `py -3 tools\extract_romfs.py "C:\path\to\game.cci" --output artifacts\romfs`. The output folder must not exist yet.
+- Start `chase-game.bat` (double-click it), or run `build\chase-game.exe` in the terminal. Start it from the unzipped folder: the programs read `artifacts\romfs` and `config\controls.cfg` relative to it.
+- The other tools of [Extracting game data](extracting-game-data.md) work the same way, with `py -3 tools\...` instead of `python3 tools/...`. They find `build\libchase_assets_c.dll` in the zip.
+- You should not need MSYS2, a compiler or a `PATH` change to start the programs. The zip carries the libraries they load, and their license texts are in `licenses\`. A check on a clean Windows machine is still open ([Windows build notes](plans/features/windows-build.md)).
+- The zip is built by the Windows job of the GitHub workflow with `tools/package_windows.py` ([commands on Windows](commands-windows.md#windows-zip)). It refuses every game-derived file.
+
 ## Other programs
 
 - [Model viewer](model-viewer.md), [sound test](sound-test.md), [video player](fmv-player.md), [input laboratory](controls.md).

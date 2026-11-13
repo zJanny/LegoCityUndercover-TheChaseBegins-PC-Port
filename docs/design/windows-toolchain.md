@@ -11,7 +11,6 @@ Asked of the user by the planner on 2026-11-12 (relayed by the lead); the quoted
 - Toolchain: "MSYS2 UCRT64 GCC (Recommended)". GCC with the flags of the Linux build, including `-ffp-contract=off`.
 - Dependencies (SDL2, epoxy, FFmpeg, pkg-config): "MSYS2 package manager (Recommended)". No vendored binaries.
 - Commands: "Ninja in MSYS2 shell (Recommended)". The CMake and ctest commands are those of [commands.md](../commands.md) run from the MSYS2 UCRT64 shell with the Ninja generator.
-- Packaging: "None for now (Recommended)". The game runs from the build folder.
 - Save directory: "%APPDATA%\<name> (Recommended)", in a platform file with the same interface as the Linux one.
 - Tests that cannot run on Windows (Azahar oracle, Xvfb and similar): "Skip with reason (Recommended)", each skip listed in the feature file.
 - ID prefixes: "WINBUILD/WINPLAT/WINTEST (Recommended)".
@@ -34,5 +33,21 @@ Open: none.
 Asked of the user by the lead on 2026-11-13: started from the Explorer, `build/chase-game.exe` reports missing DLLs (`SDL2.dll`, `libepoxy-0.dll`, `libstdc++-6.dll`, `avcodec-63.dll` and others), because they live in the MSYS2 UCRT64 `bin` folder, which only the UCRT64 window has on its `PATH`. The lead offered: "after building, copy the needed DLLs from MSYS2 into build/ next to the .exe files. Then the build folder works on its own". The user answered: "Please fix this now" and "So that i can run it from the build folder".
 
 - The Windows build copies the non-system DLLs that every program and library of the build needs, transitively, from the folder of the compiler into the build folder next to the `.exe` files. Every program then starts from the Explorer, PowerShell or Git Bash without MSYS2 on the `PATH`. Windows system DLLs are not copied.
+
+Open: none.
+
+<a id="ts-20261113-082335"></a>
+
+## 2026-11-13T08:23:35+01:00 — Windows zip for the Releases tab
+
+Asked by the lead in the session of 2026-11-13; the user's words and the labels they chose.
+
+- Wish (2026-11-13, the maintainer): "make it so the windows pipeline on main will produce a .zip file with the exe that can just be started anywhere in the releases tab to download. NO GAME ASSETS OR COPYRIGHTED MATERIAL!!!! inside it. You will still have to extract the game data".
+- Release type (2026-11-13): "Only on a version tag". The zip is published on the GitHub Releases tab only when a tag like `v0.1.0` is pushed.
+- Zip content (2026-11-13): "Programs + extraction tools". Besides the programs and their DLLs, the zip holds the Python extraction tools. The zip alone covers extract, then start; it still needs Python 3.11 or newer installed.
+- Question (2026-11-13, asked by the lead): "On every push to main, should GitHub keep the Windows zip as a downloadable CI artifact? Releases still appear only on a v* tag." User: "Yes, keep it". The Windows job builds the zip on every push to `main` and uploads it as a workflow artifact, so the packaging is tested.
+- Question (2026-11-13, asked by the lead): should the zip contain a `licenses/` folder with the bundled packages' license texts, plus a `README.txt` (not playable yet, the not-affiliated notice, extraction and start steps, the source commit link)? User: "Yes, both".
+- No game data, ever: the packaging tool takes only files an allow rule names and refuses everything game-derived ([windows-build.md](../plans/features/windows-build.md)).
+
 
 Open: none.
