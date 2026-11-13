@@ -15,4 +15,12 @@ std::uint32_t hiddenWindowFlagsFromEnvironment();
 // "no OpenGL 4.6 context: <SDL error>"; CTest turns this line into a skip.
 std::string noGlContextMessage(const char* sdlError);
 
+// Empty when a GL_VERSION string ("4.6.0 ...") names OpenGL 4.6 or newer, else the reason it does not (null, not
+// starting with major.minor, or older). Needed because a Windows driver without OpenGL 4.6 (Microsoft's software
+// OpenGL 1.1) still hands out a context, and libepoxy aborts the process at the first missing function.
+std::string glVersionProblem(const char* glVersion);
+
+// glVersionProblem for the context current on this thread; call right after SDL_GL_CreateContext.
+std::string currentGlContextProblem();
+
 }

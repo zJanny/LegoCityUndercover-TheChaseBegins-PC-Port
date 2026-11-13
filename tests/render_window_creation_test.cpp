@@ -38,6 +38,14 @@ void parser() {
         check(message == std::string("CHASE_HIDDEN_WINDOW: expected 0 or 1, got '") + bad + "'", bad);
     }
     check(chase::render::noGlContextMessage("driver text") == "no OpenGL 4.6 context: driver text", "missing context message");
+    for (const char* good : {"4.6.0 NVIDIA 555.85", "4.6 (Core Profile) Mesa 24.0", "4.10.1", "5.0", "10.2"})
+        check(chase::render::glVersionProblem(good).empty(), good);
+    check(chase::render::glVersionProblem("1.1.0") == "the context is OpenGL 1.1, 4.6 is needed", "Microsoft software OpenGL 1.1 is refused");
+    check(chase::render::glVersionProblem("4.5.0 Mesa") == "the context is OpenGL 4.5, 4.6 is needed", "4.5 is refused");
+    check(chase::render::glVersionProblem("3.3") == "the context is OpenGL 3.3, 4.6 is needed", "3.3 is refused");
+    for (const char* bad : {"", "OpenGL ES 3.2", "4", "4.", "x.6", ".6"})
+        check(chase::render::glVersionProblem(bad) == std::string("the OpenGL version '") + bad + "' is not major.minor", bad);
+    check(chase::render::glVersionProblem(nullptr) == "the driver reports no OpenGL version", "null version string");
 }
 
 }

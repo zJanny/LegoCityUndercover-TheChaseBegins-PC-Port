@@ -12,6 +12,7 @@
 #include "render/frame_keep.hpp"
 #include "render/front_presenter.hpp"
 #include "render/window.hpp"
+#include "render/window_creation.hpp"
 #include "runtime/languages_page.hpp"
 
 #include <SDL.h>
@@ -118,8 +119,10 @@ int main(int argc, char** argv) {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_Window* window = SDL_CreateWindow("ui menu window test", 0, 0, 3840, 2160, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
     SDL_GLContext context = window ? SDL_GL_CreateContext(window) : nullptr;
-    if (!context) {
-        std::cout << "qol-ui-menu-window-real-test: no GL 4.6 context, skipped\n";
+    const std::string problem = context ? chase::render::currentGlContextProblem() : SDL_GetError();
+    if (!context || !problem.empty()) {
+        std::cout << "qol-ui-menu-window-real-test: skipped, " << chase::render::noGlContextMessage(problem.c_str()) << "\n";
+        if (context) SDL_GL_DeleteContext(context);
         if (window) SDL_DestroyWindow(window);
         SDL_Quit();
         return 77;

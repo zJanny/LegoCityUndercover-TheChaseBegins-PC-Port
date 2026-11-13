@@ -134,6 +134,7 @@ int run(const Options& given) {
     qolWindow.syncControls(options.config, input);
     SDL_GLContext context = SDL_GL_CreateContext(window);
     if (!context) throw std::runtime_error(noGlContextMessage(SDL_GetError()));
+    if (const std::string problem = currentGlContextProblem(); !problem.empty()) throw std::runtime_error(noGlContextMessage(problem.c_str()));
     SDL_GL_SetSwapInterval(1);
 
     std::optional<GameAudio> audio;

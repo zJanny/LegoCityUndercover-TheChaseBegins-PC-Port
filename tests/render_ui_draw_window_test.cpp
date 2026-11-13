@@ -3,6 +3,7 @@
 // white (255) gives 127 or 128; a fill outside the scissor box keeps the background.
 #include "render/ui_draw.hpp"
 #include "render/window.hpp"
+#include "render/window_creation.hpp"
 #include <SDL.h>
 #include <cstdio>
 #include <cstdlib>
@@ -132,8 +133,10 @@ int main() {
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_Window* window = SDL_CreateWindow("ui draw window test", 0, 0, W, H, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
     SDL_GLContext context = window ? SDL_GL_CreateContext(window) : nullptr;
-    if (!context) {
-        std::printf("skip: no GL 4.6 core context (%s)\n", SDL_GetError());
+    const std::string problem = context ? currentGlContextProblem() : SDL_GetError();
+    if (!context || !problem.empty()) {
+        std::printf("skip: %s\n", noGlContextMessage(problem.c_str()).c_str());
+        if (context) SDL_GL_DeleteContext(context);
         if (window) SDL_DestroyWindow(window);
         SDL_Quit();
         return 77;
