@@ -47,6 +47,7 @@ Asked by the lead in the session of 2026-11-13; the user's words and the labels 
 - Zip content (2026-11-13): "Programs + extraction tools". Besides the programs and their DLLs, the zip holds the Python extraction tools. The zip alone covers extract, then start; it still needs Python 3.11 or newer installed.
 - Question (2026-11-13, asked by the lead): "On every push to main, should GitHub keep the Windows zip as a downloadable CI artifact? Releases still appear only on a v* tag." User: "Yes, keep it". The Windows job builds the zip on every push to `main` and uploads it as a workflow artifact, so the packaging is tested.
 - Question (2026-11-13, asked by the lead): should the zip contain a `licenses/` folder with the bundled packages' license texts, plus a `README.txt` (not playable yet, the not-affiliated notice, extraction and start steps, the source commit link)? User: "Yes, both".
+- Build type (2026-11-13, the maintainer, after the first release zip came to 273 MB and 1.1 GB unpacked, `chase-game.exe` alone 797 MB with full debug info): "Change it to use a Release Build". The Windows CI job configures with `-DCMAKE_BUILD_TYPE=Release`, so its tests run on that build and the zip packs it. The Linux job and local build instructions stay on `RelWithDebInfo`.
 - No game data, ever: the packaging tool takes only files an allow rule names and refuses everything game-derived ([windows-build.md](../plans/features/windows-build.md)).
 
 

@@ -144,7 +144,7 @@ The workflows `.forgejo/workflows/ci.yml` and `.github/workflows/ci.yml` run on 
 - They run the CTest tests without the labels `slow` and `needs-game-data`.
 - Tests that need the game image are left out, because CI has no game data. Run them on your own machine.
 - On GitHub, `.github/workflows/ci.yml` also builds and tests on Windows (job `windows-build-and-test`, MSYS2 UCRT64 with Ninja). It first checks that a clone with `core.autocrlf=true` still has LF line endings. Forgejo has no Windows job. See [Building the tools](docs/building.md#continuous-integration).
-- The Windows job also builds a zip with the programs, their DLLs and the extraction tools (`tools/package_windows.py`) and uploads it as a workflow artifact on every push to `main`. The zip never holds game data: the tool refuses every game-derived file, and its test proves it.
+- The Windows job builds with `-DCMAKE_BUILD_TYPE=Release` and `-O2`, so the zip stays small. It also builds a zip with the programs, their DLLs and the extraction tools (`tools/package_windows.py`) and uploads it as a workflow artifact on every push to `main`. The zip never holds game data: the tool refuses every game-derived file, and its test proves it.
 - Releases: the maintainer pushes a tag like `v0.1.0`; the same job then creates the GitHub release for the tag and attaches the zip. A pull request never publishes anything.
 
 ## The port must be faithful

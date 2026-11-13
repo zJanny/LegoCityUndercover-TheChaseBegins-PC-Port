@@ -82,7 +82,7 @@ jobs:
           python tests/test_line_endings.py -v
           git ls-files --eol | awk -F'\t' '{ split($1, f, " "); if (f[2] ~ /^w\/(crlf|mixed)$/ && f[3] != "attr/-text" && f[3] != "attr/binary") { print; bad = 1 } } END { exit bad }'
       - name: Configure
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_COMPILE_WARNING_AS_ERROR=ON -DCHASE_BUILD_TESTS=ON -DPython3_EXECUTABLE="$(cygpath -m "$pythonLocation")/python.exe"
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release "-DCMAKE_CXX_FLAGS_RELEASE=-O2 -DNDEBUG" -DCMAKE_COMPILE_WARNING_AS_ERROR=ON -DCHASE_BUILD_TESTS=ON -DPython3_EXECUTABLE="$(cygpath -m "$pythonLocation")/python.exe"
       - name: Build
         run: cmake --build build -j"$(nproc)"
       - name: Python tests
