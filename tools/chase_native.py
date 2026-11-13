@@ -1,4 +1,4 @@
-"""ctypes binding to the C++ asset runtime (build/libchase_assets_c.so).
+"""ctypes binding to the C++ asset runtime (build/libchase_assets_c.so, build/libchase_assets_c.dll on Windows).
 
 Set CHASE_ASSETS_LIB to use a library outside the default build directory.
 """
@@ -7,7 +7,14 @@ import ctypes
 import os
 from pathlib import Path
 
-DEFAULT_LIBRARY = Path(__file__).resolve().parents[1] / 'build' / 'libchase_assets_c.so'
+BUILD_DIRECTORY = Path(__file__).resolve().parents[1] / 'build'
+
+
+def default_library(windows=os.name == 'nt'):
+    return BUILD_DIRECTORY / ('libchase_assets_c.dll' if windows else 'libchase_assets_c.so')
+
+
+DEFAULT_LIBRARY = default_library()
 _library = None
 
 ENCODINGS = ('PCM8', 'PCM16', 'DSP-ADPCM', 'IMA-ADPCM')

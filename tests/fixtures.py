@@ -1,3 +1,5 @@
+import contextlib
+import io
 import json
 import os
 import struct
@@ -9,6 +11,9 @@ import zlib
 from pathlib import Path
 
 TOOLS = Path(__file__).parents[1] / 'tools'
+sys.path.insert(0, str(TOOLS))
+
+import hook_paths  # noqa: E402
 
 KEPT_GIT_VARIABLES = frozenset(('GIT_EXEC_PATH', 'GIT_TERMINAL_PROMPT'))
 
@@ -26,17 +31,15 @@ def isolate_git_environment():
         del os.environ[name]
 
 
-def symlinks_allowed():
-    with tempfile.TemporaryDirectory() as scratch:
-        try:
-            (Path(scratch) / 'link').symlink_to(Path(scratch), target_is_directory=True)
-        except (OSError, NotImplementedError):
-            return False
-    return True
+def directory_links_allowed():
+    with tempfile.TemporaryDirectory() as scratch, contextlib.redirect_stderr(io.StringIO()):
+        target = Path(scratch) / 'target'
+        target.mkdir()
+        return hook_paths.create_link(Path(scratch) / 'link', target) is not None
 
 
-requires_symlinks = unittest.skipUnless(
-    symlinks_allowed(), 'creating symbolic links needs a privilege the current user lacks (Windows without Developer Mode)')
+requires_directory_links = unittest.skipUnless(
+    directory_links_allowed(), 'neither a symbolic link nor, on Windows, a directory junction can be created here')
 
 
 def pooled(blocks):

@@ -195,7 +195,6 @@ What does not work on Windows yet:
 
 - The tests that run `chase-game` or the model viewer without a window are skipped, and the tests of their pictures are disabled. SDL's offscreen mode needs a library that MSYS2 does not have.
 - The save file goes to `.local\share\chase` in the home folder of the shell, not to `%APPDATA%\chase`.
-- The tools need `CHASE_ASSETS_LIB` to find the Windows library ([Extracting game data](extracting-game-data.md#3-unpack-the-asset-archive)).
 - The debug overlay shows no memory value.
 - Some of the Python tests fail on Windows.
 

@@ -1,5 +1,6 @@
 import contextlib
 import io
+import ntpath
 import os
 import re
 import subprocess
@@ -11,9 +12,17 @@ from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parent.parent / "tools" / "merge_agent.py"
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from fixtures import isolate_git_environment, requires_symlinks  # noqa: E402
+from fixtures import isolate_git_environment, requires_directory_links  # noqa: E402
+import hook_paths  # noqa: E402
 
 isolate_git_environment()
+
+
+def data_link(link: Path, target: Path) -> str | None:
+    if os.name == "nt":
+        hook_paths.make_junction(link, target)
+        return "junction"
+    return hook_paths.create_link(link, target)
 
 
 def run_script(cwd: Path, *args: str) -> subprocess.CompletedProcess:
@@ -134,12 +143,12 @@ class MergeAgentTest(unittest.TestCase):
         self.addCleanup(scratch.cleanup)
         tree = Path(scratch.name) / name
         git(self.repo, "worktree", "add", "-q", "-b", name, str(tree))
-        (tree / "artifacts").symlink_to(self.repo)
+        self.assertIsNotNone(data_link(tree / "artifacts", self.repo))
         if reason is not None:
             git(self.repo, "worktree", "lock", "--reason", reason, str(tree))
         return tree
 
-    @requires_symlinks
+    @requires_directory_links
     def test_agent_locked_worktree_is_unlocked_and_removed_with_its_branch(self) -> None:
         sys.path.insert(0, str(SCRIPT.parent))
         import merge_agent
@@ -150,7 +159,7 @@ class MergeAgentTest(unittest.TestCase):
         self.assertNotIn("tree-a", output(self.repo, "branch", "--list"))
         self.assertTrue((self.repo / "a.txt").is_file())
 
-    @requires_symlinks
+    @requires_directory_links
     def test_unlocked_worktree_is_removed(self) -> None:
         sys.path.insert(0, str(SCRIPT.parent))
         import merge_agent
@@ -160,7 +169,7 @@ class MergeAgentTest(unittest.TestCase):
         self.assertFalse(tree.exists())
         self.assertNotIn("tree-b", output(self.repo, "branch", "--list"))
 
-    @requires_symlinks
+    @requires_directory_links
     def test_foreign_lock_keeps_worktree_and_branch_with_leftover_commands(self) -> None:
         sys.path.insert(0, str(SCRIPT.parent))
         import merge_agent
@@ -173,6 +182,52 @@ class MergeAgentTest(unittest.TestCase):
         self.assertIn("tree-c", output(self.repo, "branch", "--list"))
         self.assertIn(f"warning: worktree {tree} is locked (on a usb stick)", captured.getvalue())
         self.assertIn(f"git worktree remove --force {tree} && git branch -D tree-c", captured.getvalue())
+        self.assertIn("leftover link first, never with a recursive removal", captured.getvalue())
+        self.assertLess(captured.getvalue().index("leftover link first"), captured.getvalue().index("git worktree remove --force"))
+
+    @requires_directory_links
+    def test_removing_the_artifacts_link_keeps_the_data_behind_it(self) -> None:
+        sys.path.insert(0, str(SCRIPT.parent))
+        import merge_agent
+
+        data = self.repo / "game-data"
+        (data / "inner").mkdir(parents=True)
+        (data / "inner" / "file.bin").write_text("kept\n", encoding='utf-8', newline='\n')
+        link = self.repo / "link"
+        self.assertIsNotNone(data_link(link, data))
+        self.assertTrue(merge_agent.is_directory_link(link))
+        merge_agent.remove_directory_link(link)
+        self.assertFalse(os.path.lexists(link))
+        self.assertEqual((data / "inner" / "file.bin").read_text(encoding='utf-8'), "kept\n")
+
+    def test_removing_a_link_leaves_real_folders_and_missing_paths_alone(self) -> None:
+        sys.path.insert(0, str(SCRIPT.parent))
+        import merge_agent
+
+        folder = self.repo / "real"
+        folder.mkdir()
+        (folder / "file.txt").write_text("kept\n", encoding='utf-8', newline='\n')
+        self.assertFalse(merge_agent.is_directory_link(folder))
+        merge_agent.remove_directory_link(folder)
+        merge_agent.remove_directory_link(self.repo / "missing")
+        self.assertTrue((folder / "file.txt").is_file())
+
+    @requires_directory_links
+    def test_removing_the_worktree_never_follows_the_artifacts_link_into_the_data(self) -> None:
+        sys.path.insert(0, str(SCRIPT.parent))
+        import merge_agent
+
+        data = self.repo / "game-data"
+        data.mkdir()
+        (data / "file.bin").write_text("kept\n", encoding='utf-8', newline='\n')
+        scratch = tempfile.TemporaryDirectory()
+        self.addCleanup(scratch.cleanup)
+        tree = Path(scratch.name) / "tree-d"
+        git(self.repo, "worktree", "add", "-q", "-b", "tree-d", str(tree))
+        self.assertIsNotNone(data_link(tree / "artifacts", data))
+        merge_agent.remove_worktree_and_branch(self.repo, "tree-d")
+        self.assertFalse(tree.exists())
+        self.assertEqual((data / "file.bin").read_text(encoding='utf-8'), "kept\n")
 
     def test_forbidden_matches_build_directories_only(self) -> None:
         sys.path.insert(0, str(SCRIPT.parent))
@@ -241,6 +296,88 @@ class MergeAgentTest(unittest.TestCase):
         self.assertEqual(target.read_text(encoding='utf-8'), "from main\n")
         left = subprocess.run(["git", "diff", "--name-only", "--diff-filter=U"], cwd=self.repo, text=True, capture_output=True).stdout
         self.assertEqual(left, "")
+
+
+class WindowsToolEnvironmentTest(unittest.TestCase):
+    PYTHON = r"C:\Python311\python.exe"
+    MSYS2 = r"C:\msys64\ucrt64\bin"
+
+    def setUp(self) -> None:
+        sys.path.insert(0, str(SCRIPT.parent))
+        import merge_agent
+        self.merge_agent = merge_agent
+
+    def environment(self, env, folders=None, tools=None):
+        folders = {self.MSYS2} if folders is None else folders
+        tools = {self.MSYS2: {"gcc", "ninja"}} if tools is None else tools
+
+        known = {ntpath.normcase(ntpath.normpath(folder)): names for folder, names in tools.items()}
+
+        def which(name, path=None):
+            return next((folder for folder in path.split(";") if name in known.get(ntpath.normcase(ntpath.normpath(folder)), ())), None)
+
+        return self.merge_agent.windows_tool_environment(env, windows=True, python=self.PYTHON, which=which,
+                                                         isdir=lambda folder: folder in folders)
+
+    def test_linux_environment_is_returned_unchanged(self) -> None:
+        env = {"PATH": "/usr/bin"}
+        self.assertIs(self.merge_agent.windows_tool_environment(env, windows=False), env)
+        self.assertIsNone(self.merge_agent.windows_tool_environment(None, windows=False))
+
+    def test_default_msys2_folder_follows_the_python_folder_and_ninja_is_chosen(self) -> None:
+        result = self.environment({"PATH": r"C:\Windows;C:\Tools"})
+        self.assertEqual(result["PATH"], r"C:\Python311;C:\msys64\ucrt64\bin;C:\Windows;C:\Tools")
+        self.assertEqual(result["CMAKE_GENERATOR"], "Ninja")
+
+    def test_msys2_prefix_of_the_environment_is_preferred_when_it_holds_the_toolchain(self) -> None:
+        other = r"D:\msys\ucrt64\bin"
+        result = self.environment({"PATH": r"C:\Windows", "MSYSTEM_PREFIX": "D:/msys/ucrt64"}, folders={other, self.MSYS2},
+                                  tools={other: {"gcc", "ninja"}, self.MSYS2: {"gcc", "ninja"}})
+        self.assertEqual(result["PATH"], r"C:\Python311;D:\msys\ucrt64\bin;C:\Windows")
+
+    def test_msys2_prefix_without_the_toolchain_falls_back_to_the_default_folder(self) -> None:
+        other = r"C:\Program Files\Git\mingw64\bin"
+        result = self.environment({"PATH": r"C:\Windows", "MSYSTEM_PREFIX": "C:/Program Files/Git/mingw64"},
+                                  folders={other, self.MSYS2}, tools={self.MSYS2: {"gcc", "ninja"}})
+        self.assertEqual(result["PATH"], r"C:\Python311;C:\msys64\ucrt64\bin;C:\Windows")
+
+    def test_a_path_that_already_has_the_msys2_folder_is_kept(self) -> None:
+        env = {"Path": r"C:\Windows;c:\MSYS64\ucrt64\bin\;C:\Tools"}
+        result = self.environment(env)
+        self.assertEqual(result["Path"], env["Path"])
+        self.assertNotIn("PATH", result)
+        self.assertEqual(result["CMAKE_GENERATOR"], "Ninja")
+
+    def test_the_callers_generator_wins(self) -> None:
+        result = self.environment({"PATH": r"C:\Windows", "CMAKE_GENERATOR": "Unix Makefiles"})
+        self.assertEqual(result["CMAKE_GENERATOR"], "Unix Makefiles")
+
+    def test_no_msys2_folder_and_no_ninja_leave_the_environment_alone(self) -> None:
+        env = {"PATH": r"C:\Windows", "HOME": "x"}
+        self.assertEqual(self.environment(env, folders=set(), tools={}), env)
+
+    def test_ninja_elsewhere_on_the_path_is_found(self) -> None:
+        result = self.environment({"PATH": r"C:\Windows;C:\Ninja"}, folders=set(), tools={r"C:\Ninja": {"ninja"}})
+        self.assertEqual(result["PATH"], r"C:\Windows;C:\Ninja")
+        self.assertEqual(result["CMAKE_GENERATOR"], "Ninja")
+
+    def test_the_given_environment_is_not_modified(self) -> None:
+        env = {"PATH": r"C:\Windows"}
+        self.environment(env)
+        self.assertEqual(env, {"PATH": r"C:\Windows"})
+
+    def test_the_build_runs_with_the_prepared_environment(self) -> None:
+        prepared = {"PATH": "prepared"}
+        calls = []
+
+        def fake_run(cmd, cwd, **options):
+            calls.append((cmd[0], options.get("env")))
+            return subprocess.CompletedProcess(cmd, 0, "", "")
+
+        with mock.patch.object(self.merge_agent, "windows_tool_environment", return_value=prepared), \
+                mock.patch.object(self.merge_agent, "run", side_effect=fake_run):
+            self.merge_agent.build_warning_free(Path("."))
+        self.assertEqual(calls, [("cmake", prepared), ("cmake", prepared)])
 
 
 class SyncTest(unittest.TestCase):
@@ -470,7 +607,7 @@ class VerifiedFingerprintTest(unittest.TestCase):
         (self.merge_agent.run, self.merge_agent.build_warning_free, self.merge_agent.update_priorities, self.merge_agent.fix_docs) = self.saved
         self.tmp.cleanup()
 
-    def fake_run(self, cmd, cwd, check=True, capture=False):
+    def fake_run(self, cmd, cwd, check=True, capture=False, env=None):
         name = cmd[0] if cmd[0] in ("ctest",) else "unittest" if "unittest" in cmd else None
         if name:
             self.calls.append(name)
@@ -601,6 +738,7 @@ class CheckPullRequestTest(unittest.TestCase):
         git(self.repo, "commit", "-q", "-m", "init")
         git(self.repo, "push", "-q", "origin", "main")
         (self.repo / "artifacts").mkdir()
+        (self.repo / "artifacts" / "game.bin").write_text("kept\n", encoding='utf-8', newline='\n')
         self.scratch = base / "temp"
         self.scratch.mkdir()
         self.saved_tempdir = tempfile.tempdir
@@ -624,7 +762,7 @@ class CheckPullRequestTest(unittest.TestCase):
             "files": sorted(output(tree, "ls-files").split()),
             "branch": output(tree, "rev-parse", "--abbrev-ref", "HEAD").strip(),
             "main": output(tree, "rev-parse", "main").strip(),
-            "artifacts": (tree / "artifacts").resolve() if (tree / "artifacts").is_symlink() else None,
+            "artifacts": (tree / "artifacts").resolve() if (tree / "artifacts").exists() else None,
             "hooks": sorted(path.name for path in (tree / ".git" / "hooks").glob("*")) if (tree / ".git" / "hooks").is_dir() else [],
         }
         if isinstance(self.result, BaseException):
@@ -664,7 +802,7 @@ class CheckPullRequestTest(unittest.TestCase):
         self.assertIn("files changed against main that run code on this machine (read them first):\n  tools/run_me.py", printed)
         self.assertCleanedUp(7)
 
-    @requires_symlinks
+    @requires_directory_links
     def test_clean_pull_request_is_built_and_tested_in_a_separate_checkout(self) -> None:
         self.open_pull_request(8, {"docs/notes.md": b"notes\n", "third_party/fonts/Font.ttf": b"\x00\x01\x00\x00"})
         with mock.patch.dict(os.environ, {"SSH_AUTH_SOCK": "/agent.sock", "GH_TOKEN": "secret"}):
@@ -682,6 +820,15 @@ class CheckPullRequestTest(unittest.TestCase):
             self.assertNotIn(name, env)
         self.assertEqual(env["GIT_TERMINAL_PROMPT"], "0")
         self.assertCleanedUp(8)
+        self.assertEqual((self.repo / "artifacts" / "game.bin").read_text(encoding='utf-8'), "kept\n")
+
+    def test_game_data_link_that_cannot_be_made_stops_the_check(self) -> None:
+        self.open_pull_request(13, {"docs/notes.md": b"notes\n"})
+        with mock.patch.object(self.merge_agent, "create_link", return_value=None):
+            with self.assertRaisesRegex(self.merge_agent.MergeError, "game data link in the temporary checkout could not be created"):
+                self.check(13)
+        self.assertEqual(self.checked, [])
+        self.assertCleanedUp(13)
 
     def test_pull_request_code_gets_no_agent_tokens_or_git_redirects(self) -> None:
         names = {"SSH_AUTH_SOCK": "/a", "GPG_AGENT_INFO": "/b", "GIT_DIR": "/c", "GITHUB_TOKEN": "d", "MY_SECRET": "e", "DB_PASSWORD": "f"}
@@ -689,7 +836,7 @@ class CheckPullRequestTest(unittest.TestCase):
             env = self.merge_agent.pull_request_env()
         self.assertEqual(env, {"HOME": "/home/x", "PATH": "/usr/bin", "GIT_TERMINAL_PROMPT": "0"})
 
-    @requires_symlinks
+    @requires_directory_links
     def test_failed_checks_are_reported_and_the_checkout_removed(self) -> None:
         self.open_pull_request(9, {"docs/notes.md": b"notes\n"})
         self.result = ["ctest failed (exit 8); the failing tests are listed above"]
@@ -701,7 +848,7 @@ class CheckPullRequestTest(unittest.TestCase):
             self.assertEqual(self.merge_agent.report_pull_request(9, reasons), 1)
         self.assertEqual(captured.getvalue(), "check-pr 9: FAIL\n- ctest failed (exit 8); the failing tests are listed above\n")
 
-    @requires_symlinks
+    @requires_directory_links
     def test_interrupt_removes_the_checkout(self) -> None:
         self.open_pull_request(10, {"docs/notes.md": b"notes\n"})
         self.result = KeyboardInterrupt()

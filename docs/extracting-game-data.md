@@ -38,11 +38,7 @@ Almost every asset is inside one archive, `romfs/lego_city3ds.fib`. The cutscene
 
 Steps 3 to 6 and the tools in "More tools" use the project's C++ library. Build the project first (see [Building](building.md)), or set `CHASE_ASSETS_LIB` to the path of `libchase_assets_c.so`.
 
-On Windows, run the Python tools in Git Bash from the project folder. The tools do not find the Windows library by themselves yet, so set `CHASE_ASSETS_LIB` once per Git Bash window before steps 3 to 6:
-
-```sh
-export CHASE_ASSETS_LIB=build/libchase_assets_c.dll
-```
+On Windows, run the Python tools in Git Bash from the project folder. The tools find `build/libchase_assets_c.dll` themselves once the project is built.
 
 ```sh
 python3 tools/extract_fib.py artifacts/romfs/romfs/lego_city3ds.fib \

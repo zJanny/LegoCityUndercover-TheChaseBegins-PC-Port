@@ -39,9 +39,11 @@ from __future__ import annotations
 import argparse
 import contextlib
 import importlib.util
+import ntpath
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -51,6 +53,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from forbidden_files import ALLOWED_BINARY, BINARY_PROBE, FORBIDDEN, check_paths  # noqa: E402,F401
+from hook_paths import IS_WINDOWS, create_link  # noqa: E402
 from merge_conflicts import resolve_append_only  # noqa: E402
 from round_log import name_error  # noqa: E402
 
@@ -68,6 +71,10 @@ LOG_HEADING = "## Session Log"
 PLAN_NAME = re.compile(r"[a-z][a-z0-9-]*")
 AGENT_LOCK = "claude agent "
 ROUND_IN_LINE = re.compile(r"Lead \((\S+) end\b")
+
+
+MSYS2_BIN = r"C:\msys64\ucrt64\bin"
+MSYS2_PROBE = "gcc"
 
 
 class MergeError(Exception):
@@ -232,7 +239,32 @@ def described(bad: list[tuple[str, str]]) -> str:
     return ", ".join(f"{path} ({reason})" for path, reason in bad)
 
 
+def msys2_bin(env: dict[str, str], which=shutil.which, isdir=os.path.isdir) -> str | None:
+    prefix = env.get("MSYSTEM_PREFIX")
+    for folder in ([ntpath.normpath(ntpath.join(prefix, "bin"))] if prefix else []) + [MSYS2_BIN]:
+        if isdir(folder) and which(MSYS2_PROBE, path=folder):
+            return folder
+    return None
+
+
+def windows_tool_environment(env: dict[str, str] | None = None, windows: bool = IS_WINDOWS, python: str = sys.executable,
+                             which=shutil.which, isdir=os.path.isdir) -> dict[str, str] | None:
+    if not windows:
+        return env
+    result = dict(os.environ if env is None else env)
+    name = next((key for key in result if key.upper() == "PATH"), "PATH")
+    entries = [entry for entry in result.get(name, "").split(";") if entry]
+    folder = msys2_bin(result, which, isdir)
+    if folder and ntpath.normcase(ntpath.normpath(folder)) not in (ntpath.normcase(ntpath.normpath(entry)) for entry in entries):
+        entries = [ntpath.dirname(python), folder, *entries]
+    result[name] = ";".join(entries)
+    if not result.get("CMAKE_GENERATOR") and which("ninja", path=result[name]):
+        result["CMAKE_GENERATOR"] = "Ninja"
+    return result
+
+
 def build_warning_free(root: Path, env: dict[str, str] | None = None) -> None:
+    env = windows_tool_environment(env)
     run(["cmake", "-S", ".", "-B", "build", "-DCMAKE_BUILD_TYPE=RelWithDebInfo", f"-DPython3_EXECUTABLE={sys.executable}"],
         root, capture=True, env=env)
     result = run(["cmake", "--build", "build", "-j", str(JOBS)], root, check=False, capture=True, env=env)
@@ -304,6 +336,7 @@ def recorded_fingerprint(root: Path) -> str | None:
 def run_checks(root: Path, skip_heavy: bool = False) -> None:
     check_staged_content(root)
     verified_path(root).unlink(missing_ok=True)
+    env = windows_tool_environment()
     if skip_heavy:
         print("== build, ctest and python tests skipped: the staged tree is the one the last check verified")
     else:
@@ -324,9 +357,9 @@ def run_checks(root: Path, skip_heavy: bool = False) -> None:
     update_priorities(root)
     if not skip_heavy:
         print("== ctest")
-        run(["ctest", "--test-dir", "build", "--output-on-failure", "-j", str(JOBS)], root)
+        run(["ctest", "--test-dir", "build", "--output-on-failure", "-j", str(JOBS)], root, env=env)
         print("== python tests")
-        run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"], root)
+        run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"], root, env=env)
         verified_path(root).write_text(fingerprint(root) + "\n", encoding='utf-8', newline='\n')
     print("== staged")
     print(git(root, "diff", "--cached", "--stat").rstrip())
@@ -410,14 +443,27 @@ def worktree_lock(root: Path, worktree: Path) -> str | None:
     return None
 
 
+def is_directory_link(path: Path) -> bool:
+    if path.is_symlink():
+        return True
+    try:
+        reparse_tag = getattr(os.lstat(path), "st_reparse_tag", None)
+    except OSError:
+        return False
+    return reparse_tag is not None and reparse_tag == stat.IO_REPARSE_TAG_MOUNT_POINT
+
+
+def remove_directory_link(path: Path) -> None:
+    if is_directory_link(path):
+        path.unlink()
+
+
 def remove_worktree(root: Path, worktree: Path) -> bool:
     reason = worktree_lock(root, worktree)
     if reason is not None and not reason.startswith(AGENT_LOCK):
         print(f"warning: worktree {worktree} is locked ({reason or 'no reason given'}); it is not removed", file=sys.stderr)
         return False
-    link = worktree / "artifacts"
-    if link.is_symlink():
-        link.unlink()
+    remove_directory_link(worktree / "artifacts")
     if reason is not None:
         run(["git", "worktree", "unlock", str(worktree)], root)
     run(["git", "worktree", "remove", "--force", str(worktree)], root)
@@ -427,6 +473,10 @@ def remove_worktree(root: Path, worktree: Path) -> bool:
 def remove_worktree_and_branch(root: Path, branch: str) -> None:
     worktree = worktree_of(root, branch)
     if worktree is not None and not remove_worktree(root, worktree):
+        link = worktree / "artifacts"
+        if is_directory_link(link):
+            unlink = f'cmd /c rmdir "{link}"' if IS_WINDOWS else f'rm "{link}"'
+            print(f"leftover link first, never with a recursive removal (it would delete the data behind it): {unlink}", file=sys.stderr)
         print(f"leftover, once nobody uses it: git worktree remove --force {worktree} && git branch -D {branch}", file=sys.stderr)
         return
     run(["git", "branch", "-D", branch], root)
@@ -626,8 +676,8 @@ def checkout_pull_request(root: Path, number: int, place: Path) -> Path:
     artifacts = root / "artifacts"
     if os.path.lexists(tree / "artifacts"):
         raise MergeError("check-pr: the pull request has its own top-level artifacts entry, where the game data link goes")
-    if artifacts.exists():
-        (tree / "artifacts").symlink_to(artifacts.resolve())
+    if artifacts.exists() and create_link(tree / "artifacts", artifacts.resolve()) is None:
+        raise MergeError("check-pr: the game data link in the temporary checkout could not be created (details above)")
     return tree
 
 
@@ -638,6 +688,7 @@ def pull_request_env() -> dict[str, str]:
 
 
 def pull_request_checks(tree: Path, env: dict[str, str]) -> list[str]:
+    env = windows_tool_environment(env)
     print("== build (the pull request's own code runs from here on)")
     try:
         build_warning_free(tree, env)
@@ -687,6 +738,7 @@ def check_pr(root: Path, number: int, remote: str) -> list[str]:
         tree = checkout_pull_request(root, number, place)
         return pull_request_checks(tree, pull_request_env())
     finally:
+        remove_directory_link(place / "tree" / "artifacts")
         remove_tree(place)
         run(["git", "update-ref", "-d", pull_ref(number)], root, check=False, capture=True)
 

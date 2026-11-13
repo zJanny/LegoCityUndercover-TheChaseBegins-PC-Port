@@ -19,6 +19,8 @@ Measured on Windows 11 by 20261112-winhooks-E, 2026-11-12, MSYS2 UCRT64 with GCC
 - `libchase_assets_c.dll` is linked with `-static`, so it needs only system DLLs and a python.org Python loads it through ctypes.
 - The build with `-ffp-contract=off` and `-Wall -Wextra -Wpedantic` gives no warning.
 - `tools/merge_agent.py` configures with `-DPython3_EXECUTABLE` set to its own Python.
+- Measured by 20261113-winopen-D, 2026-11-13, Windows 11, python.org Python 3.11, Git Bash: `MSYSTEM_PREFIX` is `C:/Program Files/Git/mingw64` in Git Bash (Git's own prefix, no compiler there), `C:/msys64/ucrt64` for a native program started from the MSYS2 UCRT64 shell, and unset in PowerShell.
+- `tools/merge_agent.py` (`windows_tool_environment`, used by `build_warning_free`, `run_checks` and `check-pr`) starts its child processes on Windows with the folder of its own Python and then the MSYS2 UCRT64 `bin` folder in front of the caller's `PATH`, unless that folder is already on the `PATH`, and sets `CMAKE_GENERATOR=Ninja` when it is unset and `ninja` is found. The folder is the `bin` folder under `MSYSTEM_PREFIX` when that holds `gcc`, else `C:\msys64\ucrt64\bin` when it exists. Linux passes its environment on unchanged. Unit tests with an injected environment: `tests/test_merge_agent.py` `WindowsToolEnvironmentTest`.
 
 ## 4. Stand-ins
 
@@ -27,7 +29,7 @@ None.
 ## 5. Open items
 
 - [ ] WINBUILD-3 — Windows job in `.github/workflows/ci.yml` (`msys2/setup-msys2@v2`, UCRT64, Ninja, `ctest -LE slow`), added once the first local Windows build passes; render tests need Mesa llvmpipe or a skip, game-data tests skip; needs: WINBUILD-1; evidence: [windows-toolchain.md §2026-11-12T20:54:37](../../design/windows-toolchain.md#ts-20261112-205437)
-- [ ] WINBUILD-4 — `tools/merge_agent.py` neither chooses Ninja nor finds the MSYS2 tools on Windows (`build_warning_free`, `run_checks`); the caller sets `PATH` and `CMAKE_GENERATOR` (command in [commands-windows.md](../../commands-windows.md#merging-an-agent-branch)); evidence: [windows-toolchain.md §2026-11-12T20:54:37](../../design/windows-toolchain.md#ts-20261112-205437)
+- [ ] WINBUILD-5 — question for the user: the spec names only the MSYS2 UCRT64 toolchain; the brief of 20261113-winopen-D took the folder from `MSYSTEM_PREFIX` when set, else `C:\msys64\ucrt64\bin`; in Git Bash `MSYSTEM_PREFIX` is Git's own `mingw64` prefix (no compiler, no Ninja), so the tool takes the `MSYSTEM_PREFIX` folder only when it holds `gcc` and otherwise the default folder. Is that reading right, and may the tool also look elsewhere (a `PATH` entry with `gcc`, another drive)? evidence: [windows-toolchain.md §2026-11-12T20:54:37](../../design/windows-toolchain.md#ts-20261112-205437)
 
 ## 6. Findings summary
 

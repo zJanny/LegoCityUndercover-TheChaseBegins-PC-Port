@@ -35,10 +35,9 @@ python3 -m unittest discover -s tests -p 'test_*.py' -v
 
 ## Python tools
 
-In Git Bash, from the project folder, point the tools to the Windows library once per window:
+In Git Bash, from the project folder. The tools find the library of the build, `build/libchase_assets_c.dll`, themselves; it needs no MSYS2 folder on the `PATH`. `CHASE_ASSETS_LIB` names another library when you need one:
 
 ```sh
-export CHASE_ASSETS_LIB=build/libchase_assets_c.dll
 python3 tools/extract_fib.py artifacts/romfs/romfs/lego_city3ds.fib --names artifacts/romfs/romfs/lego_city3ds.csv --output artifacts/fib
 ```
 
@@ -46,13 +45,19 @@ The other tools of [Extracting game data](extracting-game-data.md) run the same 
 
 ## Merging an agent branch
 
-`tools/merge_agent.py` runs CMake and `ctest` itself. Start it from Git Bash with the python.org Python first on the `PATH`, then the MSYS2 tools, and Ninja as the CMake generator:
+`tools/merge_agent.py` runs CMake and `ctest` itself. Start it from Git Bash:
 
 ```sh
-PY_DIR="$(dirname "$(command -v python3)")"
-PATH="$PY_DIR:/c/msys64/ucrt64/bin:$PATH" CMAKE_GENERATOR=Ninja python3 tools/merge_agent.py prepare BRANCH
+python3 tools/merge_agent.py prepare BRANCH
 ```
 
-- Use the same prefix for `check` and `finish`.
+- Use the same command for `check` and `finish`.
+- On Windows it puts the folder of its own Python and then the MSYS2 UCRT64 `bin` folder (`C:\msys64\ucrt64\bin`, or the `MSYSTEM_PREFIX` folder when that holds `gcc`) in front of the `PATH` of the programs it starts, and sets `CMAKE_GENERATOR=Ninja` when you have not set it and `ninja` is found. Values you set yourself win: a `PATH` that already lists the MSYS2 folder is kept, and so is your `CMAKE_GENERATOR`. Setting them by hand is optional:
+
+```sh
+PATH="$(dirname "$(command -v python3)"):/c/msys64/ucrt64/bin:$PATH" CMAKE_GENERATOR=Ninja python3 tools/merge_agent.py prepare BRANCH
+```
+
 - `merge_agent.py` passes its own Python to CMake as `-DPython3_EXECUTABLE`.
 - `CMAKE_GENERATOR` applies only to a new `build` folder. Delete a `build` folder made with another generator first.
+- A worktree has its `artifacts` folder as a directory junction to the game data. `merge_agent.py` removes only that link before it removes the worktree. To remove a worktree by hand, run `cmd /c rmdir <worktree>\artifacts` first. `git worktree remove`, with or without `--force`, follows the junction and deletes the game data behind it.
