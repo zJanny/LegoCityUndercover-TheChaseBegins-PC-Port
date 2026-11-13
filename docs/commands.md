@@ -43,6 +43,7 @@ The workflow files in `.forgejo/workflows/` and `.github/workflows/` define the 
 | Workflow | When | What it runs |
 |---|---|---|
 | `ci.yml` | every push to `main` and every pull request | Build with warnings as errors, the Python tests, then `ctest -LE 'slow\|needs-game-data'` |
+| `ci.yml`, job `windows-build-and-test` (GitHub only) | every push to `main` and every pull request | On `windows-latest` with MSYS2 UCRT64 and Ninja: a line-endings check of a clone with `core.autocrlf=true`, the build with warnings as errors, the Python tests, then `ctest -LE 'slow\|needs-game-data'` (commands: [Commands on Windows](commands-windows.md#build-and-test)) |
 | `full.yml` | every night and by hand (`workflow_dispatch`) | The same build and Python tests, then `ctest -LE needs-game-data`, which includes the `slow` tests |
 | `dco.yml` (workflow `DCO`, job `dco`) | every pull request | `python3 tools/check_dco.py`: fails when a commit of the pull request has no `Signed-off-by:` line |
 | `generated.yml` (workflow `Generated files`, job `regenerate`) | every push to `main` | `python3 tools/regenerate_generated_files.py`, then commits the changed generated files to `main` as the GitHub Actions bot |

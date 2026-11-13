@@ -6,7 +6,7 @@ A Windows clone made with the Git for Windows default (`core.autocrlf=true`) mus
 
 ## 2. Status
 
-IN_PROGRESS. Verified on Windows (20261112-winhooks-D, 2026-11-12); the guard test in a CI job is open.
+IN_PROGRESS. Verified on Windows (20261112-winhooks-D, 2026-11-12); the CI step that checks a clone with `core.autocrlf=true` is written (20261113-winopen-G, 2026-11-13) and has not run on GitHub yet (WINBUILD-7).
 
 ## 3. Verified behaviour
 
@@ -25,7 +25,6 @@ None.
 ## 5. Open items
 
 - [ ] WINTEST-11 — The 35 camera CSVs under `tests/data/camera` are committed with CRLF and kept byte-exact with `*.csv -text`; converting them to LF needs the port owner's OK because they are recorded reference data; evidence: [windows.md](../../rules/windows.md)
-- [ ] WINTEST-12 — Once the GitHub Windows job exists (WINBUILD-3), it clones with `core.autocrlf=true` and runs `tests/test_line_endings.py`; evidence: [windows-build](windows-build.md)
 
 ## 6. Findings summary
 
@@ -33,4 +32,4 @@ Decisions: [windows-toolchain.md §2026-11-12T20:54:37](../../design/windows-too
 
 ## 7. Code and tests
 
-`.gitattributes`, `tools/check_doc_links.py`, `tools/check_tests_data_size.py`, `tests/test_check_doc_links.py`, `tests/test_check_tests_data_size.py`, `tests/test_line_endings.py`.
+`.gitattributes`, `tools/check_doc_links.py`, `tools/check_tests_data_size.py`, `tests/test_check_doc_links.py`, `tests/test_check_tests_data_size.py`, `tests/test_line_endings.py`, `.github/workflows/ci.yml`.

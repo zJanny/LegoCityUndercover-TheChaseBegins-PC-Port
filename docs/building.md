@@ -145,6 +145,9 @@ The workflow files build the project and run the tests for every push to `main` 
 - The jobs install `g++`, `pkg-config`, `python3`, `libsdl2-dev`, `libepoxy-dev` and the five FFmpeg development packages (`libavformat-dev`, `libavcodec-dev`, `libswscale-dev`, `libswresample-dev`, `libavutil-dev`) with `apt-get`.
 - The build fails on any compiler warning.
 - The workflow files are `.forgejo/workflows/ci.yml`, `.forgejo/workflows/full.yml`, `.github/workflows/ci.yml` and `.github/workflows/full.yml`.
+- On GitHub, `.github/workflows/ci.yml` has a second job, `windows-build-and-test`, on a `windows-latest` runner. It installs the MSYS2 UCRT64 packages of [Build on Windows](#build-on-windows) with `msys2/setup-msys2@v2`. It uses the Python 3.12 of `actions/setup-python`. It builds with Ninja and warnings as errors, runs the Python tests, then runs `ctest -LE 'slow|needs-game-data'`. Forgejo has no Windows job, because it has no hosted Windows runners. The job has not run on GitHub yet; see [the Windows build notes](plans/features/windows-build.md).
+- Before the checkout, the Windows job sets `core.autocrlf=true`, the default of Git for Windows. Then it checks that the clone still has LF line endings. It runs `tests/test_line_endings.py` and fails when `git ls-files --eol` shows a text file as `w/crlf` or `w/mixed`. See [the line-endings notes](plans/features/windows-line-endings.md).
+- The GitHub runners have no graphics card, so the OpenGL tests skip there. Tests that need game data skip too.
 - The exact commands to reproduce a run locally are in the [command reference](commands.md#continuous-integration).
 
 For extraction, converter and program commands, see the [command reference](commands.md).

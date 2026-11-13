@@ -143,6 +143,7 @@ The workflows `.forgejo/workflows/ci.yml` and `.github/workflows/ci.yml` run on 
 - They run the Python unit tests.
 - They run the CTest tests without the labels `slow` and `needs-game-data`.
 - Tests that need the game image are left out, because CI has no game data. Run them on your own machine.
+- On GitHub, `.github/workflows/ci.yml` also builds and tests on Windows (job `windows-build-and-test`, MSYS2 UCRT64 with Ninja). It first checks that a clone with `core.autocrlf=true` still has LF line endings. Forgejo has no Windows job. See [Building the tools](docs/building.md#continuous-integration).
 
 ## The port must be faithful
 

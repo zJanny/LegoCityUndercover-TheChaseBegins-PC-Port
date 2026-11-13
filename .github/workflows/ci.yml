@@ -9,14 +9,13 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  SDL_VIDEODRIVER: offscreen
-  SDL_AUDIODRIVER: dummy
-
 jobs:
   build-and-test:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    env:
+      SDL_VIDEODRIVER: offscreen
+      SDL_AUDIODRIVER: dummy
     steps:
       - name: Install build dependencies
         run: |
@@ -41,5 +40,50 @@ jobs:
         run: cmake --build build -j"$(nproc)"
       - name: Python tests
         run: python3 -m unittest discover -s tests -p 'test_*.py'
+      - name: CTest without slow and game-data tests
+        run: ctest --test-dir build -j"$(nproc)" -LE 'slow|needs-game-data' --output-on-failure
+
+  windows-build-and-test:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      SDL_AUDIODRIVER: dummy
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Use the Git for Windows default line endings
+        shell: bash
+        run: git config --global core.autocrlf true
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          path-type: inherit
+          update: false
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-pkgconf
+            mingw-w64-ucrt-x86_64-sdl2-compat
+            mingw-w64-ucrt-x86_64-libepoxy
+            mingw-w64-ucrt-x86_64-ffmpeg
+      - name: Line endings of the clone
+        shell: bash
+        run: |
+          test "$(git config --get core.autocrlf)" = "true"
+          python tests/test_line_endings.py -v
+          git ls-files --eol | awk -F'\t' '{ split($1, f, " "); if (f[2] ~ /^w\/(crlf|mixed)$/ && f[3] != "attr/-text" && f[3] != "attr/binary") { print; bad = 1 } } END { exit bad }'
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_COMPILE_WARNING_AS_ERROR=ON -DCHASE_BUILD_TESTS=ON -DPython3_EXECUTABLE="$(cygpath -m "$pythonLocation")/python.exe"
+      - name: Build
+        run: cmake --build build -j"$(nproc)"
+      - name: Python tests
+        shell: bash
+        run: python -m unittest discover -s tests -p 'test_*.py'
       - name: CTest without slow and game-data tests
         run: ctest --test-dir build -j"$(nproc)" -LE 'slow|needs-game-data' --output-on-failure

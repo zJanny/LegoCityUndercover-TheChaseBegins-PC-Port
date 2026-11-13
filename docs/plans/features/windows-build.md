@@ -6,7 +6,7 @@ MSYS2 UCRT64 GCC build with Ninja: dependency discovery and flags.
 
 ## 2. Status
 
-IN_PROGRESS. The project configures and builds warning-free on Windows 11 with MSYS2 UCRT64 GCC and Ninja; all CTest tests pass or skip (see [windows-tests](windows-tests.md)). The GitHub Windows job is still open.
+IN_PROGRESS. The project configures and builds warning-free on Windows 11 with MSYS2 UCRT64 GCC and Ninja; all CTest tests pass or skip (see [windows-tests](windows-tests.md)). The GitHub Windows job is written in `.github/workflows/ci.yml` and has not run on GitHub yet.
 
 ## 3. Verified behaviour
 
@@ -28,8 +28,10 @@ None.
 
 ## 5. Open items
 
-- [ ] WINBUILD-3 — Windows job in `.github/workflows/ci.yml` (`msys2/setup-msys2@v2`, UCRT64, Ninja, `ctest -LE slow`), added once the first local Windows build passes; render tests need Mesa llvmpipe or a skip, game-data tests skip; needs: WINBUILD-1; evidence: [windows-toolchain.md §2026-11-12T20:54:37](../../design/windows-toolchain.md#ts-20261112-205437)
+- [ ] WINBUILD-7 — first run of the Windows job on GitHub is green; fix what it reports; the job excludes `slow` and `needs-game-data` tests, and the OpenGL tests skip with a reason on the GPU-less runner once WINTEST-13 is merged (see [windows-tests](windows-tests.md)); first run to check: `update: false` of setup-msys2 with a stale package database, `$pythonLocation` and `python.exe` in the MSYS2 shell, `shell: bash` resolving to Git Bash, tests that skip locally without symlink rights and now run, a newer MSYS2 GCC with new warnings under `-Werror`; needs: WINBUILD-3; blocks: WINBUILD-8, WINTEST-23. evidence: `.github/workflows/ci.yml`
 - [ ] WINBUILD-5 — question for the user: the spec names only the MSYS2 UCRT64 toolchain; the brief of 20261113-winopen-D took the folder from `MSYSTEM_PREFIX` when set, else `C:\msys64\ucrt64\bin`; in Git Bash `MSYSTEM_PREFIX` is Git's own `mingw64` prefix (no compiler, no Ninja), so the tool takes the `MSYSTEM_PREFIX` folder only when it holds `gcc` and otherwise the default folder. Is that reading right, and may the tool also look elsewhere (a `PATH` entry with `gcc`, another drive)? evidence: [windows-toolchain.md §2026-11-12T20:54:37](../../design/windows-toolchain.md#ts-20261112-205437)
+- [ ] WINBUILD-8 — Question for the user: should the Windows job cache the MSYS2 packages (a cache action keyed on the package list), or is installing them on every run acceptable? The spec does not decide; none is cached now; needs: WINBUILD-7; evidence: `.github/workflows/ci.yml`
+- [ ] WINTEST-23 — Question for the user: should the nightly full workflow (`.github/workflows/full.yml`, which runs the `slow` tests) get a Windows job too, or do the `slow` tests run on Windows only locally? The spec decides only `ctest -LE slow` for the pull-request job; `full.yml` is unchanged; needs: WINBUILD-7; evidence: `.github/workflows/full.yml`
 
 ## 6. Findings summary
 
@@ -37,4 +39,4 @@ Decisions: [windows-toolchain.md §2026-11-12T20:54:37](../../design/windows-too
 
 ## 7. Code and tests
 
-`CMakeLists.txt`, `cmake/sdl2.cmake`, `cmake/math_constants.cmake`, `cmake/platform_files.cmake`, `tools/merge_agent.py`.
+`CMakeLists.txt`, `cmake/sdl2.cmake`, `cmake/math_constants.cmake`, `cmake/platform_files.cmake`, `tools/merge_agent.py`, `.github/workflows/ci.yml`.
