@@ -1,3 +1,5 @@
+import ast
+import os
 import subprocess
 import sys
 import tempfile
@@ -62,6 +64,17 @@ class MergeConflictsTest(unittest.TestCase):
     def run_script(self):
         return subprocess.run([sys.executable, str(SCRIPT), "--root", str(self.repo)], capture_output=True, text=True)
 
+    def test_non_ascii_text_survives_a_non_utf8_default_encoding(self):
+        env = {name: value for name, value in os.environ.items() if name not in ("PYTHONIOENCODING", "PYTHONUTF8", "LC_ALL", "LANG")}
+        env.update(PYTHONUTF8="0", PYTHONCOERCECLOCALE="0", LC_ALL="C")
+        dash = "—"
+        self.conflicted_merge({LOG: f"# Progress {dash} Port\n\n- first\n- main {dash} one\n"},
+                              {LOG: f"# Progress {dash} Port\n\n- first\n- branch {dash} two\n"})
+        result = subprocess.run([sys.executable, "-X", "utf8=0", str(SCRIPT), "--root", str(self.repo)], capture_output=True, env=env)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        expected = f"# Progress {dash} Port\n\n- first\n- main {dash} one\n- branch {dash} two\n"
+        self.assertEqual((self.repo / LOG).read_bytes(), expected.encode("utf-8"))
+
     def test_appended_lines_of_both_sides_are_kept_in_order(self):
         self.conflicted_merge({LOG: "# Log\n\n- first\n- main\n", RE: "# Topic\n\n## Current state\n\nx\n\n## main entry\n"},
                               {LOG: "# Log\n\n- first\n- branch\n", RE: "# Topic\n\n## Current state\n\nx\n\n## branch entry\n"})
@@ -105,6 +118,21 @@ class MergeConflictsTest(unittest.TestCase):
     def test_unknown_option_is_rejected(self):
         result = subprocess.run([sys.executable, str(SCRIPT), "--bogus"], capture_output=True, text=True)
         self.assertEqual(result.returncode, 2)
+
+
+class TextDecodingGuardTest(unittest.TestCase):
+    def test_tools_decode_subprocess_text_as_utf8(self):
+        offenders = []
+        for path in sorted((Path(__file__).resolve().parent.parent / "tools").glob("*.py")):
+            for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+                if not isinstance(node, ast.Call):
+                    continue
+                keywords = {keyword.arg: keyword.value for keyword in node.keywords}
+                text_mode = any(isinstance(keywords.get(name), ast.Constant) and keywords[name].value is True for name in ("text", "universal_newlines"))
+                encoding = keywords.get("encoding")
+                if text_mode and not (isinstance(encoding, ast.Constant) and encoding.value == "utf-8"):
+                    offenders.append(f"{path.name}:{node.lineno}")
+        self.assertEqual(offenders, [], "subprocess text mode without encoding='utf-8' decodes with the Windows code page")
 
 
 if __name__ == "__main__":

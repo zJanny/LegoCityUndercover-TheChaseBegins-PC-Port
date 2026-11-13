@@ -55,7 +55,7 @@ def resolve_text(text: str) -> str | None:
 
 
 def git(root: Path, *args: str) -> subprocess.CompletedProcess:
-    return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True)
+    return subprocess.run(["git", *args], cwd=root, capture_output=True, encoding="utf-8", errors="replace")
 
 
 def stage_blob(root: Path, stage: int, path: str, target: Path) -> bool:
@@ -71,8 +71,13 @@ def merged_text(root: Path, path: str) -> str | None:
         parts = [Path(tmp) / name for name in ("ours", "base", "theirs")]
         if not all(stage_blob(root, stage, path, part) for stage, part in zip((2, 1, 3), parts)):
             return None
-        result = subprocess.run(["git", "merge-file", "-p", "--diff3", *map(str, parts)], cwd=root, capture_output=True, text=True)
-        return result.stdout if result.returncode >= 0 else None
+        result = subprocess.run(["git", "merge-file", "-p", "--diff3", *map(str, parts)], cwd=root, capture_output=True)
+        if result.returncode < 0:
+            return None
+        try:
+            return result.stdout.decode("utf-8")
+        except UnicodeDecodeError:
+            return None
 
 
 def resolve_append_only(root: Path, unmerged: list[str]) -> list[str]:

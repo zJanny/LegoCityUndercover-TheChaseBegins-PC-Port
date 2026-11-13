@@ -299,7 +299,7 @@ def measure_code(root, elf):
 def git_info(root):
     def run(*args):
         try:
-            return subprocess.run(['git', '-C', str(root), *args], capture_output=True, text=True, check=True).stdout.strip()
+            return subprocess.run(['git', '-C', str(root), *args], capture_output=True, encoding='utf-8', errors='replace', check=True).stdout.strip()
         except (OSError, subprocess.CalledProcessError):
             return ''
     return {'commit': run('rev-parse', 'HEAD'), 'short': run('rev-parse', '--short', 'HEAD')}

@@ -66,7 +66,7 @@ def fragment_options(fragment):
 
 def repository_files(root):
     if (root / ".git").exists():
-        out = subprocess.run(["git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard"], capture_output=True, text=True, check=True).stdout.splitlines()
+        out = subprocess.run(["git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard"], capture_output=True, encoding="utf-8", errors="replace", check=True).stdout.splitlines()
         return [root / p for p in out if (root / p).is_file() and not set(Path(p).parts) & SKIPPED_DIRS]
     return [p for p in root.rglob("*") if p.is_file() and not set(p.relative_to(root).parts) & SKIPPED_DIRS]
 

@@ -29,7 +29,7 @@ TREND = progress_trend.TREND_PATH
 
 
 def head_message(root):
-    result = subprocess.run(['git', '-C', str(root), 'log', '-1', '--format=%B'], capture_output=True, text=True, check=False)
+    result = subprocess.run(['git', '-C', str(root), 'log', '-1', '--format=%B'], capture_output=True, encoding='utf-8', errors='replace', check=False)
     return result.stdout if result.returncode == 0 else ''
 
 

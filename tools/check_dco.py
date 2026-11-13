@@ -34,7 +34,7 @@ class DcoError(Exception):
 
 
 def git(root, *args):
-    result = subprocess.run(['git', '-C', str(root), *args], capture_output=True, text=True, check=False)
+    result = subprocess.run(['git', '-C', str(root), *args], capture_output=True, encoding='utf-8', errors='replace', check=False)
     if result.returncode != 0:
         raise DcoError('git %s failed: %s' % (' '.join(args), result.stderr.strip()))
     return result.stdout

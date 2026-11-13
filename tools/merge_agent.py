@@ -135,7 +135,7 @@ def resolve_generated(root: Path, unmerged: list[str]) -> list[str]:
 
 def run(cmd: list[str], cwd: Path, check: bool = True, capture: bool = False,
         env: dict[str, str] | None = None) -> subprocess.CompletedProcess:
-    result = subprocess.run(cmd, cwd=cwd, text=True, capture_output=capture, env=env)
+    result = subprocess.run(cmd, cwd=cwd, encoding="utf-8", errors="replace", capture_output=capture, env=env)
     if check and result.returncode != 0:
         detail = (result.stdout or "") + (result.stderr or "") if capture else ""
         raise MergeError(f"command failed ({result.returncode}): {' '.join(cmd)}\n{detail}".rstrip())
@@ -147,7 +147,7 @@ def git(root: Path, *args: str) -> str:
 
 
 def repo_root() -> Path:
-    result = subprocess.run(["git", "rev-parse", "--show-toplevel"], text=True, capture_output=True)
+    result = subprocess.run(["git", "rev-parse", "--show-toplevel"], encoding="utf-8", errors="replace", capture_output=True)
     if result.returncode != 0:
         raise MergeError("not inside a git repository")
     return Path(result.stdout.strip())
@@ -574,7 +574,7 @@ def finish(root: Path, branch: str, message_file: Path, holders: list[str] | Non
     verified = recorded_fingerprint(root) == fingerprint(root)
     bookkeeping(root, holders or [], log)
     run_checks(root, skip_heavy=verified)
-    subprocess.run(["git", "commit", "-q", "-F", "-"], cwd=root, input=message + "\n", text=True, check=True)
+    subprocess.run(["git", "commit", "-q", "-F", "-"], cwd=root, input=(message + "\n").encode("utf-8"), check=True)
     remove_worktree_and_branch(root, branch)
     print(git(root, "log", "--oneline", "-1").rstrip())
     print("merged; push with `git push` when authorized")
@@ -592,7 +592,7 @@ def close(root: Path, message_file: Path, holders: list[str], log: list[str] | N
     run([sys.executable, "tools/check_doc_links.py", "--root", "."], root)
     run([sys.executable, "tools/progress_report.py", "--update-readme", "README.md"], root)
     run(["git", "add", "README.md", "docs/progress-trend.svg"], root)
-    subprocess.run(["git", "commit", "-q", "-F", "-"], cwd=root, input=message + "\n", text=True, check=True)
+    subprocess.run(["git", "commit", "-q", "-F", "-"], cwd=root, input=(message + "\n").encode("utf-8"), check=True)
     print(git(root, "log", "--oneline", "-1").rstrip())
     print("committed; push with `git push` when authorized")
 

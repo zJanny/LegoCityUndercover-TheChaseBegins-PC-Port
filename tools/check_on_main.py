@@ -14,7 +14,7 @@ MAIN_BRANCHES = ("main", "master")
 
 
 def current_branch() -> str:
-    result = subprocess.run(["git", "symbolic-ref", "--short", "-q", "HEAD"], capture_output=True, text=True)
+    result = subprocess.run(["git", "symbolic-ref", "--short", "-q", "HEAD"], capture_output=True, encoding="utf-8", errors="replace")
     return result.stdout.strip() if result.returncode == 0 else ""
 
 

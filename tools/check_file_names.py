@@ -122,7 +122,7 @@ def cmake_violations(text, source):
 
 def tracked_files(root):
     try:
-        result = subprocess.run(["git", "-C", str(root), "ls-files", "-z"], capture_output=True, text=True, check=True)
+        result = subprocess.run(["git", "-C", str(root), "ls-files", "-z"], capture_output=True, encoding="utf-8", errors="replace", check=True)
     except (OSError, subprocess.CalledProcessError) as error:
         raise SystemExit("cannot list the tracked files of %s with git: %s" % (root, error))
     return [path for path in result.stdout.split("\0") if path]

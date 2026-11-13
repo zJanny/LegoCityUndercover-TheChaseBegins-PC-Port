@@ -109,7 +109,7 @@ def build_points(sections, current):
 
 
 def _git(root, *args):
-    result = subprocess.run(['git', '-C', str(root), *args], capture_output=True, text=True, check=False)
+    result = subprocess.run(['git', '-C', str(root), *args], capture_output=True, encoding='utf-8', errors='replace', check=False)
     return result.stdout if result.returncode == 0 else ''
 
 
