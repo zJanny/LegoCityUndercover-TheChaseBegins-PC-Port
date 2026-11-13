@@ -1057,6 +1057,7 @@ def project_file_errors(root):
 
 
 def process(root, fix, messages=None):
+    root = Path(root).resolve()
     docs = {}
     if fix:
         for what, count in (("duplicate archive log lines removed", remove_duplicate_archive_lines(root)),

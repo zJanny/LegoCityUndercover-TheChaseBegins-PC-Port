@@ -9,7 +9,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parents[1] / 'tools'))
 import check_doc_links as links  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from fixtures import isolate_git_environment  # noqa: E402
+import hook_paths  # noqa: E402
+from fixtures import isolate_git_environment, requires_directory_links  # noqa: E402
 
 isolate_git_environment()
 
@@ -676,6 +677,23 @@ class RuleChecksTest(unittest.TestCase):
     def test_corrects_without_corrected_by(self):
         self.write_pair('Nothing here.')
         found = self.errors('correction-pairing')
+        self.assertEqual(len(found), 1)
+        self.assertTrue(found[0].startswith('docs/re/b.md:7:'))
+
+    @requires_directory_links
+    def test_corrections_are_checked_with_the_root_given_through_a_link(self):
+        self.write_pair('Nothing here.')
+        with tempfile.TemporaryDirectory() as scratch, contextlib.redirect_stderr(io.StringIO()):
+            link = Path(scratch) / 'link'
+            self.assertIsNotNone(hook_paths.create_link(link, self.root))
+            try:
+                errors = links.process(link, False)[0]
+            finally:
+                if link.is_symlink():
+                    link.unlink()
+                else:
+                    link.rmdir()
+        found = [e for e in errors if 'correction-pairing' in e]
         self.assertEqual(len(found), 1)
         self.assertTrue(found[0].startswith('docs/re/b.md:7:'))
 

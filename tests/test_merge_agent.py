@@ -141,7 +141,7 @@ class MergeAgentTest(unittest.TestCase):
     def add_worktree(self, name: str, reason: str | None) -> Path:
         scratch = tempfile.TemporaryDirectory()
         self.addCleanup(scratch.cleanup)
-        tree = Path(scratch.name) / name
+        tree = Path(scratch.name).resolve() / name
         git(self.repo, "worktree", "add", "-q", "-b", name, str(tree))
         self.assertIsNotNone(data_link(tree / "artifacts", self.repo))
         if reason is not None:
