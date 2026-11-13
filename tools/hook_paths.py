@@ -3,15 +3,23 @@
 
 On Windows the hooks see native paths (backslashes) from Claude Code and Git Bash style paths (/c/Users/..., /cygdrive/c/...)
 inside the commands an agent writes. Every function takes `windows` so the tests can run both forms on any platform.
+Paths of the MSYS root (/tmp, /usr, /home, /etc) depend on where Git for Windows is installed, so `cygpath -w` maps them;
+when `cygpath` is missing, fails or times out, the path stays as written.
 """
+import functools
 import os
 import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
 WORKTREES = "/.claude/worktrees/"
 IS_WINDOWS = os.name == "nt"
 MSYS_DRIVE = re.compile(r"^/(?:cygdrive/)?([a-zA-Z])(?=/|$)")
+MSYS_ROOT = re.compile(r"^/(?!/|dev/)")
+WINDOWS_PATH = re.compile(r"^(?:[a-zA-Z]:[\\/]|\\\\)")
+CYGPATH_TIMEOUT = 3
 DRIVE_PATH = re.compile(r"(?<![\w\\/])[a-zA-Z]:\\[^\s'\";|&<>()`]*")
 
 
@@ -26,12 +34,56 @@ def drive_paths_with_slashes(command, windows=IS_WINDOWS):
     return DRIVE_PATH.sub(lambda match: match.group(0).replace("\\", "/"), command)
 
 
-def native_path(text, windows=IS_WINDOWS):
+@functools.lru_cache(maxsize=None)
+def find_cygpath():
+    found = shutil.which("cygpath")
+    if found:
+        return found
+    folders = []
+    for tool in ("bash", "git"):
+        located = shutil.which(tool)
+        if located:
+            folder = Path(located).parent
+            folders += [folder, folder.parent / "usr" / "bin", folder.parent.parent / "usr" / "bin"]
+    for folder in folders:
+        for name in ("cygpath.exe", "cygpath"):
+            if (folder / name).is_file():
+                return str(folder / name)
+    return None
+
+
+@functools.lru_cache(maxsize=256)
+def run_cygpath(text):
+    program = find_cygpath()
+    if not program:
+        return None
+    try:
+        result = subprocess.run([program, "-w", "--", text], capture_output=True, text=True, encoding="utf-8",
+                                errors="replace", timeout=CYGPATH_TIMEOUT)
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return None
+    return result.stdout if result.returncode == 0 else None
+
+
+def msys_root_path(text, run=None):
+    if not MSYS_ROOT.match(text) or "\n" in text:
+        return text
+    try:
+        mapped = (run or run_cygpath)(text)
+    except Exception:
+        return text
+    mapped = mapped.strip() if isinstance(mapped, str) else ""
+    return mapped if WINDOWS_PATH.match(mapped) and "\n" not in mapped else text
+
+
+def native_path(text, windows=IS_WINDOWS, cygpath=None):
     text = str(text)
-    if windows and MSYS_DRIVE.match(text):
+    if not windows:
+        return text
+    if MSYS_DRIVE.match(text):
         mapped = MSYS_DRIVE.sub(lambda match: match.group(1).upper() + ":", text, count=1)
         return mapped + "/" if mapped.endswith(":") else mapped
-    return text
+    return msys_root_path(text, cygpath)
 
 
 def in_worktree(path, windows=IS_WINDOWS):
@@ -51,12 +103,12 @@ def main_of_worktree(path, windows=IS_WINDOWS):
     return parts[0] if parts else None
 
 
-def join(base, text, windows=IS_WINDOWS):
-    return Path(base) / os.path.expanduser(native_path(text, windows))
+def join(base, text, windows=IS_WINDOWS, cygpath=None):
+    return Path(base) / os.path.expanduser(native_path(text, windows, cygpath))
 
 
-def resolve_in(base, text, windows=IS_WINDOWS):
-    return join(base, text, windows).resolve()
+def resolve_in(base, text, windows=IS_WINDOWS, cygpath=None):
+    return join(base, text, windows, cygpath).resolve()
 
 
 def make_junction(link, target):

@@ -8,6 +8,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 TOOLS = Path(__file__).resolve().parent.parent / "tools"
 sys.path.insert(0, str(TOOLS))
@@ -26,6 +27,10 @@ WINDOWS_TREE = "C:\\work\\repo\\.claude\\worktrees\\w\\src\\a.cpp"
 
 def git(cwd, *args):
     return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True).stdout
+
+
+def no_cygpath(_text):
+    return None
 
 
 def refuse(*_, **__):
@@ -59,8 +64,86 @@ class PathFunctionTest(unittest.TestCase):
 
     def test_other_paths_are_left_alone(self):
         for text in ("/tmp/x", "/cx/y", "/usr/bin", "C:/Users/a", "C:\\Users\\a", "src/a.cpp", "../c/x", "~/x", "", "/cygdrive", "/cygdrive/cc/x"):
-            self.assertEqual(hook_paths.native_path(text, windows=True), text)
+            self.assertEqual(hook_paths.native_path(text, windows=True, cygpath=no_cygpath), text)
         self.assertEqual(hook_paths.native_path("/c/Users/a", windows=False), "/c/Users/a")
+
+    def test_msys_root_paths_are_mapped_with_cygpath_on_windows_only(self):
+        asked = []
+
+        def cygpath(text):
+            asked.append(text)
+            return "C:\\Root" + text.replace("/", "\\") + "\n"
+
+        for text, expected in (("/tmp/x", "C:\\Root\\tmp\\x"), ("/usr", "C:\\Root\\usr"), ("/var/lib/a", "C:\\Root\\var\\lib\\a"),
+                               ("/etc/passwd", "C:\\Root\\etc\\passwd")):
+            self.assertEqual(hook_paths.native_path(text, windows=True, cygpath=cygpath), expected)
+        self.assertEqual(asked, ["/tmp/x", "/usr", "/var/lib/a", "/etc/passwd"])
+        asked.clear()
+        self.assertEqual(hook_paths.native_path("/tmp/x", windows=False, cygpath=cygpath), "/tmp/x")
+        for text in ("/c/Users/a", "/cygdrive/c/a", "src/a.cpp", "C:\\a", "//server/share", "", "/tmp\nx", "/dev/null", "/dev/stderr"):
+            hook_paths.native_path(text, windows=True, cygpath=cygpath)
+        self.assertEqual(asked, [])
+
+    def test_a_failing_or_garbled_cygpath_leaves_the_path_as_written(self):
+        def timing_out(_text):
+            raise subprocess.TimeoutExpired(["cygpath"], 3)
+
+        def crashing(_text):
+            raise OSError("no such program")
+
+        answers = (no_cygpath, timing_out, crashing, lambda _: "", lambda _: "\n", lambda _: "/tmp/x", lambda _: "error: bad path",
+                   lambda _: "C:\\a\nC:\\b", lambda _: 7, lambda _: b"C:\\a")
+        for run in answers:
+            self.assertEqual(hook_paths.native_path("/tmp/x", windows=True, cygpath=run), "/tmp/x")
+            self.assertEqual(hook_paths.join(Path("base"), "/tmp/x", windows=True, cygpath=run), Path("base") / "/tmp/x")
+
+    def test_a_mapped_root_path_is_what_join_and_resolve_use(self):
+        mapped = "C:\\mapped\\x"
+        expected = Path("elsewhere") / mapped
+        self.assertEqual(hook_paths.join(Path("elsewhere"), "/tmp/x", windows=True, cygpath=lambda _: mapped), expected)
+        self.assertEqual(hook_paths.resolve_in(Path("elsewhere"), "/tmp/x", windows=True, cygpath=lambda _: mapped), expected.resolve())
+
+    def test_cygpath_is_started_without_a_shell_and_with_a_timeout(self):
+        calls = []
+
+        def fake_run(command, **options):
+            calls.append((command, options))
+            return subprocess.CompletedProcess(command, 0, "C:\\mapped\n", "")
+
+        hook_paths.run_cygpath.cache_clear()
+        with mock.patch.object(hook_paths, "find_cygpath", lambda: "cygpath-program"), mock.patch.object(hook_paths.subprocess, "run", fake_run):
+            self.assertEqual(hook_paths.native_path("/tmp/a b;x", windows=True), "C:\\mapped")
+        hook_paths.run_cygpath.cache_clear()
+        (command, options), = calls
+        self.assertEqual(command, ["cygpath-program", "-w", "--", "/tmp/a b;x"])
+        self.assertGreater(options["timeout"], 0)
+        self.assertFalse(options.get("shell", False))
+
+    def test_a_missing_cygpath_leaves_the_path_as_written(self):
+        hook_paths.run_cygpath.cache_clear()
+        with mock.patch.object(hook_paths, "find_cygpath", lambda: None):
+            self.assertEqual(hook_paths.native_path("/tmp/x", windows=True), "/tmp/x")
+        hook_paths.run_cygpath.cache_clear()
+
+    def test_a_cygpath_that_times_out_leaves_the_path_as_written(self):
+        def hang(command, **options):
+            raise subprocess.TimeoutExpired(command, options["timeout"])
+
+        hook_paths.run_cygpath.cache_clear()
+        with mock.patch.object(hook_paths, "find_cygpath", lambda: "cygpath-program"), mock.patch.object(hook_paths.subprocess, "run", hang):
+            self.assertEqual(hook_paths.native_path("/tmp/x", windows=True), "/tmp/x")
+        hook_paths.run_cygpath.cache_clear()
+
+    def test_the_real_cygpath_maps_the_msys_root(self):
+        hook_paths.find_cygpath.cache_clear()
+        program = hook_paths.find_cygpath()
+        if not program:
+            self.skipTest("cygpath is not installed (it comes with Git for Windows and MSYS2)")
+        hook_paths.run_cygpath.cache_clear()
+        for text in ("/tmp", "/usr/bin", "/etc"):
+            expected = subprocess.run([program, "-w", "--", text], capture_output=True, text=True, timeout=10).stdout.strip()
+            self.assertTrue(expected, text)
+            self.assertEqual(hook_paths.native_path(text, windows=True), expected)
 
     def test_backslash_drive_paths_in_commands_get_slashes_on_windows(self):
         for command, expected in (("rm C:\\w\\repo/src/x", "rm C:/w/repo/src/x"),
@@ -222,6 +305,24 @@ class HookRunTest(unittest.TestCase):
             self.assertIn("no Co-Authored-By", self.reason(self.bash(f"cd {target} && git commit -m x", cwd=self.tree)))
             self.assertIn("no Co-Authored-By", self.reason(self.bash(f"cd '{target}' && git commit -m x")))
         self.assertEqual(self.bash(f'cd {self.git_bash_style(self.repo)} && git commit -m "x\n\n{CO_AUTHOR}"').returncode, 0)
+
+    @unittest.skipUnless(os.name == "nt", "the MSYS root exists on Windows only")
+    def test_a_commit_after_a_cd_into_the_msys_root_is_checked(self):
+        hook_paths.find_cygpath.cache_clear()
+        hook_paths.run_cygpath.cache_clear()
+        mapped = hook_paths.msys_root_path("/tmp")
+        if mapped == "/tmp":
+            self.skipTest("cygpath is not installed (it comes with Git for Windows and MSYS2)")
+        folder = Path(tempfile.mkdtemp(dir=mapped))
+        self.addCleanup(shutil.rmtree, folder, True)
+        (folder / "tools").mkdir()
+        for name in ("claude_hooks.py", "hook_paths.py", "forbidden_files.py"):
+            shutil.copy(TOOLS / name, folder / "tools")
+        (folder / "CLAUDE.md").write_text("# Rules\n")
+        git(folder, "init", "-q", "-b", "main")
+        git(folder, "add", ".")
+        for command in (f"cd /tmp/{folder.name} && git commit -m x", f"git -C /tmp/{folder.name} commit -m x"):
+            self.assertIn("no Co-Authored-By", self.reason(self.bash(command, cwd=self.tree)), command)
 
     @unittest.skipUnless(os.name == "nt", "Git Bash drive paths exist on Windows only")
     def test_a_git_bash_style_cd_into_a_worktree_marks_the_agent(self):

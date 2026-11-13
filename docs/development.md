@@ -115,7 +115,7 @@ The hooks start through the launcher `.claude/run_hook.cmd`. It runs on Linux (`
 Requirements:
 
 1. Python 3.11 or newer, reachable as `python3`, `python` or `py -3`. The launcher tries them in this order and skips any that is not Python 3.11 or newer, such as the Microsoft Store placeholder that `python3` is on a fresh Windows. The documented commands still say `python3`; how to set it up: [Python on Windows](rules/windows.md#python-on-windows).
-2. `git` on the `PATH` of the shell that Claude Code uses.
+2. `git` on the `PATH` of the shell that Claude Code uses. `cygpath` (part of Git for Windows, next to its `git.exe` and `bash.exe`) lets the hooks resolve paths such as `/tmp/x` in commands; without it these paths are left as written and the commands they name are not followed into that folder.
 3. A checkout with LF line endings and `core.autocrlf=false`, as in [the Windows rules](rules/windows.md).
 
 If no Python is found, the launcher prints `claude hooks: no Python 3.11 or newer found` and exits with code 1. Claude Code treats that as a non-blocking error, so no rule is checked until you install Python.

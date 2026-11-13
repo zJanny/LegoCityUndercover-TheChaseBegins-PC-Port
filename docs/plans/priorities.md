@@ -28,7 +28,7 @@ Rows are ordered by Placed + Calls, then Unblocks. That sum is only an ordering 
 - Rendering, saves, menus and audio items rarely name a native or a class, so they often appear only in the list of items with unknown reach.
 - A wrong link from the text is fixed with `uses:` on that item.
 
-Items: 1170 open items and stand-ins, 205 linked to game usage, 965 with unknown reach.
+Items: 1169 open items and stand-ins, 205 linked to game usage, 964 with unknown reach.
 
 ## Top 50 overall
 
@@ -207,7 +207,7 @@ No linked items.
 
 ## Windows port (`windows-port` plan)
 
-0 of 14 items linked.
+0 of 13 items linked.
 
 No linked items.
 
@@ -306,7 +306,6 @@ Widest Unblocks among them: [SCRIPT-92](features/script-system-ai-navigation.md?
 - [vehicles.md](features/vehicles.md): VEH-16 (+2), VEH-13 (+1), VEH-143 (+1), VEH-21 (+1), VEH-99 (+1), VEH-15, VEH-23, VEH-7, VEH-S11, VEH-S4, VEH-S5
 - [viewer-tools.md](features/viewer-tools.md): TOOLS-1, TOOLS-15, TOOLS-19, TOOLS-2, TOOLS-21, TOOLS-3, TOOLS-4, TOOLS-S1
 - [windows-build.md](features/windows-build.md): WINBUILD-3, WINBUILD-5
-- [windows-hook-paths.md](features/windows-hook-paths.md): WINTEST-6
 - [windows-hooks.md](features/windows-hooks.md): WINTEST-3
 - [windows-line-endings.md](features/windows-line-endings.md): WINTEST-11, WINTEST-12
 - [windows-platform.md](features/windows-platform.md): WINPLAT-1, WINPLAT-3, WINPLAT-4
