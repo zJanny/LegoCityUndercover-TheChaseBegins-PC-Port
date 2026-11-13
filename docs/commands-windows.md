@@ -25,7 +25,8 @@ ctest --test-dir build -j"$(nproc)" --output-on-failure
 ```
 
 - `-DPython3_EXECUTABLE` picks the python.org Python for the Python checks of `ctest`. Without it CMake takes MSYS2's own Python, which comes with FFmpeg.
-- The tests that start `chase-game` or `chase-viewer` offscreen are reported as skipped, and the 5 tests that check their pictures as disabled. SDL needs `libEGL.dll` for its offscreen mode, and MSYS2 has none.
+- The tests that start `chase-game` or `chase-viewer` offscreen use SDL's Windows video driver and a hidden window (`SDL_VIDEODRIVER=windows` and `CHASE_HIDDEN_WINDOW=1`, set for you by CMake). They need a graphics card with OpenGL 4.6. Without one they should skip with the reason `no OpenGL 4.6 context`, which is not yet checked on such a machine.
+- To run `chase-game` or `chase-viewer` by hand without showing the window, set `CHASE_HIDDEN_WINDOW=1`. Unset or `0` shows the window; any other value, even an empty one, stops the program with an error.
 
 In Git Bash:
 

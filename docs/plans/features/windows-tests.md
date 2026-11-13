@@ -6,18 +6,21 @@ Running all tests and tools on Windows; skips with reasons.
 
 ## 2. Status
 
-IN_PROGRESS. Full `ctest` on Windows: 624 tests, 500 pass, 119 skip with a reason, 5 are disabled, none fail. The game scene tests cannot run, because SDL's offscreen driver has no OpenGL on Windows.
+IN_PROGRESS. Full `ctest` on Windows with the extracted game data: 635 tests, 633 pass and 2 skip off main (as on Linux). The tests that start `chase-game` or `chase-viewer` and the 5 picture checks run on the graphics card through a hidden window. Not verified on a machine without a graphics card (WINTEST-14).
 
 ## 3. Verified behaviour
 
-Measured on Windows 11 by 20261112-winhooks-E, 2026-11-12, `ctest --test-dir build -j16 --output-on-failure` in the UCRT64 shell with the extracted game data and `-DPython3_EXECUTABLE` set to the python.org Python:
+Measured on Windows 11 by 20261113-winopen-A, 2026-11-13, `ctest --test-dir build -j4 --output-on-failure` with MSYS2 UCRT64 first on the `PATH`, the extracted game data and `-DPython3_EXECUTABLE` set to the python.org Python, on a graphics card with OpenGL 4.6 (WGL context in a hidden window):
 
-- 500 tests pass, among them every unit, runtime and real-data test that runs without a window; their pinned values are unchanged.
-- 112 tests that start `chase-game` or `chase-viewer` with `SDL_VIDEODRIVER=offscreen` skip: SDL prints `Could not load EGL library`, and CMake marks that output as a skip on Windows (WINTEST-13). The 5 tests that check their pictures (`debug-overlay-area`, `tip-text-panel`, `waypoint-marker-position`, `police-entrance-no-disc`, `front-overlay-area`) are disabled when CMake finds no `libEGL.dll`.
+- First full run, before the save folder change (WINPLAT-1) was merged: 623 pass, 3 skip, 1 fails and 1 does not run. `game-save-new-game` failed because its pinned save path is joined with `/` and the Windows save code joins with a backslash; `game-save-reload` needs its save file. Every other test passed, among them the 112 `chase-game` and `chase-viewer` tests, the 5 picture checks (`debug-overlay-area`, `tip-text-panel`, `waypoint-marker-position`, `police-entrance-no-disc`, `front-overlay-area`) and every game scene test with pinned movement values.
+- After merging main (save folder `%APPDATA%\chase`, UTF-8 manifest) and the per-test `APPDATA`: all 635 tests pass or skip off main, among them `game-save-new-game` and `game-save-reload`, with no platform skip list. Their output check accepts `/` or `\` before `chase` and `savegame.dat`, because the Windows path mixes both. Total time 585 s; 54 tests are labelled `slow`.
+- Mechanism: on Windows `chase_use_hidden_window_for_gl_tests` (`cmake/platform_files.cmake`) rewrites the environment of every test that has `SDL_VIDEODRIVER=offscreen` to `SDL_VIDEODRIVER=windows` plus `CHASE_HIDDEN_WINDOW=1`, and adds the skip pattern `no OpenGL 4.6 context` to every test. `chase-game` and `chase-viewer` add `hiddenWindowFlagsFromEnvironment()` (`src/render/window_creation.cpp`) to their window flags: unset or `0` shows the window, `1` hides it, any other value stops with `CHASE_HIDDEN_WINDOW: expected 0 or 1, got '<text>'` (tests `render-window-creation*`, `game-hidden-window-rejects`). No command-line option was added; the Linux tests and the game with default options are unchanged. Reason for an environment switch: only the test setup needs it, and it adds no documented option.
+- A missing OpenGL 4.6 context: `chase-game` and `chase-viewer` stop with `no OpenGL 4.6 context: <SDL error>` when the window or the context cannot be created, and CTest turns that output into a skip. Provoked with `SDL_VIDEODRIVER=dummy` (SDL has no OpenGL window there): CTest reports the test as skipped. The window tests of `chase_render` keep their exit code 77.
 - Other ways to get OpenGL without a window were ruled out: Mesa llvmpipe for Windows offers OpenGL 4.5 only, ANGLE offers OpenGL ES only, and Mesa's d3d12 driver on Windows is an extra dependency. The hidden-window approach is approved ([windows-toolchain.md §2026-11-12T20:54:37](../../design/windows-toolchain.md#ts-20261112-205437)).
-- `render-ui-draw-window`, `render-frame-keep-window` and `qol-ui-menu-window-real-data` skip with exit code 77 (no OpenGL 4.6 context offscreen), as on a Linux machine without a display.
 - `progress-readme` and `priorities-current` skip off main, as on Linux.
 - `save-default-path` runs `tests/save_default_path_windows_test.cpp` on Windows (WINPLAT-1) and no longer skips.
+- `fmv-real-smoke` runs with the Windows video driver and shows a window while it runs (WINTEST-15).
+- Test isolation: on Windows every test gets `APPDATA=<build>/test-xdg/<test>` next to `XDG_DATA_HOME` (`chase_isolate_test_appdata` in `cmake/platform_files.cmake`, run at the end of configuring so it also covers the tests of the subdirectories and the deferred ones), so a test that saves writes to `<build>/test-xdg/<test>/chase/savegame.dat` and never to the real `%APPDATA%\chase`. CMake stops when a test sets `APPDATA` itself, and the test `test-appdata-isolated` (`cmake/check_test_appdata.cmake`) fails when the `APPDATA` of its own environment lies outside `<build>/test-xdg` (checked by hand with the real Roaming folder: it fails).
 
 ## 4. Stand-ins
 
@@ -25,8 +28,9 @@ None.
 
 ## 5. Open items
 
-- [ ] WINTEST-2 — floating-point equality with MSYS2 GCC and `-ffp-contract=off`: the pinned values of the 500 passing tests hold unchanged; the game scene tests with pinned movement values are still unchecked; needs: WINBUILD-1, WINTEST-13; evidence: [windows-toolchain.md §2026-11-12T20:54:37](../../design/windows-toolchain.md#ts-20261112-205437)
-- [ ] WINTEST-13 — the 112 offscreen OpenGL tests and their 5 picture checks do not run on Windows: SDL's offscreen driver needs `libEGL.dll`, which no listed MSYS2 package ships; on Windows these tests use SDL's normal Windows video driver with a hidden window instead of `SDL_VIDEODRIVER=offscreen`, which gives a WGL context with OpenGL 4.6 on the graphics card (a Windows-only test setup change, approach approved by the user 2026-11-12); blocks: WINTEST-2; evidence: [Verified behaviour](#3-verified-behaviour)
+- [ ] WINTEST-2 — floating-point equality with MSYS2 GCC and `-ffp-contract=off`: the pinned values of all passing tests hold unchanged, among them the game scene tests; the cause analysis is still open; needs: WINTEST-13; evidence: [Verified behaviour](#3-verified-behaviour)
+- [ ] WINTEST-14 — no machine without a usable OpenGL 4.6 context (a CI runner with Microsoft's software OpenGL 1.1) was available: the skip is checked only with SDL's dummy video driver; check on the GitHub Windows job that every such test skips with `no OpenGL 4.6 context` and none fails; needs: WINBUILD-3, WINBUILD-7; evidence: [Verified behaviour](#3-verified-behaviour)
+- [ ] WINTEST-15 — `fmv-real-smoke` (`chase-fmv`, SDL renderer, no OpenGL) shows a visible window on Windows because `chase-fmv` does not read `CHASE_HIDDEN_WINDOW`; question for the user: may `chase-fmv` read the same switch (one more line of glue, and `chase-fmv` then links `chase_render`)?; evidence: [Verified behaviour](#3-verified-behaviour)
 
 ## 6. Findings summary
 
@@ -34,4 +38,4 @@ Decisions: [windows-toolchain.md §2026-11-12T20:54:37](../../design/windows-too
 
 ## 7. Code and tests
 
-`tests/`, `CMakeLists.txt`, `cmake/platform_files.cmake` (`chase_skip_tests_without_offscreen_gl`, `chase_platform_skip_test`).
+`tests/render_window_creation_test.cpp`, `src/render/window_creation.cpp`, `CMakeLists.txt`, `cmake/platform_files.cmake` (`chase_use_hidden_window_for_gl_tests`, `chase_isolate_test_appdata`, `chase_platform_skip_test`), `cmake/check_test_appdata.cmake`.

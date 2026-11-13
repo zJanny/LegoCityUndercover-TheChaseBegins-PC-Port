@@ -9,6 +9,7 @@
 #include "render/character.hpp"
 #include "render/scene.hpp"
 #include "render/window.hpp"
+#include "render/window_creation.hpp"
 #include "runtime/cutscene_camera.hpp"
 #include "strict_parse.hpp"
 #include <SDL.h>
@@ -188,10 +189,10 @@ int run(const Options& options) {
     PadDevice pad;
     int width = 960, height = 600;
     SDL_Window* window = SDL_CreateWindow("The Chase Begins - development model viewer (not gameplay)",
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-    if (!window) throw std::runtime_error(SDL_GetError());
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | hiddenWindowFlagsFromEnvironment());
+    if (!window) throw std::runtime_error(noGlContextMessage(SDL_GetError()));
     SDL_GLContext context = SDL_GL_CreateContext(window);
-    if (!context) throw std::runtime_error(SDL_GetError());
+    if (!context) throw std::runtime_error(noGlContextMessage(SDL_GetError()));
     SDL_GL_SetSwapInterval(1);
 
     Scene scene(archive, options.exclude);

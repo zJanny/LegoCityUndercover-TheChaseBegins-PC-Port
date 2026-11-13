@@ -86,7 +86,7 @@ ctest --test-dir build -j"$(nproc)" --output-on-failure
 - The programs read their paths as UTF-8: a manifest in every `.exe` sets the code page of the process, so folders with letters outside the Windows ANSI code page (for example Cyrillic or Japanese) work for options such as `--config`. This needs Windows 10 version 1903 or later. The Python tools that load the native library do not accept such folders yet.
 - The tests need Git, which the window finds through the Windows `PATH` (`-use-full-path`).
 - Run the Python tests in Git Bash: `python3 -m unittest discover -s tests -p 'test_*.py' -v`.
-- On Windows the tests that start `chase-game` or `chase-viewer` without a window are skipped. SDL's offscreen mode needs `libEGL.dll`, which MSYS2 does not have. The list is in [the Windows test notes](plans/features/windows-tests.md).
+- On Windows, the tests that start `chase-game` or `chase-viewer` offscreen use SDL's Windows video driver and a hidden window (`CHASE_HIDDEN_WINDOW=1`, set by `cmake/platform_files.cmake`). They need a graphics card with OpenGL 4.6. Without one they should skip with the reason `no OpenGL 4.6 context`, which is not yet checked on such a machine. The list is in [the Windows test notes](plans/features/windows-tests.md).
 - The extraction and conversion tools load `build/libchase_assets_c.dll`. They find it themselves on Windows; `CHASE_ASSETS_LIB` is optional there and names another path ([Extracting game data](extracting-game-data.md#3-unpack-the-asset-archive)).
 - `-DCHASE_BUILD_TESTS=ON` builds the tests again after a build with `-DCHASE_BUILD_TESTS=OFF`, as in the README. Without tests the build needs no Python setting.
 

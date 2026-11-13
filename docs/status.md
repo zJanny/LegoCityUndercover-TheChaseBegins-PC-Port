@@ -195,7 +195,7 @@ What works on Windows 11:
 
 What does not work on Windows yet:
 
-- The tests that run `chase-game` or the model viewer without a window are skipped, and the tests of their pictures are disabled. SDL's offscreen mode needs a library that MSYS2 does not have.
+- The tests that run `chase-game` or the model viewer use a hidden window and need a graphics card with OpenGL 4.6. Without one they should skip; this is not yet checked on such a machine.
 - Some of the Python tests fail on Windows.
 
 The details are in the Windows feature pages: [build](plans/features/windows-build.md), [platform](plans/features/windows-platform.md) and [tests](plans/features/windows-tests.md).

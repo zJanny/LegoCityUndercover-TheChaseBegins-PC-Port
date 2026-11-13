@@ -170,6 +170,15 @@ if(EPOXY_FOUND)
   target_sources(chase_render PRIVATE src/render/shadow.cpp)
   target_sources(chase_render PRIVATE src/render/ui_text.cpp)
   target_sources(chase_render PRIVATE src/render/ui_batch.cpp src/render/ui_draw.cpp src/render/frame_keep.cpp)
+  target_sources(chase_render PRIVATE src/render/window_creation.cpp)
+  add_executable(render-window-creation-test tests/render_window_creation_test.cpp)
+  target_link_libraries(render-window-creation-test PRIVATE chase_render)
+  target_compile_options(render-window-creation-test PRIVATE -Wall -Wextra -Wpedantic)
+  add_test(NAME render-window-creation COMMAND render-window-creation-test)
+  add_test(NAME render-window-creation-environment-hidden COMMAND render-window-creation-test environment-hidden)
+  set_tests_properties(render-window-creation-environment-hidden PROPERTIES ENVIRONMENT "CHASE_HIDDEN_WINDOW=1")
+  add_test(NAME render-window-creation-environment-rejected COMMAND render-window-creation-test environment-rejected)
+  set_tests_properties(render-window-creation-environment-rejected PROPERTIES ENVIRONMENT "CHASE_HIDDEN_WINDOW=maybe")
   add_executable(render-viewport-rect-test tests/render_viewport_rect_test.cpp)
   target_link_libraries(render-viewport-rect-test PRIVATE chase_render)
   target_compile_options(render-viewport-rect-test PRIVATE -Wall -Wextra -Wpedantic)
@@ -1738,7 +1747,7 @@ if(BUILD_TESTING)
       --script "at 948.327 95.031 1124.175 0;0 0 40")
     set_tests_properties(game-save-new-game PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300
       FIXTURES_REQUIRED save_new_game_clean FIXTURES_SETUP save_new_game
-      PASS_REGULAR_EXPRESSION "save: new game in slot 0, save requests write [^\n]*/test-xdg/game-save-new-game/chase/savegame\\.dat.*save: level entry 2, studs 0, super bricks 0.*party: level 2, ids 9 19- 29- 39- 49- 59- 69- 80- 0 0, usable 1, walk 8, player character 9\n.*save: request 1 written to")
+      PASS_REGULAR_EXPRESSION "save: new game in slot 0, save requests write [^\n]*/test-xdg/game-save-new-game[/\\]chase[/\\]savegame\\.dat.*save: level entry 2, studs 0, super bricks 0.*party: level 2, ids 9 19- 29- 39- 49- 59- 69- 80- 0 0, usable 1, walk 8, player character 9\n.*save: request 1 written to")
     add_test(NAME game-save-reload COMMAND chase-game
       --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
       --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --save "${CMAKE_BINARY_DIR}/test-xdg/game-save-new-game/chase/savegame.dat" --slot 0
@@ -2987,6 +2996,9 @@ if(TARGET chase-game)
   set_property(TEST game-ladder-kick-1-4 APPEND PROPERTY LABELS needs-game-data)
 endif()
 
+if(BUILD_TESTING AND WIN32)
+  add_test(NAME test-appdata-isolated COMMAND ${CMAKE_COMMAND} -DBUILD_DIR=${CMAKE_BINARY_DIR} -P ${CMAKE_SOURCE_DIR}/cmake/check_test_appdata.cmake)
+endif()
 if(BUILD_TESTING)
   add_test(NAME test-labels COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/tools/check_test_labels.py" "${CMAKE_BINARY_DIR}")
 endif()
@@ -3148,9 +3160,18 @@ if(TARGET chase-game)
   set_tests_properties(game-bone-attach-1-3 PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy" TIMEOUT 300 LABELS needs-game-data
     PASS_REGULAR_EXPRESSION "prop 1-3_boom_chopper: attached to bone weaponright of 1-3_sound_man_chopper at update 0\n.*prop 1-3_boom_park: attached to bone weaponright of 1-3_sound_man_park at update 0\n.*prop 1-3_camera_chopper: attached to bone weaponright of 1-3_camera_man_chopper at update 0\n.*prop 1-3_camera_park: attached to bone weaponright of 1-3_camera_man_park at update 0")
 endif()
+if(TARGET chase-game)
+  # Rejection of CHASE_HIDDEN_WINDOW by the program (20261113-winopen-A, 2026-11-13, run by hand with the value maybe).
+  add_test(NAME game-hidden-window-rejects COMMAND chase-game
+    --fib "${CHASE_ROMFS_DIR}/lego_city3ds.fib" --names "${CHASE_ROMFS_DIR}/lego_city3ds.csv"
+    --config "${CMAKE_BINARY_DIR}/config/controls.cfg" --gameplay --frames 1)
+  set_tests_properties(game-hidden-window-rejects PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy;CHASE_HIDDEN_WINDOW=maybe" LABELS needs-game-data
+    PASS_REGULAR_EXPRESSION "chase-game: CHASE_HIDDEN_WINDOW: expected 0 or 1, got 'maybe'")
+endif()
 if(WIN32 AND BUILD_TESTING)
   if(CMAKE_VERSION VERSION_LESS 3.28)
     message(FATAL_ERROR "Building the tests on Windows needs CMake 3.28 or newer")
   endif()
-  chase_skip_tests_without_offscreen_gl(${CMAKE_SOURCE_DIR})
+  chase_use_hidden_window_for_gl_tests(${CMAKE_SOURCE_DIR})
+  cmake_language(DEFER DIRECTORY ${CMAKE_SOURCE_DIR} CALL chase_isolate_test_appdata ${CMAKE_SOURCE_DIR})
 endif()
