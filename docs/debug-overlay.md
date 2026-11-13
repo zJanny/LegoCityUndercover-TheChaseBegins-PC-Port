@@ -36,9 +36,9 @@ The panel shows one line each:
 | `FRAME MS LAST` | The last frame | milliseconds | Time between the start of the previous and the start of this pass of the main loop. With the window's vertical sync this includes the wait for the display. |
 | `AVG` | Average frame time | milliseconds | Mean of the frame times in the same 1.0 s window. |
 | `MIN`, `MAX` | Shortest and longest frame time | milliseconds | Smallest and largest frame time in the same window. |
-| `MEM MB` | Resident memory of the process now | mebibytes (1024 x 1024 bytes) | `VmRSS` in `/proc/self/status`, read once per second. Shows `MEM MB N/A` when the file cannot be read. |
-| `PEAK` | Highest resident memory since the process started | mebibytes | `VmHWM` in `/proc/self/status`, read once per second. |
-| `CPU` | CPU use of the process | percent | CPU time (user plus system, from `getrusage`) divided by wall time, over about one second. **100 % is one full core.** All threads of the process count, so the value can exceed 100 %, for example with audio or driver threads or a software renderer. Shows `...` for the first second after the overlay appears. |
+| `MEM MB` | Resident memory of the process now | mebibytes (1024 x 1024 bytes) | On Linux `VmRSS` in `/proc/self/status`, on Windows the working set (`GetProcessMemoryInfo`), read once per second. Shows `MEM MB N/A` when the value cannot be read. |
+| `PEAK` | Highest resident memory since the process started | mebibytes | On Linux `VmHWM` in `/proc/self/status`, on Windows the peak working set, read once per second. |
+| `CPU` | CPU use of the process | percent | CPU time (user plus system, from `getrusage`, on Windows `GetProcessTimes`) divided by wall time, over about one second. **100 % is one full core.** All threads of the process count, so the value can exceed 100 %, for example with audio or driver threads or a software renderer. Shows `...` for the first second after the overlay appears. |
 | `GPU MS` | GPU time of the level draw | milliseconds | An OpenGL timer query (`GL_TIME_ELAPSED`) around drawing the level (scene, studs, HUD). The driver finishes it a frame or two later, so the value is for an earlier frame. `N/A` until the first result, and when the driver gives none. The overlay's own drawing is not included. |
 | `DRAWS` | Draw calls of the level draw | count | Every draw call of the level scene, the studs and the HUD in one frame (the overlay's own is not counted). Only in levels. |
 | `UPDATES/S` | Game updates in the last full second | updates per second | The count of game logic updates (the fixed update rate of the recovered scheduler), the same number as the `updates/s` line the program prints once a second (that line is not printed in `--script` runs). `0` for the first second. |
@@ -51,7 +51,7 @@ The panel shows one line each:
 
 ## Limits
 
-- The memory and CPU values come from Linux (`/proc`, `getrusage`). On another system they are not available. The overlay is only supported on Linux, like the rest of the port.
+- The memory and CPU values come from the operating system: on Linux `/proc` and `getrusage`, on Windows `GetProcessMemoryInfo` and `GetProcessTimes`. On Windows the working set counts only the memory of the process that is in RAM now, as the resident size does on Linux.
 - Memory, CPU and frame times are for the whole process. `GPU MS` and `DRAWS` cover only the drawing of the level, not the front-end screens.
 - Reading `/proc` and drawing the panel cost a little time, well under a millisecond per frame. The overlay is only read and drawn while it is visible. Frame times are recorded all the time (one clock read per frame).
 - The text uses a small built-in font with capital letters, digits and a few signs.

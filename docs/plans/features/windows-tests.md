@@ -17,7 +17,7 @@ Measured on Windows 11 by 20261112-winhooks-E, 2026-11-12, `ctest --test-dir bui
 - Other ways to get OpenGL without a window were ruled out: Mesa llvmpipe for Windows offers OpenGL 4.5 only, ANGLE offers OpenGL ES only, and Mesa's d3d12 driver on Windows is an extra dependency. The hidden-window approach is approved ([windows-toolchain.md §2026-11-12T20:54:37](../../design/windows-toolchain.md#ts-20261112-205437)).
 - `render-ui-draw-window`, `render-frame-keep-window` and `qol-ui-menu-window-real-data` skip with exit code 77 (no OpenGL 4.6 context offscreen), as on a Linux machine without a display.
 - `progress-readme` and `priorities-current` skip off main, as on Linux.
-- `save-default-path` skips on Windows with the reason WINPLAT-1.
+- `save-default-path` runs `tests/save_default_path_windows_test.cpp` on Windows (WINPLAT-1) and no longer skips.
 
 ## 4. Stand-ins
 

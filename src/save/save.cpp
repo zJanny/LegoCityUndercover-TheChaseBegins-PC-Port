@@ -1,5 +1,6 @@
 #include "save/save.hpp"
 #include "save/file_replace.hpp"
+#include "save/save_directory.hpp"
 #include <algorithm>
 #include <array>
 #include <cstdlib>
@@ -136,18 +137,7 @@ void SaveImage::setMusicVolume(std::size_t slot, std::uint8_t value) {
     volume(6, slot) = std::min(value, kMaxVolume);
 }
 
-std::string defaultSavePath() {
-    const char* dataHome = std::getenv("XDG_DATA_HOME");
-    std::filesystem::path base;
-    if (dataHome && *dataHome && std::filesystem::path(dataHome).is_absolute()) {
-        base = dataHome;
-    } else {
-        const char* home = std::getenv("HOME");
-        if (!home || !*home) throw std::runtime_error("neither XDG_DATA_HOME nor HOME is set");
-        base = std::filesystem::path(home) / ".local" / "share";
-    }
-    return (base / "chase" / "savegame.dat").string();
-}
+std::string defaultSavePath() { return (std::filesystem::path(saveDirectory()) / "savegame.dat").string(); }
 
 LoadResult load(const std::string& path) {
     LoadResult result;

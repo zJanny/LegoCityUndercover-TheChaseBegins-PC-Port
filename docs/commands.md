@@ -227,7 +227,7 @@ SDL_VIDEODRIVER=offscreen build/chase-game --script "0 150 40" --screenshot out.
     - `--level` starts another level with the progress of the slot. `--start` and `--facing` place the player yourself.
     - Only the police station was checked against the original. Other levels use the level's start point too, which is not checked.
     - Without `--save` a run is a new game in slot `--slot` (default 0) with the original's starting progress.
-  - `--save-out FILE` is where save requests go. Without it they go to the port's save file `$XDG_DATA_HOME/chase/savegame.dat`, normally `~/.local/share/chase/savegame.dat`.
+  - `--save-out FILE` is where save requests go. Without it they go to the port's save file `$XDG_DATA_HOME/chase/savegame.dat`, normally `~/.local/share/chase/savegame.dat`, and on Windows `%APPDATA%\chase\savegame.dat`.
     - Every save request of the game writes the slot of this run into that file. Examples are the level scripts' QuickSave or a collected super brick. The other slot and the options of an existing file are kept.
     - This also happens in development runs with `--level` or `--script`. Give `--save-out` to keep your own save untouched.
     - It must not be the `--save` file. The level state of the slot is not refreshed.

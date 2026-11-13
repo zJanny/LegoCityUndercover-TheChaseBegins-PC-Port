@@ -1,5 +1,6 @@
 #pragma once
 // Developer debug overlay values (docs/debug-overlay.md). Not game behaviour. No SDL, no OpenGL.
+#include "runtime/process_memory.hpp"
 #include <cstddef>
 #include <deque>
 #include <optional>
@@ -23,11 +24,6 @@ public:
 private:
     struct Sample { double end, duration; };
     std::deque<Sample> samples_;
-};
-
-struct ProcessMemory {
-    long residentKilobytes = 0;
-    long peakKilobytes = 0;
 };
 
 // Reads VmRSS and VmHWM (kB) from the text of /proc/<pid>/status; nothing when either line is missing or malformed.

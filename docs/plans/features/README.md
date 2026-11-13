@@ -148,7 +148,7 @@ One file per feature: scope, status, verified behaviour, stand-ins, open items (
 | Feature | Status | Top open items |
 |---|---|---|
 | [windows-build](windows-build.md) | IN_PROGRESS | WINBUILD-3 GitHub Windows job; WINBUILD-5 MSYS2 folder choice of the merge tool |
-| [windows-platform](windows-platform.md) | IN_PROGRESS | WINPLAT-1 save directory; WINPLAT-7 Python tools and non-ANSI paths; WINPLAT-3 overlay memory line |
+| [windows-platform](windows-platform.md) | IN_PROGRESS | WINPLAT-7 Python tools and non-ANSI paths; WINPLAT-8 Windows 10 before 1903; WINPLAT-5 non-ANSI save path |
 | [windows-tests](windows-tests.md) | IN_PROGRESS | WINTEST-13 offscreen OpenGL tests; WINTEST-2 floating-point equality of the scene tests |
 | [windows-hook-paths](windows-hook-paths.md) | IN_PROGRESS | WINTEST-6 MSYS root paths in hook commands |
 | [windows-hooks](windows-hooks.md) | IN_PROGRESS | WINTEST-3 real Claude Code run on a clean Windows |

@@ -107,7 +107,8 @@ struct LoadResult {
     std::optional<SaveImage> image;
 };
 
-// $XDG_DATA_HOME/chase/savegame.dat, falling back to $HOME/.local/share. Throws when neither is set.
+// savegame.dat in the save folder of the platform (save/save_directory.hpp): $XDG_DATA_HOME/chase, falling back to
+// $HOME/.local/share/chase, on POSIX; %APPDATA%\chase on Windows. Throws when no variable is set.
 std::string defaultSavePath();
 LoadResult load(const std::string& path);
 // Seals a copy and replaces the file atomically (temporary file, fsync, rename, directory fsync).

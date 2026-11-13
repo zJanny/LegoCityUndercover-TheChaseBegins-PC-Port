@@ -74,7 +74,7 @@ Set up `python3` once:
 4. **Extract.** Run `python3 tools/extract_romfs.py "path/to/game.cci" --output artifacts/romfs` in Git Bash. Write the path of your image with forward slashes, for example `C:/Games/game.cci` or `/c/Games/game.cci`. The last line names the output folder with a backslash: `51 files, 763156067 bytes -> artifacts\romfs`.
 5. **Start.** Run `build/chase-game` in the UCRT64 window. The programs need the DLLs in `C:\msys64\ucrt64\bin`, which only that window has on its `PATH`. Started from Git Bash or the Explorer, Windows reports a missing DLL.
 
-- **Saves.** The Windows save folder is not built yet. The game saves to `~/.local/share/chase/savegame.dat`, where `~` is the home folder of the window. In the window of step 3 that is your Windows user folder. At the start the game prints the full path, for example `save: new game in slot 0, save requests write <your user folder>\.local\share\chase\savegame.dat`. The `--save` command of the README works there unchanged.
+- **Saves.** The game saves to `%APPDATA%\chase\savegame.dat`, normally `C:\Users\<you>\AppData\Roaming\chase\savegame.dat`, and creates the folder. At the start the game prints the full path, for example `save: new game in slot 0, save requests write C:\Users\<you>\AppData\Roaming\chase\savegame.dat`. Start from it with `build/chase-game --save "$APPDATA/chase/savegame.dat" --slot 0` instead of the `~/.local/share` path of the README.
 - **Tests and tools.** [Building the tools](building.md#build-on-windows) has the test commands and the Python setting for the tests.
 
 ## Other programs

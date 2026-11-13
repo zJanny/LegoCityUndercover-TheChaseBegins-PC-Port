@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
-#include <fstream>
 #include <sstream>
 
 namespace chase::runtime {
@@ -95,10 +94,7 @@ DebugReadout DebugMetrics::readout() {
     const double now = wallSeconds();
     if (!lastSlowRefresh_ || now - *lastSlowRefresh_ >= kMetricsWindowSeconds) {
         lastSlowRefresh_ = now;
-        std::ifstream status("/proc/self/status");
-        std::stringstream text;
-        text << status.rdbuf();
-        memory_ = parseProcessStatus(text.str());
+        memory_ = currentProcessMemory();
         cpu_.sample(now, processCpuSeconds());
     }
     DebugReadout readout;
