@@ -26,3 +26,13 @@ Asked of the user by the planner on 2026-11-12 (relayed by the lead); the quoted
 - Offscreen OpenGL tests on Windows (2026-11-12, relayed by the lead): "Yes, put it on the list" for running them with SDL's normal Windows video driver and a hidden window instead of `SDL_VIDEODRIVER=offscreen` (WINTEST-13, [windows-tests.md](../plans/features/windows-tests.md)).
 
 Open: none.
+
+<a id="ts-20261113-075540"></a>
+
+## 2026-11-13T07:55:40+01:00 — Programs start from the build folder
+
+Asked of the user by the lead on 2026-11-13: started from the Explorer, `build/chase-game.exe` reports missing DLLs (`SDL2.dll`, `libepoxy-0.dll`, `libstdc++-6.dll`, `avcodec-63.dll` and others), because they live in the MSYS2 UCRT64 `bin` folder, which only the UCRT64 window has on its `PATH`. The lead offered: "after building, copy the needed DLLs from MSYS2 into build/ next to the .exe files. Then the build folder works on its own". The user answered: "Please fix this now" and "So that i can run it from the build folder".
+
+- The Windows build copies the non-system DLLs that every program and library of the build needs, transitively, from the folder of the compiler into the build folder next to the `.exe` files. Every program then starts from the Explorer, PowerShell or Git Bash without MSYS2 on the `PATH`. Windows system DLLs are not copied.
+
+Open: none.

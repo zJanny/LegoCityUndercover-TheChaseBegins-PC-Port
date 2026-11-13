@@ -9,9 +9,9 @@ Back to the [documentation list](../README.md#more-documentation).
 | Window | How to open it | Use it for |
 |---|---|---|
 | Git Bash | Start menu, from Git for Windows | `git`, the Python tools and the Python tests |
-| MSYS2 UCRT64 with the Windows `PATH` | `/c/msys64/msys2_shell.cmd -ucrt64 -use-full-path -here` in Git Bash | `cmake`, `ctest` and the programs in `build/` |
+| MSYS2 UCRT64 with the Windows `PATH` | `/c/msys64/msys2_shell.cmd -ucrt64 -use-full-path -here` in Git Bash | `cmake` and `ctest` (the programs in `build/` also start from any window) |
 
-The programs need the DLLs of MSYS2, so start them from the UCRT64 window. That window also finds Git and the python.org Python through the Windows `PATH`.
+`cmake --build` copies the DLLs of MSYS2 that the programs need into `build` next to the `.exe` files (the folder of the compiler is searched; Windows system DLLs are not copied), so the programs in `build` start from any window or from the Explorer. The UCRT64 window is for building and testing; it also finds Git and the python.org Python through the Windows `PATH`.
 
 ## Build and test
 

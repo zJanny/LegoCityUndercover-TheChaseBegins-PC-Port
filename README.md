@@ -132,7 +132,7 @@ It ends with a line like `[693/693] Linking CXX executable chase-game.exe`.
 
 **4. Extract the game data.** Run the command of step 4 above in Git Bash. Write the image path with forward slashes, like `C:/Games/game.cci`. It ends with `-> artifacts\romfs`.
 
-**5. Start the game.** In the UCRT64 window, run `build/chase-game`. Start it from there, so it finds the MSYS2 libraries.
+**5. Start the game.** Run `build/chase-game` in any window (UCRT64, Git Bash or PowerShell as `build\chase-game.exe`), or double-click `chase-game.exe` in the `build` folder. The build copied the MSYS2 libraries it needs (about 100 DLLs, 150 MB) into `build` next to the programs, so the folder works without the UCRT64 window.
 
 ### Saving and continuing later
 
@@ -171,7 +171,8 @@ All keys and how to change them: [Controls](docs/controls.md).
 - **The extraction says a hash does not match.** The image file is damaged or incomplete. Dump it again.
 - **The extraction says "output already exists".** Delete the folder `artifacts/romfs` and run step 4 again.
 - **The window does not open or stays black.** Update your graphics driver. The game needs OpenGL 4.6.
-- **Windows: `cmake: command not found`, or a missing DLL when you start a program.** Run them in the MSYS2 UCRT64 window of Windows step 3.
+- **Windows: `cmake: command not found`.** Run it in the MSYS2 UCRT64 window of Windows step 3.
+- **Windows: a program reports a missing DLL such as `SDL2.dll`.** The build copies the DLLs into `build`. Run `cmake --build build` again in the UCRT64 window; it copies them and names any DLL it cannot find.
 - More help: [Getting started](docs/getting-started.md#problems).
 
 
@@ -189,7 +190,7 @@ All keys and how to change them: [Controls](docs/controls.md).
 
 ![Progress trend](docs/progress-trend.svg)
 
-Updated 2026-11-13, commit 7e80ba0d. How the numbers are measured: [docs/progress.md](docs/progress.md).
+Updated 2026-11-13, commit ca87e0bc. How the numbers are measured: [docs/progress.md](docs/progress.md).
 <!-- progress:end -->
 
 ## More documentation

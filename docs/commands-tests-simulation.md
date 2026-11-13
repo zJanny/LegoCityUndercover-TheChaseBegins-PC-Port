@@ -76,6 +76,7 @@ Back to the [documentation list](../README.md#more-documentation).
 | `save-default-path` | Default save path from `XDG_DATA_HOME` and `HOME` on POSIX, from `APPDATA` on Windows (`%APPDATA%\chase\savegame.dat`, the folder is created when the file is saved) |
 | `file-replace` | Atomic replacement of the save file on the platform of the build (POSIX or Windows): new file, replace, no temporary file left, errors for a missing folder and a folder as target |
 | `utf8-path-prepare`, `utf8-path-copy`, `utf8-path-argument`, `utf8-path-argument-missing`, `utf8-path-cleanup` | On Windows: `chase-input-lab` reads its controls file from a folder named with Cyrillic and Japanese letters (outside the ANSI code page), and the error for a missing file there names the folder correctly; the first two create the folder and its controls file, and `utf8-path-cleanup` removes the folder. On Linux one test `utf8-path-argument` is skipped, because Linux reads UTF-8 paths unchanged |
+| `runtime-dlls-present`, `runtime-dlls-start-without-msys2` | On Windows: every DLL imported by a program or DLL of the build, except Windows system DLLs, is in the build folder; and `chase-input-lab` starts with only the Windows folders on the `PATH`; the first is slow (about 30 s). On Linux `runtime-dlls-present` is skipped, because the Linux programs use the system libraries |
 | `save-real-data` | Completion totals from the game tables; needs `artifacts/romfs`, skips with code 77 otherwise |
 
 ## Other test pages

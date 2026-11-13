@@ -188,7 +188,7 @@ What works on Windows 11:
 
 - Building all programs with MSYS2 (UCRT64, GCC and Ninja), without warnings.
 - Extracting the game data and running the conversion tools in Git Bash.
-- Starting `chase-game` from the MSYS2 UCRT64 window. It opens a window and shows the level.
+- Starting `chase-game` from the `build` folder in any window or the Explorer. It opens a window and shows the level.
 - Saving to `%APPDATA%\chase\savegame.dat`.
 - The memory values of the debug overlay.
 - The tests of `ctest`. All of them pass, are skipped with a reason or are disabled with a reason.
